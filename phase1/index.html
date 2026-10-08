@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forge — Cooperative & Fintech Platform</title>
+  <title>DigiFyntek — Cooperative & Fintech Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
@@ -829,7 +829,7 @@
             <path d="M12 7v5l3 3"/>
           </svg>
         </div>
-        <div class="brand-name">Forge</div>
+        <div class="brand-name">DigiFyntek</div>
       </div>
 
       <div class="hero">
@@ -848,7 +848,7 @@
     <div class="login-right">
       <div class="form-box">
         <h2>Sign in</h2>
-        <p class="sub">Continue to Forge</p>
+        <p class="sub">Continue to DigiFyntek</p>
         <form id="loginForm" onsubmit="event.preventDefault(); doLogin()">
           <div class="field">
             <label>User ID</label>
@@ -879,7 +879,7 @@
             <path d="M12 7v5l3 3"/>
           </svg>
         </div>
-        <div class="n">Forge</div>
+        <div class="n">DigiFyntek</div>
       </div>
 
       <nav class="nav">
@@ -1066,7 +1066,7 @@
   <script src="js/api.js"></script>
 <script src="js/shell.js"></script>
   <script>
-    document.getElementById('apiBaseHint').textContent = (ForgeAPI.BASE || '').replace(/^https?:\/\//, '');
+    document.getElementById('apiBaseHint').textContent = (DigiFyntekAPI.BASE || '').replace(/^https?:\/\//, '');
 
     function goLogin() {
       document.getElementById('login').style.display = 'grid';
@@ -1089,13 +1089,13 @@
       btn.disabled = true;
       btn.textContent = 'Signing in…';
       try {
-        await ForgeAPI.login(
+        await DigiFyntekAPI.login(
           document.getElementById('loginUser').value.trim(),
           document.getElementById('loginPass').value
         );
         goApp();
       } catch (e) {
-        err.textContent = e.message || 'Login failed — is API running on ' + ForgeAPI.BASE + '?';
+        err.textContent = e.message || 'Login failed — is API running on ' + DigiFyntekAPI.BASE + '?';
         err.style.display = 'block';
       } finally {
         btn.disabled = false;
@@ -1104,21 +1104,21 @@
     }
 
     async function loadDashboard() {
-      if (!ForgeAPI.token()) return;
+      if (!DigiFyntekAPI.token()) return;
       try {
-        const k = await ForgeAPI.kpis();
+        const k = await DigiFyntekAPI.kpis();
         document.getElementById('kpiMembers').textContent = k.totalMembers;
         document.getElementById('kpiFarmers').textContent = k.farmers + ' tagged as Farmer';
         document.getElementById('kpiLoans').textContent = k.activeLoans;
-        document.getElementById('kpiPortfolio').textContent = ForgeAPI.fmtPKR(k.portfolioOutstanding);
+        document.getElementById('kpiPortfolio').textContent = DigiFyntekAPI.fmtPKR(k.portfolioOutstanding);
         document.getElementById('kpiPar').textContent = (Number(k.par30ApproxPct) || 0).toFixed(1) + '%';
         document.getElementById('snapMembers').textContent = k.totalMembers;
         document.getElementById('snapFarmers').textContent = k.farmers;
         document.getElementById('snapLoans').textContent = k.activeLoans;
-        document.getElementById('snapOs').textContent = ForgeAPI.fmtPKR(k.portfolioOutstanding);
+        document.getElementById('snapOs').textContent = DigiFyntekAPI.fmtPKR(k.portfolioOutstanding);
         document.getElementById('snapPar').textContent = (Number(k.par30ApproxPct) || 0).toFixed(1) + '%';
 
-        const members = await ForgeAPI.members();
+        const members = await DigiFyntekAPI.members();
         const box = document.getElementById('recentMembers');
         const latest = (members || []).slice(0, 5);
         if (!latest.length) {
@@ -1126,19 +1126,19 @@
         } else {
           box.innerHTML = latest.map(m => {
             const tag = m.is_farmer ? '<span class="tag">Farmer</span>' : '<span class="tag member-only">Member</span>';
-            return '<div class="member"><div class="av2">' + ForgeAPI.initials(m.full_name) +
+            return '<div class="member"><div class="av2">' + DigiFyntekAPI.initials(m.full_name) +
               '</div><div class="info"><div class="name">' + (m.full_name || '') +
               '</div><div class="meta2">CNIC · ' + (m.cnic || '') + '</div></div>' + tag + '</div>';
           }).join('');
         }
       } catch (e) {
         console.error(e);
-        if (e.status === 401) { ForgeAPI.clearSession(); goLogin(); }
+        if (e.status === 401) { DigiFyntekAPI.clearSession(); goLogin(); }
       }
     }
 
     // Auto-enter app if already logged in
-    if (ForgeAPI.token()) goApp();
+    if (DigiFyntekAPI.token()) goApp();
   </script>
 </body>
 </html>

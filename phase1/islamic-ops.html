@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forge — Islamic facility ops</title>
+  <title>DigiFyntek — Islamic facility ops</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#f6f7f9;--surface:#fff;--surface-2:#f0f2f5;--ink:#111827;--ink-2:#4b5563;--ink-3:#9ca3af;--brand:#0e7490;--brand-bright:#06b6d4;--brand-soft:#ecfeff;--brand-deep:#164e63;--green:#059669;--green-soft:#d1fae5;--amber:#d97706;--amber-soft:#fef3c7;--rose:#e11d48;--border:#e5e7eb;--shadow:0 1px 3px rgba(0,0,0,.04);--r:12px;--r-sm:8px;--font:'Inter',system-ui,sans-serif;--serif:'Source Serif 4',Georgia,serif;--side:250px;--top:60px}
@@ -43,7 +43,7 @@
 <body>
 <div class="app">
   <aside class="sidebar">
-    <div class="side-brand"><div class="m">F</div><div class="n">Forge</div></div>
+    <div class="side-brand"><div class="m">F</div><div class="n">DigiFyntek</div></div>
     <nav class="nav">
       <div class="sec-t">Credit</div>
       <a href="loans.html">Loans &amp; PAR</a>
@@ -103,7 +103,7 @@
 <script src="js/api.js"></script>
 <script src="js/shell.js"></script>
 <script>
-  if (!ForgeAPI.requireAuth('index.html')) {}
+  if (!DigiFyntekAPI.requireAuth('index.html')) {}
   let mode = 'salam';
   let currentId = null;
 
@@ -166,7 +166,7 @@
   async function loadList() {
     const path = mode === 'qard' ? '/api/islamic/qard' : '/api/islamic/' + mode;
     try {
-      const rows = await ForgeAPI.request(path);
+      const rows = await DigiFyntekAPI.request(path);
       const tb = document.getElementById('tbody');
       if (!rows.length) {
         tb.innerHTML = '<tr><td colspan="6" style="padding:20px;color:#9ca3af">None yet</td></tr>';
@@ -178,7 +178,7 @@
           : mode === 'ijarah'
             ? (r.lease_asset_desc || r.underlying_asset || '')
             : (r.underlying_asset || '');
-        const amt = mode === 'ijarah' ? ForgeAPI.fmtPKR(r.rent_amount) + '/period' : ForgeAPI.fmtPKR(r.outstanding || r.principal);
+        const amt = mode === 'ijarah' ? DigiFyntekAPI.fmtPKR(r.rent_amount) + '/period' : DigiFyntekAPI.fmtPKR(r.outstanding || r.principal);
         return `<tr>
           <td class="mono">${r.loan_number||''}</td>
           <td>${r.member_name||''}</td>
@@ -197,7 +197,7 @@
   async function openF(id) {
     currentId = id;
     try {
-      const d = await ForgeAPI.request('/api/islamic/facility/' + id);
+      const d = await DigiFyntekAPI.request('/api/islamic/facility/' + id);
       const f = d.facility;
       document.getElementById('actionsCard').style.display = 'block';
       document.getElementById('actNo').textContent = f.loan_number;
@@ -221,14 +221,14 @@
 
   async function act(m, action) {
     try {
-      await ForgeAPI.request(`/api/islamic/${m}/${currentId}/${action}`, { method: 'POST', body: '{}' });
+      await DigiFyntekAPI.request(`/api/islamic/${m}/${currentId}/${action}`, { method: 'POST', body: '{}' });
       openF(currentId); loadList();
     } catch (e) { alert(e.message); }
   }
 
   async function toggleCheck(stepId, el) {
     try {
-      await ForgeAPI.request(`/api/islamic/facility/${currentId}/checklist/${stepId}`, {
+      await DigiFyntekAPI.request(`/api/islamic/facility/${currentId}/checklist/${stepId}`, {
         method: 'PATCH', body: JSON.stringify({ is_done: el.checked })
       });
     } catch (e) { el.checked = !el.checked; alert(e.message); }
@@ -269,7 +269,7 @@
           admin_fee: Number(document.getElementById('fFee').value)||0,
         };
       }
-      const r = await ForgeAPI.request(path, { method: 'POST', body: JSON.stringify(body) });
+      const r = await DigiFyntekAPI.request(path, { method: 'POST', body: JSON.stringify(body) });
       msg.textContent = 'Created ' + r.loan_number;
       msg.style.color = 'var(--green)';
       loadList();

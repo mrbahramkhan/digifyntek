@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forge — Loans & PAR</title>
+  <title>DigiFyntek — Loans & PAR</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#f6f7f9;--surface:#fff;--surface-2:#f0f2f5;--ink:#111827;--ink-2:#4b5563;--ink-3:#9ca3af;--brand:#0e7490;--brand-bright:#06b6d4;--brand-soft:#ecfeff;--brand-deep:#164e63;--green:#059669;--green-soft:#d1fae5;--amber:#d97706;--amber-soft:#fef3c7;--rose:#e11d48;--rose-soft:#ffe4e6;--blue:#2563eb;--blue-soft:#dbeafe;--border:#e5e7eb;--shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.03);--r:12px;--r-sm:8px;--font:'Inter',system-ui,sans-serif;--serif:'Source Serif 4',Georgia,serif;--side:250px;--top:60px}
@@ -47,7 +47,7 @@
 <body>
 <div class="app">
   <aside class="sidebar">
-    <div class="side-brand"><div class="m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></svg></div><div class="n">Forge</div></div>
+    <div class="side-brand"><div class="m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></svg></div><div class="n">DigiFyntek</div></div>
     <nav class="nav">
       <div class="sec"><div class="sec-t">Overview</div><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
       <div class="sec"><div class="sec-t">CRM</div>
@@ -157,7 +157,7 @@
 <script src="js/api.js"></script>
 <script src="js/shell.js"></script>
 <script>
-  if (!ForgeAPI.requireAuth('index.html')) {}
+  if (!DigiFyntekAPI.requireAuth('index.html')) {}
 
   function tagBucket(b) {
     const map = { current: 'tag-g', d30: 'tag-a', d60: 'tag-a', d90: 'tag-r' };
@@ -171,18 +171,18 @@
 
   async function loadLoans() {
     try {
-      const [port, loans] = await Promise.all([ForgeAPI.portfolio(), ForgeAPI.loans()]);
+      const [port, loans] = await Promise.all([DigiFyntekAPI.portfolio(), DigiFyntekAPI.loans()]);
       const os = Number(port.portfolio_outstanding || 0);
-      document.getElementById('kpiOs').textContent = ForgeAPI.fmtPKR(os);
+      document.getElementById('kpiOs').textContent = DigiFyntekAPI.fmtPKR(os);
       document.getElementById('kpiActive').textContent = (port.active_loans || 0) + ' active accounts';
       const p30 = Number(port.par30_pct || 0);
       const p90 = Number(port.par90_pct || 0);
       document.getElementById('kpiPar30').textContent = p30.toFixed(1) + '%';
-      document.getElementById('kpiPar30Amt').textContent = ForgeAPI.fmtPKR(
+      document.getElementById('kpiPar30Amt').textContent = DigiFyntekAPI.fmtPKR(
         Number(port.par30_os || 0) + Number(port.par60_os || 0) + Number(port.par90_os || 0)
       );
       document.getElementById('kpiPar90').textContent = p90.toFixed(1) + '%';
-      document.getElementById('kpiPar90Amt').textContent = ForgeAPI.fmtPKR(port.par90_os || 0);
+      document.getElementById('kpiPar90Amt').textContent = DigiFyntekAPI.fmtPKR(port.par90_os || 0);
 
       const tbodies = document.querySelectorAll('table tbody');
       // main loan list is last large table - find by header Classification context - we cleared first matching
@@ -202,7 +202,7 @@
           '<td class="mono">' + (l.loan_number || '') + '</td>' +
           '<td>' + (l.member_name || '') + '</td>' +
           '<td>' + (l.product_name || l.mode || '') + '</td>' +
-          '<td>' + ForgeAPI.fmtPKR(l.outstanding) + '</td>' +
+          '<td>' + DigiFyntekAPI.fmtPKR(l.outstanding) + '</td>' +
           '<td>—</td>' +
           '<td>' + (l.days_past_due || 0) + '</td>' +
           '<td>' + tagBucket(l.par_bucket) + '</td>' +

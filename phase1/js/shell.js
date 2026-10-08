@@ -1,4 +1,4 @@
-/** Shared nav + logout for Forge phase1 pages */
+/** Shared nav + logout for DigiFyntek phase1 pages */
 (function (g) {
   const LINKS = [
     { sec: 'Overview', items: [
@@ -33,14 +33,14 @@
 
   function injectLogout() {
     const top = document.querySelector('.topbar, header.topbar');
-    if (!top || top.querySelector('.forge-logout')) return;
+    if (!top || top.querySelector('.digifyntek-logout')) return;
     const btn = document.createElement('button');
-    btn.className = 'forge-logout';
+    btn.className = 'digifyntek-logout';
     btn.textContent = 'Logout';
     btn.style.cssText =
       'margin-left:auto;height:32px;padding:0 12px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit';
     btn.onclick = function () {
-      if (g.ForgeAPI) ForgeAPI.logout();
+      if (g.DigiFyntekAPI) DigiFyntekAPI.logout();
       else {
         localStorage.removeItem('FORGE_TOKEN');
         location.href = 'index.html';
@@ -82,14 +82,14 @@
     nav.innerHTML = html;
   }
 
-  g.ForgeShell = { enhanceNav: enhanceNav, injectLogout: injectLogout, pageName: pageName };
+  g.DigiFyntekShell = { enhanceNav: enhanceNav, injectLogout: injectLogout, pageName: pageName };
 
   document.addEventListener('DOMContentLoaded', function () {
     try {
       enhanceNav();
       injectLogout();
-      if (g.ForgeAPI && pageName() !== 'index.html') {
-        ForgeAPI.requireAuth('index.html');
+      if (g.DigiFyntekAPI && pageName() !== 'index.html') {
+        DigiFyntekAPI.requireAuth('index.html');
       }
     } catch (e) {
       console.warn(e);

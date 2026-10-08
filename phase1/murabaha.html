@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forge — Murābaḥah</title>
+  <title>DigiFyntek — Murābaḥah</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#f6f7f9;--surface:#fff;--surface-2:#f0f2f5;--ink:#111827;--ink-2:#4b5563;--ink-3:#9ca3af;--brand:#0e7490;--brand-bright:#06b6d4;--brand-soft:#ecfeff;--brand-deep:#164e63;--green:#059669;--green-soft:#d1fae5;--amber:#d97706;--amber-soft:#fef3c7;--rose:#e11d48;--rose-soft:#ffe4e6;--blue:#2563eb;--blue-soft:#dbeafe;--border:#e5e7eb;--shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.03);--r:12px;--r-sm:8px;--font:'Inter',system-ui,sans-serif;--serif:'Source Serif 4',Georgia,serif;--side:250px;--top:60px}
@@ -52,7 +52,7 @@
 <body>
 <div class="app">
   <aside class="sidebar">
-    <div class="side-brand"><div class="m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></svg></div><div class="n">Forge</div></div>
+    <div class="side-brand"><div class="m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></svg></div><div class="n">DigiFyntek</div></div>
     <nav class="nav">
       <div class="sec"><div class="sec-t">Overview</div>
         <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a>
@@ -178,7 +178,7 @@
 <script src="js/api.js"></script>
 <script src="js/shell.js"></script>
 <script>
-  if (!ForgeAPI.requireAuth('index.html')) {}
+  if (!DigiFyntekAPI.requireAuth('index.html')) {}
   let currentId = null;
   let current = null;
   const STAGE_ORDER = ['application','promise','approved','purchased','sold','delivered','active','settled'];
@@ -196,7 +196,7 @@
 
   async function loadList() {
     try {
-      const rows = await ForgeAPI.request('/api/murabaha');
+      const rows = await DigiFyntekAPI.request('/api/murabaha');
       const tb = document.getElementById('listBody');
       if (!rows.length) {
         tb.innerHTML = '<tr><td colspan="6" class="empty">No murābaḥah facilities</td></tr>';
@@ -207,7 +207,7 @@
         '<td class="mono">'+(r.loan_number||'')+'</td>'+
         '<td>'+(r.member_name||'')+'</td>'+
         '<td>'+(r.underlying_asset||'—')+'</td>'+
-        '<td>'+ForgeAPI.fmtPKR(r.sale_price||r.outstanding)+'</td>'+
+        '<td>'+DigiFyntekAPI.fmtPKR(r.sale_price||r.outstanding)+'</td>'+
         '<td>'+stageTag(r.murabaha_stage||r.status)+'</td>'+
         '<td><button class="btn btn-s" style="height:28px;font-size:11px" onclick="openDetail('+r.id+')">Open</button></td>'+
         '</tr>'
@@ -221,14 +221,14 @@
   async function openDetail(id) {
     currentId = id;
     try {
-      const d = await ForgeAPI.request('/api/murabaha/'+id);
+      const d = await DigiFyntekAPI.request('/api/murabaha/'+id);
       current = d.facility;
       document.getElementById('detailCard').style.display = 'block';
       document.getElementById('detailTitle').textContent = current.loan_number + ' · ' + (current.member_name||'');
       document.getElementById('detailStage').textContent = current.murabaha_stage || current.status;
-      document.getElementById('dCost').textContent = ForgeAPI.fmtPKR(current.cost_amount);
-      document.getElementById('dProfit').textContent = ForgeAPI.fmtPKR(current.profit_amount);
-      document.getElementById('dSale').textContent = ForgeAPI.fmtPKR(current.sale_price);
+      document.getElementById('dCost').textContent = DigiFyntekAPI.fmtPKR(current.cost_amount);
+      document.getElementById('dProfit').textContent = DigiFyntekAPI.fmtPKR(current.profit_amount);
+      document.getElementById('dSale').textContent = DigiFyntekAPI.fmtPKR(current.sale_price);
       document.getElementById('dSupplier').textContent = current.supplier_name || '—';
       document.getElementById('dInvoice').textContent = current.supplier_invoice_ref || '—';
       document.getElementById('dOwn').textContent = current.ownership_confirmed ? 'Confirmed' : 'Not yet';
@@ -261,7 +261,7 @@
 
   async function toggleCheck(stepId, el) {
     try {
-      await ForgeAPI.request('/api/murabaha/'+currentId+'/checklist/'+stepId, {
+      await DigiFyntekAPI.request('/api/murabaha/'+currentId+'/checklist/'+stepId, {
         method: 'PATCH', body: JSON.stringify({ is_done: el.checked })
       });
     } catch (e) {
@@ -283,7 +283,7 @@
         sale_price: Number(document.getElementById('nSale').value),
         supplier_name: document.getElementById('nSupplier').value || null,
       };
-      const r = await ForgeAPI.request('/api/murabaha', { method: 'POST', body: JSON.stringify(body) });
+      const r = await DigiFyntekAPI.request('/api/murabaha', { method: 'POST', body: JSON.stringify(body) });
       msg.textContent = 'Created ' + r.loan_number + (r.mcl_ok ? '' : ' · MCL review');
       msg.style.color = 'var(--green)';
       loadList();
@@ -297,7 +297,7 @@
   async function doPurchase() {
     if (!currentId) return alert('Open a facility');
     try {
-      await ForgeAPI.request('/api/murabaha/'+currentId+'/purchase', {
+      await DigiFyntekAPI.request('/api/murabaha/'+currentId+'/purchase', {
         method: 'POST',
         body: JSON.stringify({
           supplier_name: document.getElementById('pSupplier').value,
@@ -314,7 +314,7 @@
   async function doSell() {
     if (!currentId) return alert('Open a facility');
     try {
-      await ForgeAPI.request('/api/murabaha/'+currentId+'/sell', {
+      await DigiFyntekAPI.request('/api/murabaha/'+currentId+'/sell', {
         method: 'POST',
         body: JSON.stringify({
           installments: Number(document.getElementById('pInst').value)||4,
@@ -328,7 +328,7 @@
   async function doDeliver() {
     if (!currentId) return alert('Open a facility');
     try {
-      await ForgeAPI.request('/api/murabaha/'+currentId+'/deliver', { method: 'POST', body: '{}' });
+      await DigiFyntekAPI.request('/api/murabaha/'+currentId+'/deliver', { method: 'POST', body: '{}' });
       openDetail(currentId); loadList();
     } catch (e) { alert(e.message); }
   }

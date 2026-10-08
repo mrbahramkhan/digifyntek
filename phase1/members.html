@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forge — Members (CRM)</title>
+  <title>DigiFyntek — Members (CRM)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
@@ -352,7 +352,7 @@
             <path d="M12 7v5l3 3"/>
           </svg>
         </div>
-        <div class="n">Forge</div>
+        <div class="n">DigiFyntek</div>
       </div>
       <nav class="nav">
         <div class="sec">
@@ -585,7 +585,7 @@
           </div>
 
           <div class="api-note">
-            <strong>Forge API</strong><br>
+            <strong>DigiFyntek API</strong><br>
             Save → <code>POST /api/members</code><br>
             Update → <code>PUT /api/members/:id</code><br>
             List → <code>GET /api/members</code><br>
@@ -607,7 +607,7 @@
     let editingId = null;
     let allMembers = [];
 
-    if (!ForgeAPI.requireAuth('index.html')) { /* redirect */ }
+    if (!DigiFyntekAPI.requireAuth('index.html')) { /* redirect */ }
 
     function openDrawer(edit, id) {
       editingId = edit && id ? id : null;
@@ -648,9 +648,9 @@
       };
       try {
         if (editingId) {
-          await ForgeAPI.updateMember(editingId, body);
+          await DigiFyntekAPI.updateMember(editingId, body);
         } else {
-          await ForgeAPI.createMember(body);
+          await DigiFyntekAPI.createMember(body);
         }
         closeDrawer();
         await loadMembers();
@@ -704,7 +704,7 @@
         return '<tr data-type="' + type + '" data-status="' + status +
           '" data-name="' + (m.full_name || '').toLowerCase() +
           '" data-cnic="' + (m.cnic || '') + '">' +
-          '<td><div class="member-cell"><div class="avatar">' + ForgeAPI.initials(m.full_name) +
+          '<td><div class="member-cell"><div class="avatar">' + DigiFyntekAPI.initials(m.full_name) +
           '</div><div><div class="member-name">' + (m.full_name || '') +
           '</div><div class="member-sub">' + (m.village || '') + '</div></div></div></td>' +
           '<td>' + (m.cnic || '') + '</td>' +
@@ -720,7 +720,7 @@
 
     async function loadMembers() {
       try {
-        allMembers = await ForgeAPI.members() || [];
+        allMembers = await DigiFyntekAPI.members() || [];
         renderRows(allMembers);
       } catch (e) {
         console.error(e);

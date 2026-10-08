@@ -1,4 +1,4 @@
-# Forge — Complete system map
+# DigiFyntek — Complete system map
 
 ## One process, full stack
 

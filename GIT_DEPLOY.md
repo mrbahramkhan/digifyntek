@@ -9,13 +9,13 @@ Empty repo create karein (README mat add karo agar pehle push kar rahe ho).
 ## 2. Remote add + push
 
 ```bash
-cd forge-coop   # ya aapka project path
+cd digifyntek   # ya aapka project path
 
 # GitHub example
-git remote add origin https://github.com/YOUR_USER/forge-coop.git
+git remote add origin https://github.com/YOUR_USER/digifyntek.git
 
 # OR SSH
-# git remote add origin git@github.com:YOUR_USER/forge-coop.git
+# git remote add origin git@github.com:YOUR_USER/digifyntek.git
 
 git push -u origin main
 ```
@@ -23,8 +23,8 @@ git push -u origin main
 ## 3. Server pe pull (deploy)
 
 ```bash
-git clone https://github.com/YOUR_USER/forge-coop.git
-cd forge-coop
+git clone https://github.com/YOUR_USER/digifyntek.git
+cd digifyntek
 cp backend/.env.example backend/.env
 # edit JWT_SECRET, DB_PASSWORD, CORS_ORIGINS
 

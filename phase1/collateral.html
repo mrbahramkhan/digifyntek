@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forge — Collateral & Guarantees</title>
+  <title>DigiFyntek — Collateral & Guarantees</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#f6f7f9;--surface:#fff;--surface-2:#f0f2f5;--ink:#111827;--ink-2:#4b5563;--ink-3:#9ca3af;--brand:#0e7490;--brand-bright:#06b6d4;--brand-soft:#ecfeff;--brand-deep:#164e63;--green:#059669;--green-soft:#d1fae5;--amber:#d97706;--amber-soft:#fef3c7;--rose:#e11d48;--rose-soft:#ffe4e6;--blue:#2563eb;--blue-soft:#dbeafe;--border:#e5e7eb;--shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.03);--r:12px;--r-sm:8px;--font:'Inter',system-ui,sans-serif;--serif:'Source Serif 4',Georgia,serif;--side:250px;--top:60px}
@@ -40,7 +40,7 @@
 <body>
 <div class="app">
   <aside class="sidebar">
-    <div class="side-brand"><div class="m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></svg></div><div class="n">Forge</div></div>
+    <div class="side-brand"><div class="m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></svg></div><div class="n">DigiFyntek</div></div>
     <nav class="nav">
       <div class="sec"><div class="sec-t">Overview</div><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
       <div class="sec"><div class="sec-t">CRM</div>
@@ -127,14 +127,14 @@
 <script>
 async function loadCol() {
   try {
-    const [cols, gus] = await Promise.all([ForgeAPI.collaterals(), ForgeAPI.guarantees()]);
+    const [cols, gus] = await Promise.all([DigiFyntekAPI.collaterals(), DigiFyntekAPI.guarantees()]);
     const cb = document.getElementById('colBody');
     const gb = document.getElementById('guBody');
     if (!cols.length) cb.innerHTML = '<tr><td colspan="8">No collateral</td></tr>';
     else cb.innerHTML = cols.map(c =>
       '<tr><td class="mono">'+(c.collateral_code||'')+'</td><td>'+(c.coll_type||'')+'</td>'+
       '<td>'+(c.full_name||'')+'<br><span style="font-size:11px;color:var(--ink-3)">'+(c.description||'')+'</span></td>'+
-      '<td class="mono">'+(c.loan_number||'—')+'</td><td>'+ForgeAPI.fmtPKR(c.declared_value)+'</td>'+
+      '<td class="mono">'+(c.loan_number||'—')+'</td><td>'+DigiFyntekAPI.fmtPKR(c.declared_value)+'</td>'+
       '<td>'+(c.charge_date?String(c.charge_date).slice(0,10):'—')+'</td>'+
       '<td><span class="tag tag-g">'+(c.status||'')+'</span></td><td>—</td></tr>'
     ).join('');
@@ -142,7 +142,7 @@ async function loadCol() {
     else gb.innerHTML = gus.map(g =>
       '<tr><td class="mono">'+(g.guarantee_code||'')+'</td><td>'+(g.guarantor_name||'')+'</td>'+
       '<td>'+(g.borrower_name||'')+'</td><td class="mono">'+(g.loan_number||'')+'</td>'+
-      '<td>'+ForgeAPI.fmtPKR(g.amount)+'</td><td>—</td>'+
+      '<td>'+DigiFyntekAPI.fmtPKR(g.amount)+'</td><td>—</td>'+
       '<td><span class="tag tag-g">'+(g.status||'')+'</span></td></tr>'
     ).join('');
   } catch (e) {
@@ -158,7 +158,7 @@ async function addCollateral() {
   const lid = prompt('Loan ID (optional)', '');
   if (!mid) return;
   try {
-    await ForgeAPI.request('/api/collateral', {
+    await DigiFyntekAPI.request('/api/collateral', {
       method:'POST',
       body: JSON.stringify({
         member_id: Number(mid), loan_id: lid ? Number(lid) : null,
@@ -175,7 +175,7 @@ async function addGuarantee() {
   const amt = prompt('Amount PKR');
   if (!g || !b || !loan) return;
   try {
-    await ForgeAPI.request('/api/collateral/guarantees', {
+    await DigiFyntekAPI.request('/api/collateral/guarantees', {
       method:'POST',
       body: JSON.stringify({
         guarantor_member_id: Number(g), borrower_member_id: Number(b),

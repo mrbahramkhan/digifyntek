@@ -1,17 +1,14 @@
-# Forge
+# DigiFyntek
 
 **Cooperative & fintech platform** for village agriculture cooperatives, credit societies, and member-owned financial institutions.
 
-Not “Digital Kisaan” — product name is **Forge**.
+## Product
 
-## What it is
-
-- Member CRM (optional Farmer tag)
-- Share capital & savings
-- Loans with PAR / MCL
-- Islamic modes: Murābaḥah, Salam, Ijārah, Qard Ḥasan
-- Collateral, instruments, membership cards
-- Cooperative compliance & Pakistan registration checklist
+| | |
+|--|--|
+| **Name** | DigiFyntek |
+| **Category** | Cooperative fintech |
+| **Use** | VAC / credit cooperatives · members · shares · loans · Islamic modes · compliance |
 
 ## Quick start
 
@@ -25,16 +22,12 @@ Open **http://localhost:4000** · Login: `superadmin` / your seed password
 
 ## Docs
 
-| Doc | Topic |
-|-----|--------|
-| [SYSTEM.md](SYSTEM.md) | Full module map |
-| [PRODUCTION.md](PRODUCTION.md) | Hardened deploy |
-| [AUTO.md](AUTO.md) | Zero-touch / CI |
-| [deploy/README.md](deploy/README.md) | nginx + HTTPS |
-| [GIT_DEPLOY.md](GIT_DEPLOY.md) | Git push |
+- [SYSTEM.md](SYSTEM.md) — modules  
+- [PRODUCTION.md](PRODUCTION.md) — hardened deploy  
+- [AUTO.md](AUTO.md) — CI / zero-touch  
+- [deploy/README.md](deploy/README.md) — nginx + HTTPS  
+- [BRAND.md](BRAND.md) — naming  
 
 ## Stack
 
-Node.js · Express · MySQL 8 · phase1 UI (served by API) · Docker Compose
-
-Legacy origin: redesigned from an older “Digital Kisaan” app; this codebase is **Forge**.
+Node.js · Express · MySQL 8 · UI served by API · Docker Compose

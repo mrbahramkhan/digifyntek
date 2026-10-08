@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forge — Membership Cards</title>
+  <title>DigiFyntek — Membership Cards</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#f6f7f9;--surface:#fff;--surface-2:#f0f2f5;--ink:#111827;--ink-2:#4b5563;--ink-3:#9ca3af;--brand:#0e7490;--brand-bright:#06b6d4;--brand-soft:#ecfeff;--brand-deep:#164e63;--green:#059669;--green-soft:#d1fae5;--amber:#d97706;--amber-soft:#fef3c7;--rose:#e11d48;--rose-soft:#ffe4e6;--blue:#2563eb;--blue-soft:#dbeafe;--border:#e5e7eb;--shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.03);--r:12px;--r-sm:8px;--font:'Inter',system-ui,sans-serif;--serif:'Source Serif 4',Georgia,serif;--side:250px;--top:60px}
@@ -46,7 +46,7 @@
 <body>
 <div class="app">
   <aside class="sidebar">
-    <div class="side-brand"><div class="m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></svg></div><div class="n">Forge</div></div>
+    <div class="side-brand"><div class="m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></svg></div><div class="n">DigiFyntek</div></div>
     <nav class="nav">
       <div class="sec"><div class="sec-t">Overview</div><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
       <div class="sec"><div class="sec-t">CRM</div>
@@ -128,7 +128,7 @@
 <script>
 async function loadCards() {
   try {
-    const rows = await ForgeAPI.cards();
+    const rows = await DigiFyntekAPI.cards();
     const tb = document.querySelector('table tbody');
     if (!rows.length) { tb.innerHTML = '<tr><td colspan="7">No cards</td></tr>'; return; }
     const tag = s => {
@@ -150,14 +150,14 @@ async function loadCards() {
 }
 async function blockCard(id) {
   if (!confirm('Block this card?')) return;
-  await ForgeAPI.request('/api/cards/'+id+'/block', { method:'POST', body:'{}' });
+  await DigiFyntekAPI.request('/api/cards/'+id+'/block', { method:'POST', body:'{}' });
   loadCards();
 }
 async function issueCard() {
   const mid = prompt('Member ID to issue card for:');
   if (!mid) return;
   try {
-    await ForgeAPI.request('/api/cards', { method:'POST', body: JSON.stringify({ member_id: Number(mid) }) });
+    await DigiFyntekAPI.request('/api/cards', { method:'POST', body: JSON.stringify({ member_id: Number(mid) }) });
     loadCards();
   } catch (e) { alert(e.message); }
 }

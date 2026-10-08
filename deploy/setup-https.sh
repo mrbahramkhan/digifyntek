@@ -45,8 +45,8 @@ mkdir -p /var/www/certbot
 
 green "==> Writing HTTP nginx config (for ACME + proxy)"
 sed "s/app.example.com/${DOMAIN}/g" "$SCRIPT_DIR/nginx-http-only.conf" \
-  > /etc/nginx/sites-available/forge
-ln -sfn /etc/nginx/sites-available/forge /etc/nginx/sites-enabled/forge
+  > /etc/nginx/sites-available/digifyntek
+ln -sfn /etc/nginx/sites-available/digifyntek /etc/nginx/sites-enabled/digifyntek
 rm -f /etc/nginx/sites-enabled/default
 
 nginx -t

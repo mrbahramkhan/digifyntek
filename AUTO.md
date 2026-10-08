@@ -29,7 +29,7 @@ Grok/automation **cannot** access your GitHub password, server SSH key, or domai
 | `DEPLOY_HOST` | `1.2.3.4` |
 | `DEPLOY_USER` | `ubuntu` |
 | `DEPLOY_SSH_KEY` | private key contents |
-| `DEPLOY_PATH` | `/home/ubuntu/forge-coop` |
+| `DEPLOY_PATH` | `/home/ubuntu/digifyntek` |
 | `REPO_URL` | `https://github.com/USER/REPO.git` |
 | `JWT_SECRET` | long random string |
 | `DB_PASSWORD` | strong password |

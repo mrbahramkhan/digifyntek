@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forge — Instruments</title>
+  <title>DigiFyntek — Instruments</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -85,7 +85,7 @@
   <aside class="sidebar">
     <div class="side-brand">
       <div class="m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></svg></div>
-      <div class="n">Forge</div>
+      <div class="n">DigiFyntek</div>
     </div>
     <nav class="nav">
       <div class="sec"><div class="sec-t">Overview</div>
@@ -218,7 +218,7 @@
   function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); document.getElementById('bg').classList.remove('open'); }
   async function loadInst() {
     try {
-      const rows = await ForgeAPI.instruments();
+      const rows = await DigiFyntekAPI.instruments();
       const tb = document.querySelector('.card table tbody');
       const typeTag = {
         loan_agreement: 'tag-b', share_certificate: 'tag-n', guarantee: 'tag-a', deposit_receipt: 'tag-n'
@@ -231,7 +231,7 @@
       tb.innerHTML = rows.map(r =>
         '<tr><td class="mono">'+(r.instrument_no||'')+'</td>'+
         '<td><span class="tag '+(typeTag[r.inst_type]||'tag-n')+'">'+(labels[r.inst_type]||r.inst_type)+'</span></td>'+
-        '<td>'+(r.full_name||'—')+'</td><td>'+ForgeAPI.fmtPKR(r.amount_or_shares)+'</td>'+
+        '<td>'+(r.full_name||'—')+'</td><td>'+DigiFyntekAPI.fmtPKR(r.amount_or_shares)+'</td>'+
         '<td>'+(r.issue_date?String(r.issue_date).slice(0,10):'—')+'</td>'+
         '<td><span class="tag tag-g">'+(r.status||'')+'</span></td><td></td></tr>'
       ).join('');
@@ -242,7 +242,7 @@
   }
   async function saveInstrument() {
     try {
-      await ForgeAPI.request('/api/instruments', {
+      await DigiFyntekAPI.request('/api/instruments', {
         method: 'POST',
         body: JSON.stringify({
           inst_type: document.getElementById('instType').value,

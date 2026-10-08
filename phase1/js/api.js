@@ -1,31 +1,31 @@
 /**
- * Forge API client — wire phase1 HTML → Express MySQL backend
+ * DigiFyntek API client — wire phase1 HTML → Express MySQL backend
  * Default: http://localhost:4000
- * Override: localStorage.FORGE_API_BASE = 'https://your-api'
+ * Override: localStorage.DIGIFYNTEK_API_BASE = 'https://your-api'
  */
 (function (global) {
-  const BASE = localStorage.getItem('FORGE_API_BASE') || (typeof location !== 'undefined' && /^https?:/.test(location.origin) ? location.origin : 'http://localhost:4000');
+  const BASE = localStorage.getItem('DIGIFYNTEK_API_BASE') || (typeof location !== 'undefined' && /^https?:/.test(location.origin) ? location.origin : 'http://localhost:4000');
 
   function token() {
-    return localStorage.getItem('FORGE_TOKEN') || '';
+    return localStorage.getItem('DIGIFYNTEK_TOKEN') || '';
   }
 
   function user() {
     try {
-      return JSON.parse(localStorage.getItem('FORGE_USER') || 'null');
+      return JSON.parse(localStorage.getItem('DIGIFYNTEK_USER') || 'null');
     } catch {
       return null;
     }
   }
 
   function setSession(t, u) {
-    if (t) localStorage.setItem('FORGE_TOKEN', t);
-    if (u) localStorage.setItem('FORGE_USER', JSON.stringify(u));
+    if (t) localStorage.setItem('DIGIFYNTEK_TOKEN', t);
+    if (u) localStorage.setItem('DIGIFYNTEK_USER', JSON.stringify(u));
   }
 
   function clearSession() {
-    localStorage.removeItem('FORGE_TOKEN');
-    localStorage.removeItem('FORGE_USER');
+    localStorage.removeItem('DIGIFYNTEK_TOKEN');
+    localStorage.removeItem('DIGIFYNTEK_USER');
   }
 
   function requireAuth(redirect) {
@@ -190,5 +190,5 @@
     },
   };
 
-  global.ForgeAPI = api;
+  global.DigiFyntekAPI = api;
 })(window);

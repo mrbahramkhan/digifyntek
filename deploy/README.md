@@ -13,7 +13,7 @@
 
 ```bash
 git clone <YOUR_REPO_URL>
-cd forge-coop   # or forge-coop
+cd digifyntek   # or digifyntek
 
 export JWT_SECRET=$(openssl rand -hex 32)
 export DB_PASSWORD=$(openssl rand -hex 16)

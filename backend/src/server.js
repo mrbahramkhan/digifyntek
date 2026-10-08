@@ -65,7 +65,7 @@ app.get('/health', async (_req, res) => {
     const dbOk = await ping();
     res.status(dbOk ? 200 : 503).json({
       ok: dbOk,
-      service: 'forge-api',
+      service: 'digifyntek-api',
       env: env.nodeEnv,
       ts: new Date().toISOString(),
     });
@@ -111,7 +111,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 const server = app.listen(env.port, () => {
-  logger.info(`Forge full system on :${env.port}`, { env: env.nodeEnv, ui: uiRoot });
+  logger.info(`DigiFyntek full system on :${env.port}`, { env: env.nodeEnv, ui: uiRoot });
 });
 
 function shutdown(signal) {

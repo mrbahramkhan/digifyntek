@@ -1,4 +1,4 @@
-# Forge Backend (production-hardened)
+# DigiFyntek Backend (production-hardened)
 
 ## Scripts
 

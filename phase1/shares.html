@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forge — Shares</title>
+  <title>DigiFyntek — Shares</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#f6f7f9;--surface:#fff;--ink:#111827;--ink-2:#4b5563;--brand:#0e7490;--brand-deep:#164e63;--border:#e5e7eb;--green:#059669;--side:250px;--top:60px;--font:Inter,system-ui,sans-serif}
@@ -27,7 +27,7 @@
 </head>
 <body>
 <div class="app">
-  <aside class="sidebar"><div class="side-brand">Forge</div><nav class="nav"></nav></aside>
+  <aside class="sidebar"><div class="side-brand">DigiFyntek</div><nav class="nav"></nav></aside>
   <div class="main">
     <header class="topbar"><span>Share capital</span></header>
     <div class="content">
@@ -61,17 +61,17 @@
 async function load() {
   try {
     const [sum, rows] = await Promise.all([
-      ForgeAPI.request('/api/shares/summary'),
-      ForgeAPI.request('/api/shares'),
+      DigiFyntekAPI.request('/api/shares/summary'),
+      DigiFyntekAPI.request('/api/shares'),
     ]);
     document.getElementById('kFolios').textContent = sum.folios;
     document.getElementById('kShares').textContent = sum.total_shares;
-    document.getElementById('kCap').textContent = ForgeAPI.fmtPKR(sum.capital);
+    document.getElementById('kCap').textContent = DigiFyntekAPI.fmtPKR(sum.capital);
     const tb = document.getElementById('tb');
     if (!rows.length) { tb.innerHTML = '<tr><td colspan="6">No folios</td></tr>'; return; }
     tb.innerHTML = rows.map(r =>
       `<tr><td class="mono">${r.folio_no}</td><td>${r.full_name||''}</td><td>${r.shares}</td>
-       <td>${ForgeAPI.fmtPKR(r.face_value)}</td><td>${ForgeAPI.fmtPKR(r.shares*r.face_value)}</td><td>${r.status}</td></tr>`
+       <td>${DigiFyntekAPI.fmtPKR(r.face_value)}</td><td>${DigiFyntekAPI.fmtPKR(r.shares*r.face_value)}</td><td>${r.status}</td></tr>`
     ).join('');
   } catch (e) {
     document.getElementById('tb').innerHTML = `<tr><td colspan="6" style="color:#e11d48">${e.message}</td></tr>`;
@@ -79,7 +79,7 @@ async function load() {
 }
 async function issue() {
   try {
-    await ForgeAPI.request('/api/shares', {
+    await DigiFyntekAPI.request('/api/shares', {
       method: 'POST',
       body: JSON.stringify({
         member_id: Number(document.getElementById('mid').value),
