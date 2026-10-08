@@ -82,12 +82,39 @@
     nav.innerHTML = html;
   }
 
-  g.DigiFyntekShell = { enhanceNav: enhanceNav, injectLogout: injectLogout, pageName: pageName };
+  
+  function injectLogo() {
+    document.querySelectorAll('.side-brand').forEach(function (el) {
+      if (el.querySelector('img.df-logo')) return;
+      var img = document.createElement('img');
+      img.src = 'assets/logo.svg';
+      img.alt = 'DigiFyntek';
+      img.className = 'df-logo';
+      img.width = 28;
+      img.height = 28;
+      img.style.cssText = 'border-radius:8px;flex-shrink:0';
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.gap = '10px';
+      el.insertBefore(img, el.firstChild);
+    });
+    // favicon once
+    if (!document.querySelector('link[rel="icon"]')) {
+      var link = document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/svg+xml';
+      link.href = 'assets/favicon.svg';
+      document.head.appendChild(link);
+    }
+  }
+
+  g.DigiFyntekShell = { enhanceNav: enhanceNav, injectLogout: injectLogout, injectLogo: injectLogo, pageName: pageName };
 
   document.addEventListener('DOMContentLoaded', function () {
     try {
       enhanceNav();
       injectLogout();
+      injectLogo();
       if (g.DigiFyntekAPI && pageName() !== 'index.html') {
         DigiFyntekAPI.requireAuth('index.html');
       }
