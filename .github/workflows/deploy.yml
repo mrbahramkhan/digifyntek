@@ -1,0 +1,46 @@
+name: Deploy Forge
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check secrets
+        run: |
+          if [ -z "${{ secrets.DEPLOY_HOST }}" ]; then
+            echo "No DEPLOY_HOST secret — skip remote deploy (OK for local-only repos)"
+            echo "SKIP=1" >> $GITHUB_ENV
+          else
+            echo "SKIP=0" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy over SSH
+        if: env.SKIP == '0'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+            APP_DIR="${{ secrets.DEPLOY_PATH }}"
+            if [ -z "$APP_DIR" ]; then APP_DIR="$HOME/forge-coop"; fi
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone "${{ secrets.REPO_URL }}" "$APP_DIR"
+            fi
+            cd "$APP_DIR"
+            git fetch origin main
+            git reset --hard origin/main
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            export MYSQL_ROOT_PASSWORD="${{ secrets.MYSQL_ROOT_PASSWORD }}"
+            export CORS_ORIGINS="${{ secrets.CORS_ORIGINS }}"
+            docker compose up -d --build
+            sleep 10
+            docker compose exec -T app sh -c "npm run db:init || true"
+            docker compose exec -T app sh -c "npm run db:seed-admin -- '${{ secrets.ADMIN_PASSWORD }}' || true"
+            curl -sf http://127.0.0.1:4000/health || true
