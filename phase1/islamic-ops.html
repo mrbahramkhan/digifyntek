@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forge — Islamic facility ops</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f6f7f9;--surface:#fff;--surface-2:#f0f2f5;--ink:#111827;--ink-2:#4b5563;--ink-3:#9ca3af;--brand:#0e7490;--brand-bright:#06b6d4;--brand-soft:#ecfeff;--brand-deep:#164e63;--green:#059669;--green-soft:#d1fae5;--amber:#d97706;--amber-soft:#fef3c7;--rose:#e11d48;--border:#e5e7eb;--shadow:0 1px 3px rgba(0,0,0,.04);--r:12px;--r-sm:8px;--font:'Inter',system-ui,sans-serif;--serif:'Source Serif 4',Georgia,serif;--side:250px;--top:60px}
+    *{margin:0;padding:0;box-sizing:border-box}body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.5}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--side);background:var(--brand-deep);color:#ecfeff;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:40}
+    .side-brand{height:var(--top);display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .side-brand .m{width:32px;height:32px;background:var(--brand-bright);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}.side-brand .n{font-size:16px;font-weight:700}
+    .nav{flex:1;padding:14px 10px;overflow-y:auto}.sec-t{font-size:10px;font-weight:600;text-transform:uppercase;opacity:.4;padding:0 10px;margin:12px 0 5px}
+    .nav a{display:block;padding:8px 11px;border-radius:9px;color:rgba(236,254,255,.7);text-decoration:none;font-size:13px;font-weight:500;margin-bottom:1px}
+    .nav a:hover{background:rgba(255,255,255,.06);color:#fff}.nav a.active{background:var(--brand);color:#fff}
+    .main{margin-left:var(--side);flex:1}.topbar{height:var(--top);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;font-weight:600;position:sticky;top:0;background:rgba(246,247,249,.92);backdrop-filter:blur(8px)}
+    .content{padding:24px}
+    h1{font-family:var(--serif);font-size:24px;font-weight:500;margin-bottom:4px}
+    .sub{color:var(--ink-2);font-size:14px;margin-bottom:16px}
+    .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+    .tab{padding:8px 14px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:600;cursor:pointer}
+    .tab.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+    .btn{height:36px;padding:0 14px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+    .btn-p{background:var(--brand);color:#fff}.btn-s{background:#fff;border:1px solid var(--border)}
+    .card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+    .card-h{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;display:flex;justify-content:space-between}
+    .pad{padding:16px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{text-align:left;padding:10px 14px;background:var(--surface-2);font-size:11px;text-transform:uppercase;color:var(--ink-2)}
+    td{padding:10px 14px;border-top:1px solid var(--border)}
+    .fg{margin-bottom:10px}label{display:block;font-size:12px;color:var(--ink-2);margin-bottom:4px;font-weight:500}
+    input,select{width:100%;height:36px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;font-family:inherit}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .note{background:var(--brand-soft);border:1px solid #a5f3fc;border-radius:10px;padding:12px;font-size:12px;color:#0e7490;margin-bottom:14px;line-height:1.5}
+    .tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--green-soft);color:var(--green)}
+    .layout{display:grid;grid-template-columns:1.3fr 0.7fr;gap:16px}
+    @media(max-width:900px){.layout,.g2{grid-template-columns:1fr}.sidebar{display:none}.main{margin-left:0}}
+    .check{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+    .msg{font-size:12px;margin-top:8px;color:var(--ink-3)}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-brand"><div class="m">F</div><div class="n">Forge</div></div>
+    <nav class="nav">
+      <div class="sec-t">Credit</div>
+      <a href="loans.html">Loans &amp; PAR</a>
+      <a href="murabaha.html">Murābaḥah</a>
+      <a class="active" href="islamic-ops.html">Salam · Ijārah · Qard</a>
+      <a href="islamic.html">Product catalogue</a>
+      <div class="sec-t">CRM</div>
+      <a href="members.html">Members</a>
+      <a href="index.html">Dashboard</a>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">Islamic facility operations</header>
+    <div class="content">
+      <h1>Salam · Ijārah · Qard Ḥasan</h1>
+      <p class="sub">Operational flows with Sharīʿah checklists. Murābaḥah has its own screen.</p>
+
+      <div class="tabs">
+        <button class="tab on" data-mode="salam" onclick="setMode('salam')">Salam</button>
+        <button class="tab" data-mode="ijarah" onclick="setMode('ijarah')">Ijārah</button>
+        <button class="tab" data-mode="qard" onclick="setMode('qard')">Qard Ḥasan</button>
+        <a class="tab" href="murabaha.html" style="text-decoration:none;color:inherit">Murābaḥah →</a>
+      </div>
+
+      <div class="note" id="modeNote">Salam: pay full price now for defined produce delivered later (crop finance).</div>
+
+      <div class="layout">
+        <div>
+          <div class="card">
+            <div class="card-h"><span id="listTitle">Salam facilities</span>
+              <button class="btn btn-s" onclick="loadList()">Refresh</button>
+            </div>
+            <table>
+              <thead><tr><th>No.</th><th>Member</th><th>Detail</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+              <tbody id="tbody"><tr><td colspan="6" style="padding:20px;color:#9ca3af">Loading…</td></tr></tbody>
+            </table>
+          </div>
+          <div class="card" id="actionsCard" style="display:none">
+            <div class="card-h">Actions · <span id="actNo"></span></div>
+            <div class="pad" id="actions"></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-h">New facility</div>
+            <div class="pad" id="formPad"></div>
+          </div>
+          <div class="card">
+            <div class="card-h">Checklist</div>
+            <div class="pad" id="checklist"><span style="color:#9ca3af;font-size:12px">Open a facility</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+  if (!ForgeAPI.requireAuth('index.html')) {}
+  let mode = 'salam';
+  let currentId = null;
+
+  const NOTES = {
+    salam: 'Salam: society pays full price in advance for a defined commodity (e.g. wheat) delivered at a future date.',
+    ijarah: 'Ijārah: society owns the asset and leases usufruct for rent. Acquire asset before activating lease.',
+    qard: 'Qard ḥasan: interest-free loan. Profit must be 0%. Admin fee only if actual cost.'
+  };
+
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll('.tab[data-mode]').forEach(t => t.classList.toggle('on', t.dataset.mode === m));
+    document.getElementById('modeNote').textContent = NOTES[m];
+    document.getElementById('listTitle').textContent = ({salam:'Salam',ijarah:'Ijārah',qard:'Qard Ḥasan'})[m] + ' facilities';
+    renderForm();
+    loadList();
+    document.getElementById('actionsCard').style.display = 'none';
+    document.getElementById('checklist').innerHTML = '<span style="color:#9ca3af;font-size:12px">Open a facility</span>';
+  }
+
+  function renderForm() {
+    const el = document.getElementById('formPad');
+    if (mode === 'salam') {
+      el.innerHTML = `
+        <div class="fg"><label>Member ID</label><input id="fMid" type="number" /></div>
+        <div class="fg"><label>Commodity</label><input id="fAsset" placeholder="Wheat" /></div>
+        <div class="g2">
+          <div class="fg"><label>Quantity</label><input id="fQty" type="number" placeholder="20" /></div>
+          <div class="fg"><label>Unit</label><input id="fUnit" value="maund" /></div>
+        </div>
+        <div class="fg"><label>Salam price (full advance)</label><input id="fPrice" type="number" /></div>
+        <div class="fg"><label>Delivery date</label><input id="fDue" type="date" /></div>
+        <div class="fg"><label>Delivery place</label><input id="fPlace" placeholder="VAC godown" /></div>
+        <button class="btn btn-p" style="width:100%" onclick="create()">Create salam</button>
+        <p class="msg" id="fMsg"></p>`;
+    } else if (mode === 'ijarah') {
+      el.innerHTML = `
+        <div class="fg"><label>Member ID</label><input id="fMid" type="number" /></div>
+        <div class="fg"><label>Asset</label><input id="fAsset" placeholder="Tube-well motor" /></div>
+        <div class="g2">
+          <div class="fg"><label>Rent / period</label><input id="fRent" type="number" /></div>
+          <div class="fg"><label>Tenor (months)</label><input id="fMonths" type="number" value="12" /></div>
+        </div>
+        <div class="fg"><label>Rent frequency</label>
+          <select id="fFreq"><option value="monthly">Monthly</option><option value="seasonal">Seasonal</option></select>
+        </div>
+        <button class="btn btn-p" style="width:100%" onclick="create()">Create ijārah</button>
+        <p class="msg" id="fMsg"></p>`;
+    } else {
+      el.innerHTML = `
+        <div class="fg"><label>Member ID</label><input id="fMid" type="number" /></div>
+        <div class="fg"><label>Amount (0% profit)</label><input id="fPrice" type="number" /></div>
+        <div class="fg"><label>Purpose</label><input id="fAsset" placeholder="Emergency enterprise" /></div>
+        <div class="fg"><label>Admin fee (actual cost only)</label><input id="fFee" type="number" value="0" /></div>
+        <button class="btn btn-p" style="width:100%" onclick="create()">Create qard ḥasan</button>
+        <p class="msg" id="fMsg"></p>`;
+    }
+  }
+
+  async function loadList() {
+    const path = mode === 'qard' ? '/api/islamic/qard' : '/api/islamic/' + mode;
+    try {
+      const rows = await ForgeAPI.request(path);
+      const tb = document.getElementById('tbody');
+      if (!rows.length) {
+        tb.innerHTML = '<tr><td colspan="6" style="padding:20px;color:#9ca3af">None yet</td></tr>';
+        return;
+      }
+      tb.innerHTML = rows.map(r => {
+        const detail = mode === 'salam'
+          ? ((r.underlying_asset||'') + ' ' + (r.quantity||'') + ' ' + (r.unit||''))
+          : mode === 'ijarah'
+            ? (r.lease_asset_desc || r.underlying_asset || '')
+            : (r.underlying_asset || '');
+        const amt = mode === 'ijarah' ? ForgeAPI.fmtPKR(r.rent_amount) + '/period' : ForgeAPI.fmtPKR(r.outstanding || r.principal);
+        return `<tr>
+          <td class="mono">${r.loan_number||''}</td>
+          <td>${r.member_name||''}</td>
+          <td>${detail}</td>
+          <td>${amt}</td>
+          <td><span class="tag">${r.islamic_stage||r.status}</span></td>
+          <td><button class="btn btn-s" style="height:28px;font-size:11px" onclick="openF(${r.id})">Open</button></td>
+        </tr>`;
+      }).join('');
+    } catch (e) {
+      document.getElementById('tbody').innerHTML =
+        `<tr><td colspan="6" style="padding:16px;color:#e11d48">${e.message}<br><small>Apply sql/04_islamic_modes.sql</small></td></tr>`;
+    }
+  }
+
+  async function openF(id) {
+    currentId = id;
+    try {
+      const d = await ForgeAPI.request('/api/islamic/facility/' + id);
+      const f = d.facility;
+      document.getElementById('actionsCard').style.display = 'block';
+      document.getElementById('actNo').textContent = f.loan_number;
+      let html = '';
+      if (f.mode === 'salam') {
+        html = `<button class="btn btn-s" onclick="act('salam','pay-advance')">Pay advance (full price)</button>
+                <button class="btn btn-p" onclick="act('salam','receive-delivery')">Receive delivery → settle</button>`;
+      } else if (f.mode === 'ijarah') {
+        html = `<button class="btn btn-s" onclick="act('ijarah','acquire-asset')">Acquire / own asset</button>
+                <button class="btn btn-p" onclick="act('ijarah','activate')">Activate lease + schedule</button>`;
+      } else {
+        html = `<button class="btn btn-p" onclick="act('qard','disburse')">Disburse (0% profit)</button>`;
+      }
+      document.getElementById('actions').innerHTML = html;
+      document.getElementById('checklist').innerHTML = (d.checklist||[]).map(c =>
+        `<label class="check"><input type="checkbox" ${c.is_done?'checked':''}
+          onchange="toggleCheck(${c.id}, this)"/><span>${c.step_title}</span></label>`
+      ).join('') || '<span style="color:#9ca3af">No checklist</span>';
+    } catch (e) { alert(e.message); }
+  }
+
+  async function act(m, action) {
+    try {
+      await ForgeAPI.request(`/api/islamic/${m}/${currentId}/${action}`, { method: 'POST', body: '{}' });
+      openF(currentId); loadList();
+    } catch (e) { alert(e.message); }
+  }
+
+  async function toggleCheck(stepId, el) {
+    try {
+      await ForgeAPI.request(`/api/islamic/facility/${currentId}/checklist/${stepId}`, {
+        method: 'PATCH', body: JSON.stringify({ is_done: el.checked })
+      });
+    } catch (e) { el.checked = !el.checked; alert(e.message); }
+  }
+
+  async function create() {
+    const msg = document.getElementById('fMsg');
+    msg.textContent = 'Saving…';
+    try {
+      let path, body;
+      const mid = Number(document.getElementById('fMid').value);
+      if (mode === 'salam') {
+        path = '/api/islamic/salam';
+        body = {
+          member_id: mid, vac_id: 1,
+          underlying_asset: document.getElementById('fAsset').value,
+          quantity: Number(document.getElementById('fQty').value),
+          unit: document.getElementById('fUnit').value,
+          sale_price: Number(document.getElementById('fPrice').value),
+          delivery_date: document.getElementById('fDue').value || null,
+          delivery_place: document.getElementById('fPlace').value || null,
+        };
+      } else if (mode === 'ijarah') {
+        path = '/api/islamic/ijarah';
+        body = {
+          member_id: mid, vac_id: 1,
+          lease_asset_desc: document.getElementById('fAsset').value,
+          rent_amount: Number(document.getElementById('fRent').value),
+          tenor_months: Number(document.getElementById('fMonths').value),
+          rent_frequency: document.getElementById('fFreq').value,
+        };
+      } else {
+        path = '/api/islamic/qard';
+        body = {
+          member_id: mid, vac_id: 1,
+          principal: Number(document.getElementById('fPrice').value),
+          purpose: document.getElementById('fAsset').value,
+          admin_fee: Number(document.getElementById('fFee').value)||0,
+        };
+      }
+      const r = await ForgeAPI.request(path, { method: 'POST', body: JSON.stringify(body) });
+      msg.textContent = 'Created ' + r.loan_number;
+      msg.style.color = 'var(--green)';
+      loadList();
+      openF(r.id);
+    } catch (e) {
+      msg.textContent = e.message;
+      msg.style.color = 'var(--rose)';
+    }
+  }
+
+  renderForm();
+  loadList();
+</script>
+</body>
+</html>

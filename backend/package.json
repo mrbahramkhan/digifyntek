@@ -1,0 +1,28 @@
+{
+  "name": "forge-backend",
+  "version": "1.1.0",
+  "description": "Forge cooperative platform API — production-hardened",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "NODE_ENV=production node src/server.js",
+    "dev": "NODE_ENV=development node --watch src/server.js",
+    "db:init": "node scripts/init-db.js",
+    "db:seed-admin": "node scripts/seed-admin.js",
+    "healthcheck": "node scripts/healthcheck.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.0",
+    "uuid": "^10.0.0",
+    "winston": "^3.14.2"
+  }
+}

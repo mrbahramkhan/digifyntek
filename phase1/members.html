@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forge — Members (CRM)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --surface-2: #f0f2f5;
+      --ink: #111827;
+      --ink-2: #4b5563;
+      --ink-3: #9ca3af;
+      --brand: #0e7490;
+      --brand-bright: #06b6d4;
+      --brand-soft: #ecfeff;
+      --brand-deep: #164e63;
+      --green: #059669;
+      --green-soft: #d1fae5;
+      --amber: #d97706;
+      --amber-soft: #fef3c7;
+      --rose: #e11d48;
+      --blue: #2563eb;
+      --blue-soft: #dbeafe;
+      --border: #e5e7eb;
+      --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+      --shadow-md: 0 8px 24px rgba(0,0,0,0.06);
+      --r: 12px;
+      --r-sm: 8px;
+      --font: 'Inter', system-ui, sans-serif;
+      --serif: 'Source Serif 4', Georgia, serif;
+      --side: 250px;
+      --top: 60px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--side);
+      background: var(--brand-deep);
+      color: #ecfeff;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 40;
+    }
+    .side-brand {
+      height: var(--top);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .side-brand .m {
+      width: 32px; height: 32px;
+      background: var(--brand-bright);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .side-brand .m svg { width: 16px; height: 16px; color: #fff; }
+    .side-brand .n { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+    .nav { flex: 1; overflow-y: auto; padding: 14px 10px; }
+    .sec { margin-bottom: 18px; }
+    .sec-t {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; opacity: 0.4; padding: 0 10px; margin-bottom: 5px;
+    }
+    .nav a {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 11px; border-radius: 9px;
+      color: rgba(236,254,255,0.65); text-decoration: none;
+      font-size: 13.5px; font-weight: 500; margin-bottom: 1px; cursor: pointer;
+      transition: 0.15s;
+    }
+    .nav a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .nav a.active { background: var(--brand); color: #fff; }
+    .nav a svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.8; }
+    .nav a.active svg { opacity: 1; }
+    .badge {
+      margin-left: auto; background: rgba(255,255,255,0.15);
+      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px;
+    }
+
+    /* Main */
+    .main {
+      margin-left: var(--side);
+      flex: 1; display: flex; flex-direction: column; min-height: 100vh;
+    }
+    .topbar {
+      height: var(--top);
+      background: rgba(246,247,249,0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; position: sticky; top: 0; z-index: 30;
+    }
+    .top-title { font-size: 15px; font-weight: 600; }
+    .top-right { display: flex; align-items: center; gap: 8px; }
+    .search {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; padding: 7px 14px; width: 220px;
+    }
+    .search input {
+      border: none; outline: none; background: transparent;
+      font-size: 13px; font-family: inherit; width: 100%;
+    }
+    .search input::placeholder { color: var(--ink-3); }
+    .search svg { width: 14px; height: 14px; color: var(--ink-3); }
+    .av {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--brand); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+
+    .content { padding: 24px; flex: 1; }
+
+    .page-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 20px; gap: 16px; flex-wrap: wrap;
+    }
+    .page-head h1 {
+      font-family: var(--serif); font-size: 24px; font-weight: 500;
+      letter-spacing: -0.02em; margin-bottom: 4px;
+    }
+    .page-head p { font-size: 14px; color: var(--ink-2); }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .btn {
+      height: 38px; padding: 0 16px; border-radius: var(--r-sm);
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+      border: none; transition: 0.15s;
+    }
+    .btn svg { width: 15px; height: 15px; }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover { background: #0c657a; }
+    .btn-secondary {
+      background: var(--surface); color: var(--ink);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      border-color: var(--brand); color: var(--brand); background: var(--brand-soft);
+    }
+    .btn-ghost {
+      background: transparent; color: var(--ink-2); border: 1px solid transparent;
+    }
+    .btn-ghost:hover { background: var(--surface-2); color: var(--ink); }
+    .btn-danger { background: #fff1f2; color: var(--rose); border: 1px solid #fecdd3; }
+    .btn-danger:hover { background: #ffe4e6; }
+    .btn-sm { height: 32px; padding: 0 10px; font-size: 12px; }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .filter-chip {
+      height: 34px; padding: 0 12px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--surface);
+      font-size: 12px; font-weight: 500; font-family: inherit;
+      color: var(--ink-2); cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .filter-chip.active {
+      background: var(--brand-soft); border-color: #a5f3fc; color: var(--brand);
+    }
+    .filter-chip select {
+      border: none; background: transparent; font-size: 12px;
+      font-family: inherit; color: inherit; outline: none; cursor: pointer;
+    }
+
+    /* Table card */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden;
+    }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      text-align: left; padding: 12px 16px;
+      background: var(--surface-2); color: var(--ink-2);
+      font-weight: 600; font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.04em; border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #fafbfc; }
+
+    .member-cell {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--brand); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600; flex-shrink: 0;
+    }
+    .member-name { font-weight: 600; font-size: 13px; }
+    .member-sub { font-size: 11px; color: var(--ink-3); }
+
+    .tag {
+      display: inline-flex; align-items: center;
+      font-size: 11px; font-weight: 600; padding: 3px 9px;
+      border-radius: 999px; white-space: nowrap;
+    }
+    .tag-farmer { background: var(--green-soft); color: var(--green); }
+    .tag-member { background: #e0e7ff; color: #4338ca; }
+    .tag-active { background: var(--green-soft); color: var(--green); }
+    .tag-inactive { background: #f3f4f6; color: #6b7280; }
+
+    .row-actions { display: flex; gap: 4px; }
+    .icon-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--ink-2); transition: 0.15s;
+    }
+    .icon-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
+    .icon-btn svg { width: 14px; height: 14px; }
+
+    .pagination {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-top: 1px solid var(--border);
+      font-size: 13px; color: var(--ink-2);
+    }
+    .page-btns { display: flex; gap: 6px; }
+
+    /* Empty */
+    .empty {
+      padding: 48px 24px; text-align: center; color: var(--ink-3);
+    }
+    .empty h3 { font-size: 16px; color: var(--ink); margin-bottom: 6px; }
+    .empty p { font-size: 13px; margin-bottom: 16px; }
+
+    /* Modal / Drawer */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.4);
+      z-index: 50; display: none; align-items: stretch; justify-content: flex-end;
+    }
+    .overlay.open { display: flex; }
+    .drawer {
+      width: 100%; max-width: 520px; background: var(--surface);
+      box-shadow: var(--shadow-md); display: flex; flex-direction: column;
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(20px); opacity: 0.8; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .drawer-head {
+      padding: 18px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .drawer-head h2 { font-size: 17px; font-weight: 600; }
+    .drawer-body {
+      flex: 1; overflow-y: auto; padding: 20px;
+    }
+    .drawer-foot {
+      padding: 14px 20px; border-top: 1px solid var(--border);
+      display: flex; gap: 8px; justify-content: flex-end;
+    }
+
+    .form-section {
+      margin-bottom: 22px;
+    }
+    .form-section-title {
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.04em; color: var(--ink-3); margin-bottom: 12px;
+      padding-bottom: 6px; border-bottom: 1px solid var(--border);
+    }
+    .form-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .form-grid .full { grid-column: 1 / -1; }
+    .field label {
+      display: block; font-size: 12px; font-weight: 500;
+      color: var(--ink-2); margin-bottom: 5px;
+    }
+    .field label .req { color: var(--rose); }
+    .field input, .field select, .field textarea {
+      width: 100%; height: 40px; padding: 0 12px;
+      border: 1.5px solid var(--border); border-radius: var(--r-sm);
+      font-size: 13px; font-family: inherit; background: var(--surface-2);
+      color: var(--ink); outline: none; transition: 0.15s;
+    }
+    .field textarea {
+      height: auto; min-height: 72px; padding: 10px 12px; resize: vertical;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--brand); background: #fff;
+      box-shadow: 0 0 0 3px rgba(14,116,144,0.12);
+    }
+    .field input::placeholder, .field textarea::placeholder { color: var(--ink-3); }
+
+    .check-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; background: var(--green-soft);
+      border: 1px solid #a7f3d0; border-radius: var(--r-sm);
+      cursor: pointer; user-select: none;
+    }
+    .check-row input {
+      width: 16px; height: 16px; accent-color: var(--green); cursor: pointer;
+    }
+    .check-row .check-label { font-size: 13px; font-weight: 500; color: var(--green); }
+    .check-row .check-hint { font-size: 11px; color: #047857; opacity: 0.8; }
+
+    .api-note {
+      margin-top: 16px; padding: 10px 12px;
+      background: var(--surface-2); border-radius: 8px;
+      font-size: 11px; color: var(--ink-3); line-height: 1.5;
+    }
+    .api-note code {
+      font-size: 10px; background: #e5e7eb; padding: 1px 4px; border-radius: 3px;
+    }
+
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0; }
+      .form-grid { grid-template-columns: 1fr; }
+      .drawer { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="side-brand">
+        <div class="m">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/>
+            <path d="M12 7v5l3 3"/>
+          </svg>
+        </div>
+        <div class="n">Forge</div>
+      </div>
+      <nav class="nav">
+        <div class="sec">
+          <div class="sec-t">Overview</div>
+          <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a>
+        </div>
+        <div class="sec">
+          <div class="sec-t">CRM</div>
+          <a class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Members</a>
+          <a onclick="openDrawer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Member</a>
+          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg> Shares</a>
+        </div>
+        <div class="sec">
+          <div class="sec-t">Finance</div>
+          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Credit & Lending <span class="badge">3</span></a>
+          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Revolving Fund</a>
+        </div>
+        <div class="sec">
+          <div class="sec-t">System</div>
+          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</a>
+        </div>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="top-title">Members</div>
+        <div class="top-right">
+          <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" id="searchInput" placeholder="Search name, CNIC, phone..." oninput="filterTable()" />
+          </div>
+          <div class="av">SA</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-head">
+          <div>
+            <h1>Member Management</h1>
+            <p>CRM for cooperative members. Tag farmers when applicable.</p>
+          </div>
+          <div class="actions">
+            <button class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+            </button>
+            <button class="btn btn-primary" onclick="openDrawer()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Member
+            </button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="filters">
+            <button class="filter-chip active" data-filter="all" onclick="setFilter(this, 'all')">All</button>
+            <button class="filter-chip" data-filter="farmer" onclick="setFilter(this, 'farmer')">Farmers</button>
+            <button class="filter-chip" data-filter="member" onclick="setFilter(this, 'member')">Other members</button>
+            <button class="filter-chip" data-filter="active" onclick="setFilter(this, 'active')">Active</button>
+          </div>
+          <div style="font-size:13px;color:var(--ink-2);">
+            <strong id="resultCount">3</strong> members
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>CNIC</th>
+                  <th>Phone</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Registered</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="memberTable">
+                <tr><td colspan="7">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <span>Showing 1–3 of 3</span>
+            <div class="page-btns">
+              <button class="btn btn-secondary btn-sm" disabled>Previous</button>
+              <button class="btn btn-secondary btn-sm" disabled>Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add / Edit Member Drawer -->
+  <div class="overlay" id="drawer">
+    <div class="drawer">
+      <div class="drawer-head">
+        <h2 id="drawerTitle">Add Member</h2>
+        <button class="icon-btn" onclick="closeDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="drawer-body">
+        <form id="memberForm" onsubmit="event.preventDefault(); saveMember();">
+          <!-- Farmer tick -->
+          <label class="check-row" style="margin-bottom:20px;">
+            <input type="checkbox" id="isFarmer" checked />
+            <div>
+              <div class="check-label">This member is a Farmer</div>
+              <div class="check-hint">Maps to existing Farmer entity · API: POST /farmer/save</div>
+            </div>
+          </label>
+
+          <div class="form-section">
+            <div class="form-section-title">Basic information</div>
+            <div class="form-grid">
+              <div class="field full">
+                <label>Member name <span class="req">*</span></label>
+                <input type="text" name="memberName" placeholder="Full name" required />
+              </div>
+              <div class="field">
+                <label>CNIC <span class="req">*</span></label>
+                <input type="text" name="cnic" placeholder="xxxxx-xxxxxxx-x" required />
+              </div>
+              <div class="field">
+                <label>Date of birth <span class="req">*</span></label>
+                <input type="date" name="dob" required />
+              </div>
+              <div class="field">
+                <label>Gender <span class="req">*</span></label>
+                <select name="gender" required>
+                  <option value="">Select</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Phone <span class="req">*</span></label>
+                <input type="tel" name="phone" placeholder="03xx-xxxxxxx" required />
+              </div>
+              <div class="field">
+                <label>Father / Husband name <span class="req">*</span></label>
+                <input type="text" name="fatherName" placeholder="Name" required />
+              </div>
+              <div class="field">
+                <label>Education</label>
+                <select name="education">
+                  <option value="">Select</option>
+                  <option>Primary</option>
+                  <option>Middle</option>
+                  <option>Matric</option>
+                  <option>Intermediate</option>
+                  <option>Graduate</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Occupation</label>
+                <select name="occupation">
+                  <option value="">Select</option>
+                  <option>Farmer</option>
+                  <option>Labor</option>
+                  <option>Business</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Member date</label>
+                <input type="date" name="memberDate" />
+              </div>
+              <div class="field">
+                <label>Status</label>
+                <select name="status">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Household</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>House hold head?</label>
+                <select name="isHouseholdHead">
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Household CNIC</label>
+                <input type="text" name="hhCnic" placeholder="If different" />
+              </div>
+              <div class="field">
+                <label>Household name</label>
+                <input type="text" name="hhName" placeholder="Head name" />
+              </div>
+              <div class="field">
+                <label>Family size</label>
+                <input type="number" name="familySize" min="1" placeholder="0" />
+              </div>
+              <div class="field">
+                <label>No. of male</label>
+                <input type="number" name="noMale" min="0" placeholder="0" />
+              </div>
+              <div class="field">
+                <label>No. of female</label>
+                <input type="number" name="noFemale" min="0" placeholder="0" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Income</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Agriculture income (annual)</label>
+                <input type="number" name="agriIncome" placeholder="0" />
+              </div>
+              <div class="field">
+                <label>Other source income (annual)</label>
+                <input type="number" name="otherIncome" placeholder="0" />
+              </div>
+            </div>
+          </div>
+
+          <div class="api-note">
+            <strong>Backend mapping</strong><br>
+            Save → <code>POST /digitalkisaan/farmer/save</code><br>
+            Update → <code>PUT /digitalkisaan/farmer/update</code><br>
+            List → <code>GET /digitalkisaan/farmer/getByVacs?porOrgacode=&amp;vacCode=</code><br>
+            “Is Farmer” tick → existing farmer entity (all current records are farmers; use for UI filter / future memberType)
+          </div>
+        </form>
+      </div>
+      <div class="drawer-foot">
+        <button type="button" class="btn btn-secondary" onclick="closeDrawer()">Cancel</button>
+        <button type="submit" form="memberForm" class="btn btn-primary">Save member</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+  <script>
+    let currentFilter = 'all';
+    let editingId = null;
+    let allMembers = [];
+
+    if (!ForgeAPI.requireAuth('index.html')) { /* redirect */ }
+
+    function openDrawer(edit, id) {
+      editingId = edit && id ? id : null;
+      document.getElementById('drawerTitle').textContent = editingId ? 'Edit Member' : 'Add Member';
+      document.getElementById('drawer').classList.add('open');
+      if (!editingId) {
+        document.getElementById('memberForm').reset();
+        document.getElementById('isFarmer').checked = true;
+      } else {
+        const m = allMembers.find(x => x.id === editingId);
+        if (m) {
+          const f = document.getElementById('memberForm');
+          f.memberName.value = m.full_name || '';
+          f.cnic.value = m.cnic || '';
+          f.phone.value = m.mobile || '';
+          f.status.value = (m.status || 'active') === 'active' ? 'Active' : 'Inactive';
+          document.getElementById('isFarmer').checked = !!m.is_farmer;
+        }
+      }
+    }
+    function closeDrawer() {
+      document.getElementById('drawer').classList.remove('open');
+      editingId = null;
+    }
+
+    async function saveMember() {
+      const f = document.getElementById('memberForm');
+      const body = {
+        vac_id: 1,
+        full_name: f.memberName.value.trim(),
+        cnic: f.cnic.value.trim(),
+        mobile: f.phone.value.trim(),
+        village: f.hhName?.value || null,
+        is_farmer: document.getElementById('isFarmer').checked ? 1 : 0,
+        status: (f.status.value || 'Active').toLowerCase() === 'active' ? 'active' : 'inactive',
+        joined_at: f.memberDate?.value || new Date().toISOString().slice(0, 10),
+        nominee_name: null,
+      };
+      try {
+        if (editingId) {
+          await ForgeAPI.updateMember(editingId, body);
+        } else {
+          await ForgeAPI.createMember(body);
+        }
+        closeDrawer();
+        await loadMembers();
+      } catch (e) {
+        alert('Save failed: ' + (e.message || e));
+      }
+    }
+
+    function setFilter(el, filter) {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      currentFilter = filter;
+      filterTable();
+    }
+
+    function filterTable() {
+      const q = (document.getElementById('searchInput').value || '').toLowerCase();
+      const rows = document.querySelectorAll('#memberTable tr');
+      let visible = 0;
+      rows.forEach(row => {
+        const type = row.dataset.type;
+        const status = row.dataset.status;
+        const name = row.dataset.name || '';
+        const cnic = row.dataset.cnic || '';
+        let show = true;
+        if (currentFilter === 'farmer' && type !== 'farmer') show = false;
+        if (currentFilter === 'member' && type !== 'member') show = false;
+        if (currentFilter === 'active' && status !== 'active') show = false;
+        if (q && !name.includes(q) && !cnic.includes(q) && !row.textContent.toLowerCase().includes(q)) show = false;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      document.getElementById('resultCount').textContent = visible;
+    }
+
+    function renderRows(list) {
+      const tb = document.getElementById('memberTable');
+      if (!list.length) {
+        tb.innerHTML = '<tr><td colspan="7" style="padding:24px;color:#9ca3af;">No members — add one or start API + seed.</td></tr>';
+        document.getElementById('resultCount').textContent = '0';
+        return;
+      }
+      tb.innerHTML = list.map(m => {
+        const type = m.is_farmer ? 'farmer' : 'member';
+        const status = m.status || 'active';
+        const tagType = m.is_farmer
+          ? '<span class="tag tag-farmer">Farmer</span>'
+          : '<span class="tag tag-member">Member</span>';
+        const tagSt = '<span class="tag tag-active">' + status + '</span>';
+        const joined = m.joined_at ? String(m.joined_at).slice(0, 10) : '—';
+        return '<tr data-type="' + type + '" data-status="' + status +
+          '" data-name="' + (m.full_name || '').toLowerCase() +
+          '" data-cnic="' + (m.cnic || '') + '">' +
+          '<td><div class="member-cell"><div class="avatar">' + ForgeAPI.initials(m.full_name) +
+          '</div><div><div class="member-name">' + (m.full_name || '') +
+          '</div><div class="member-sub">' + (m.village || '') + '</div></div></div></td>' +
+          '<td>' + (m.cnic || '') + '</td>' +
+          '<td>' + (m.mobile || '—') + '</td>' +
+          '<td>' + tagType + '</td><td>' + tagSt + '</td><td>' + joined + '</td>' +
+          '<td><div class="row-actions">' +
+          '<button class="icon-btn" title="360" onclick="location.href=\'member360.html?id=' + m.id + '\'">◉</button>' +
+          '<button class="icon-btn" title="Edit" onclick="openDrawer(true,' + m.id + ')">✎</button>' +
+          '</div></td></tr>';
+      }).join('');
+      filterTable();
+    }
+
+    async function loadMembers() {
+      try {
+        allMembers = await ForgeAPI.members() || [];
+        renderRows(allMembers);
+      } catch (e) {
+        console.error(e);
+        document.getElementById('memberTable').innerHTML =
+          '<tr><td colspan="7" style="padding:24px;color:#e11d48;">API error: ' + (e.message || e) +
+          '<br><small>Start backend: cd backend && npm start</small></td></tr>';
+      }
+    }
+
+    document.getElementById('drawer').addEventListener('click', function(e) {
+      if (e.target === this) closeDrawer();
+    });
+    const si = document.getElementById('searchInput');
+    if (si) si.addEventListener('input', filterTable);
+
+    loadMembers();
+  </script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forge — Murābaḥah</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f6f7f9;--surface:#fff;--surface-2:#f0f2f5;--ink:#111827;--ink-2:#4b5563;--ink-3:#9ca3af;--brand:#0e7490;--brand-bright:#06b6d4;--brand-soft:#ecfeff;--brand-deep:#164e63;--green:#059669;--green-soft:#d1fae5;--amber:#d97706;--amber-soft:#fef3c7;--rose:#e11d48;--rose-soft:#ffe4e6;--blue:#2563eb;--blue-soft:#dbeafe;--border:#e5e7eb;--shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.03);--r:12px;--r-sm:8px;--font:'Inter',system-ui,sans-serif;--serif:'Source Serif 4',Georgia,serif;--side:250px;--top:60px}
+    *{margin:0;padding:0;box-sizing:border-box}body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.5}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--side);background:var(--brand-deep);color:#ecfeff;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:40}
+    .side-brand{height:var(--top);display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .side-brand .m{width:32px;height:32px;background:var(--brand-bright);border-radius:9px;display:flex;align-items:center;justify-content:center}.side-brand .m svg{width:16px;height:16px;color:#fff}.side-brand .n{font-size:16px;font-weight:700}
+    .nav{flex:1;overflow-y:auto;padding:14px 10px}.sec{margin-bottom:14px}.sec-t{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;opacity:.4;padding:0 10px;margin-bottom:5px}
+    .nav a{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:9px;color:rgba(236,254,255,.65);text-decoration:none;font-size:13px;font-weight:500}
+    .nav a:hover{background:rgba(255,255,255,.06);color:#fff}.nav a.active{background:var(--brand);color:#fff}.nav a svg{width:15px;height:15px;opacity:.8}
+    .main{margin-left:var(--side);flex:1}.topbar{height:var(--top);background:rgba(246,247,249,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:30}
+    .top-title{font-size:15px;font-weight:600}.av{width:34px;height:34px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+    .content{padding:24px}.page-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:16px;flex-wrap:wrap}
+    .page-head h1{font-family:var(--serif);font-size:24px;font-weight:500;margin-bottom:4px}.page-head p{font-size:14px;color:var(--ink-2)}
+    .btn{height:36px;padding:0 14px;border-radius:var(--r-sm);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px}
+    .btn-p{background:var(--brand);color:#fff}.btn-s{background:var(--surface);border:1px solid var(--border);color:var(--ink)}.btn:disabled{opacity:.5;cursor:not-allowed}
+    .note{background:var(--brand-soft);border:1px solid #a5f3fc;border-radius:var(--r);padding:12px 14px;font-size:12px;color:#0e7490;margin-bottom:16px;line-height:1.5}
+    .warn{background:var(--amber-soft);border-color:#fcd34d;color:#92400e}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+    .card-h{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{text-align:left;padding:10px 14px;background:var(--surface-2);color:var(--ink-2);font-weight:600;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+    td{padding:11px 14px;border-bottom:1px solid var(--border)}tr:last-child td{border-bottom:none}
+    .tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;display:inline-block}
+    .tag-g{background:var(--green-soft);color:var(--green)}.tag-a{background:var(--amber-soft);color:var(--amber)}.tag-r{background:var(--rose-soft);color:var(--rose)}.tag-b{background:var(--blue-soft);color:var(--blue)}.tag-n{background:var(--surface-2);color:var(--ink-2)}
+    .mono{font-family:ui-monospace,monospace;font-size:12px}
+    .steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+    .step{padding:6px 10px;border-radius:999px;font-size:11px;font-weight:600;background:var(--surface-2);color:var(--ink-3)}
+    .step.on{background:var(--brand);color:#fff}.step.done{background:var(--green-soft);color:var(--green)}
+    .fg{margin-bottom:12px}.fg label{display:block;font-size:12px;font-weight:500;color:var(--ink-2);margin-bottom:4px}
+    .fg input,.fg select,.fg textarea{width:100%;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:inherit}
+    .fg textarea{height:70px;padding:8px 12px}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .check-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+    .check-item:last-child{border-bottom:none}
+    .panel-pad{padding:16px}
+    .price-box{background:var(--surface-2);border-radius:var(--r-sm);padding:12px;font-size:13px}
+    .price-box div{display:flex;justify-content:space-between;padding:4px 0}
+    .price-box .total{font-weight:700;border-top:1px solid var(--border);margin-top:6px;padding-top:8px}
+    .layout{display:grid;grid-template-columns:1.2fr 0.8fr;gap:16px}
+    @media(max-width:1000px){.layout,.grid2,.g2{grid-template-columns:1fr}.sidebar{transform:translateX(-100%)}.main{margin-left:0}}
+    .empty{padding:24px;color:var(--ink-3);font-size:13px}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-brand"><div class="m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></svg></div><div class="n">Forge</div></div>
+    <nav class="nav">
+      <div class="sec"><div class="sec-t">Overview</div>
+        <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a>
+      </div>
+      <div class="sec"><div class="sec-t">Credit</div>
+        <a href="loans.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Loans &amp; PAR</a>
+        <a class="active" href="murabaha.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Murābaḥah</a>
+        <a href="islamic.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> Islamic products</a>
+        <a href="collateral.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Collateral</a>
+      </div>
+      <div class="sec"><div class="sec-t">CRM</div>
+        <a href="members.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Members</a>
+      </div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar"><div class="top-title">Murābaḥah · cost-plus sale</div><div class="av">SA</div></header>
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>Murābaḥah facilities</h1>
+          <p>Promise → purchase &amp; own → cost + profit sale → delivery → installments. Not an interest loan.</p>
+        </div>
+        <button class="btn btn-p" onclick="showNew()">+ New murābaḥah</button>
+      </div>
+
+      <div class="note">
+        <strong>Sharīʿah control:</strong> Society must own the asset before sale. System blocks <em>sold / delivered / active</em> until ownership is confirmed.
+        Labels use <strong>Cost · Profit · Sale price</strong> — not interest rate.
+      </div>
+
+      <div class="layout">
+        <div>
+          <div class="card">
+            <div class="card-h">Facilities <button class="btn btn-s" style="height:28px;font-size:11px" onclick="loadList()">Refresh</button></div>
+            <table>
+              <thead>
+                <tr><th>Facility</th><th>Member</th><th>Asset</th><th>Sale price</th><th>Stage</th><th></th></tr>
+              </thead>
+              <tbody id="listBody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="card" id="detailCard" style="display:none">
+            <div class="card-h"><span id="detailTitle">Facility</span>
+              <span class="tag tag-b" id="detailStage">—</span>
+            </div>
+            <div class="panel-pad">
+              <div class="steps" id="stageSteps"></div>
+              <div class="g2" style="margin-bottom:12px">
+                <div class="price-box">
+                  <div><span>Cost</span><span id="dCost">—</span></div>
+                  <div><span>Profit</span><span id="dProfit">—</span></div>
+                  <div class="total"><span>Sale price</span><span id="dSale">—</span></div>
+                </div>
+                <div class="price-box">
+                  <div><span>Supplier</span><span id="dSupplier">—</span></div>
+                  <div><span>Invoice</span><span id="dInvoice">—</span></div>
+                  <div><span>Ownership</span><span id="dOwn">—</span></div>
+                  <div><span>MCL</span><span id="dMcl">—</span></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+                <button class="btn btn-s" onclick="doPurchase()">1. Confirm purchase / ownership</button>
+                <button class="btn btn-s" onclick="doSell()">2. Execute sale + schedule</button>
+                <button class="btn btn-p" onclick="doDeliver()">3. Confirm delivery → active</button>
+              </div>
+              <div class="fg">
+                <label>Purchase form (ownership step)</label>
+                <div class="g2">
+                  <input id="pSupplier" placeholder="Supplier name" />
+                  <input id="pInvoice" placeholder="Invoice ref" />
+                  <input id="pCost" type="number" placeholder="Cost amount" />
+                  <input id="pProfit" type="number" placeholder="Profit amount" />
+                </div>
+              </div>
+              <div class="fg g2">
+                <div><label>Installments (on sale)</label><input id="pInst" type="number" value="4" min="1" max="36" /></div>
+                <div><label>First due date</label><input id="pDue" type="date" /></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" id="newCard">
+            <div class="card-h">New application</div>
+            <div class="panel-pad">
+              <div class="fg"><label>Member ID</label><input id="nMember" type="number" placeholder="e.g. 1" /></div>
+              <div class="fg"><label>Asset (underlying)</label><input id="nAsset" placeholder="e.g. Urea 15 bags + DAP 10" /></div>
+              <div class="g2">
+                <div class="fg"><label>Cost</label><input id="nCost" type="number" placeholder="45000" oninput="calcSale()" /></div>
+                <div class="fg"><label>Profit</label><input id="nProfit" type="number" placeholder="4500" oninput="calcSale()" /></div>
+              </div>
+              <div class="fg"><label>Sale price (auto)</label><input id="nSale" type="number" readonly /></div>
+              <div class="fg"><label>Supplier (optional)</label><input id="nSupplier" placeholder="Dealer name" /></div>
+              <button class="btn btn-p" style="width:100%" onclick="createFacility()">Create application</button>
+              <p id="newMsg" style="font-size:12px;margin-top:10px;color:var(--ink-3)"></p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-h">Compliance checklist</div>
+            <div class="panel-pad" id="checkList"><div class="empty">Select a facility</div></div>
+          </div>
+
+          <div class="card">
+            <div class="card-h">Contract structure</div>
+            <div class="panel-pad" style="font-size:12px;color:var(--ink-2);line-height:1.55">
+              <strong>1. Waʿd</strong> — promise to purchase<br>
+              <strong>2. Purchase</strong> — society buys &amp; owns<br>
+              <strong>3. Murābaḥah sale</strong> — cost + profit fixed<br>
+              <strong>4. Delivery</strong> — possession to member<br>
+              <strong>5. Schedule</strong> — installments of sale price<br>
+              <span style="color:var(--rose)">Blocked:</span> sale without ownership confirmation
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+  if (!ForgeAPI.requireAuth('index.html')) {}
+  let currentId = null;
+  let current = null;
+  const STAGE_ORDER = ['application','promise','approved','purchased','sold','delivered','active','settled'];
+
+  function calcSale() {
+    const c = Number(document.getElementById('nCost').value)||0;
+    const p = Number(document.getElementById('nProfit').value)||0;
+    document.getElementById('nSale').value = c + p;
+  }
+
+  function stageTag(s) {
+    const map = { active:'tag-g', sold:'tag-b', purchased:'tag-a', settled:'tag-n', cancelled:'tag-r' };
+    return '<span class="tag '+(map[s]||'tag-n')+'">'+(s||'—')+'</span>';
+  }
+
+  async function loadList() {
+    try {
+      const rows = await ForgeAPI.request('/api/murabaha');
+      const tb = document.getElementById('listBody');
+      if (!rows.length) {
+        tb.innerHTML = '<tr><td colspan="6" class="empty">No murābaḥah facilities</td></tr>';
+        return;
+      }
+      tb.innerHTML = rows.map(r =>
+        '<tr>'+
+        '<td class="mono">'+(r.loan_number||'')+'</td>'+
+        '<td>'+(r.member_name||'')+'</td>'+
+        '<td>'+(r.underlying_asset||'—')+'</td>'+
+        '<td>'+ForgeAPI.fmtPKR(r.sale_price||r.outstanding)+'</td>'+
+        '<td>'+stageTag(r.murabaha_stage||r.status)+'</td>'+
+        '<td><button class="btn btn-s" style="height:28px;font-size:11px" onclick="openDetail('+r.id+')">Open</button></td>'+
+        '</tr>'
+      ).join('');
+    } catch (e) {
+      document.getElementById('listBody').innerHTML =
+        '<tr><td colspan="6" class="empty" style="color:#e11d48">'+e.message+' — run sql/03_murabaha.sql + restart API</td></tr>';
+    }
+  }
+
+  async function openDetail(id) {
+    currentId = id;
+    try {
+      const d = await ForgeAPI.request('/api/murabaha/'+id);
+      current = d.facility;
+      document.getElementById('detailCard').style.display = 'block';
+      document.getElementById('detailTitle').textContent = current.loan_number + ' · ' + (current.member_name||'');
+      document.getElementById('detailStage').textContent = current.murabaha_stage || current.status;
+      document.getElementById('dCost').textContent = ForgeAPI.fmtPKR(current.cost_amount);
+      document.getElementById('dProfit').textContent = ForgeAPI.fmtPKR(current.profit_amount);
+      document.getElementById('dSale').textContent = ForgeAPI.fmtPKR(current.sale_price);
+      document.getElementById('dSupplier').textContent = current.supplier_name || '—';
+      document.getElementById('dInvoice').textContent = current.supplier_invoice_ref || '—';
+      document.getElementById('dOwn').textContent = current.ownership_confirmed ? 'Confirmed' : 'Not yet';
+      document.getElementById('dOwn').style.color = current.ownership_confirmed ? 'var(--green)' : 'var(--rose)';
+      document.getElementById('dMcl').textContent = current.mcl_ok ? 'OK' : 'Review';
+
+      const st = current.murabaha_stage || 'application';
+      const idx = STAGE_ORDER.indexOf(st);
+      document.getElementById('stageSteps').innerHTML = STAGE_ORDER.map((s,i) => {
+        let cls = 'step';
+        if (i < idx) cls += ' done';
+        if (i === idx) cls += ' on';
+        return '<span class="'+cls+'">'+s+'</span>';
+      }).join('');
+
+      document.getElementById('pSupplier').value = current.supplier_name || '';
+      document.getElementById('pInvoice').value = current.supplier_invoice_ref || '';
+      document.getElementById('pCost').value = current.cost_amount || '';
+      document.getElementById('pProfit').value = current.profit_amount || '';
+
+      const cl = d.checklist || [];
+      document.getElementById('checkList').innerHTML = cl.length ? cl.map(c =>
+        '<label class="check-item"><input type="checkbox" '+(Number(c.is_done)?'checked':'')+
+        ' onchange="toggleCheck('+c.id+', this)" /><div>'+c.step_title+'</div></label>'
+      ).join('') : '<div class="empty">No checklist</div>';
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function toggleCheck(stepId, el) {
+    try {
+      await ForgeAPI.request('/api/murabaha/'+currentId+'/checklist/'+stepId, {
+        method: 'PATCH', body: JSON.stringify({ is_done: el.checked })
+      });
+    } catch (e) {
+      el.checked = !el.checked;
+      alert(e.message);
+    }
+  }
+
+  async function createFacility() {
+    const msg = document.getElementById('newMsg');
+    msg.textContent = 'Saving…';
+    try {
+      const body = {
+        member_id: Number(document.getElementById('nMember').value),
+        vac_id: 1,
+        underlying_asset: document.getElementById('nAsset').value,
+        cost_amount: Number(document.getElementById('nCost').value),
+        profit_amount: Number(document.getElementById('nProfit').value),
+        sale_price: Number(document.getElementById('nSale').value),
+        supplier_name: document.getElementById('nSupplier').value || null,
+      };
+      const r = await ForgeAPI.request('/api/murabaha', { method: 'POST', body: JSON.stringify(body) });
+      msg.textContent = 'Created ' + r.loan_number + (r.mcl_ok ? '' : ' · MCL review');
+      msg.style.color = 'var(--green)';
+      loadList();
+      openDetail(r.id);
+    } catch (e) {
+      msg.textContent = e.message;
+      msg.style.color = 'var(--rose)';
+    }
+  }
+
+  async function doPurchase() {
+    if (!currentId) return alert('Open a facility');
+    try {
+      await ForgeAPI.request('/api/murabaha/'+currentId+'/purchase', {
+        method: 'POST',
+        body: JSON.stringify({
+          supplier_name: document.getElementById('pSupplier').value,
+          supplier_invoice_ref: document.getElementById('pInvoice').value,
+          cost_amount: Number(document.getElementById('pCost').value)||undefined,
+          profit_amount: Number(document.getElementById('pProfit').value)||undefined,
+          sale_price: (Number(document.getElementById('pCost').value)||0) + (Number(document.getElementById('pProfit').value)||0) || undefined,
+        })
+      });
+      openDetail(currentId); loadList();
+    } catch (e) { alert(e.message); }
+  }
+
+  async function doSell() {
+    if (!currentId) return alert('Open a facility');
+    try {
+      await ForgeAPI.request('/api/murabaha/'+currentId+'/sell', {
+        method: 'POST',
+        body: JSON.stringify({
+          installments: Number(document.getElementById('pInst').value)||4,
+          first_due_date: document.getElementById('pDue').value || null,
+        })
+      });
+      openDetail(currentId); loadList();
+    } catch (e) { alert(e.message); }
+  }
+
+  async function doDeliver() {
+    if (!currentId) return alert('Open a facility');
+    try {
+      await ForgeAPI.request('/api/murabaha/'+currentId+'/deliver', { method: 'POST', body: '{}' });
+      openDetail(currentId); loadList();
+    } catch (e) { alert(e.message); }
+  }
+
+  function showNew() {
+    document.getElementById('nMember').focus();
+  }
+
+  loadList();
+</script>
+</body>
+</html>
