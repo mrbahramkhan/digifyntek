@@ -9,7 +9,7 @@ Empty repo create karein (README mat add karo agar pehle push kar rahe ho).
 ## 2. Remote add + push
 
 ```bash
-cd digital-kisaan-redesign   # ya aapka project path
+cd forge-coop   # ya aapka project path
 
 # GitHub example
 git remote add origin https://github.com/YOUR_USER/forge-coop.git

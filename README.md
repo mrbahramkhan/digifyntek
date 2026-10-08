@@ -1,94 +1,40 @@
-# Forge — Cooperative & Fintech Platform (UX redesign)
+# Forge
 
-Frontend-only redesign of Digital Kisaan. **Backend APIs unchanged** (Option A: same Angular project migration).
+**Cooperative & fintech platform** for village agriculture cooperatives, credit societies, and member-owned financial institutions.
 
-**Brand:** Forge · **Theme:** Light default, dark optional · **CRM:** Members (+ optional Farmer tag)
+Not “Digital Kisaan” — product name is **Forge**.
 
----
+## What it is
 
-## Phase 1 screens
+- Member CRM (optional Farmer tag)
+- Share capital & savings
+- Loans with PAR / MCL
+- Islamic modes: Murābaḥah, Salam, Ijārah, Qard Ḥasan
+- Collateral, instruments, membership cards
+- Cooperative compliance & Pakistan registration checklist
 
-| Screen | File | Covers |
-|--------|------|--------|
-| Login + Dashboard | `phase1/index.html` | Auth shell, KPIs |
-| Members CRM | `phase1/members.html` | List, filters, drawer, Farmer tick |
-| Member 360° | `phase1/member360.html` | Profile, exposure, loans, shares, docs |
-| Membership cards | `phase1/cards.html` | ID cards (not ATM/debit) |
-| Loans · PAR · MCL | `phase1/loans.html` | Aging, PAR 30/90, NPL, provision matrix |
-| Collateral & guarantees | `phase1/collateral.html` | Pledge register, guarantor exposure |
-| Instruments | `phase1/instruments.html` | Loan agreements, share certs, guarantees, receipts |
-| Islamic products | `phase1/islamic.html` | Murābaḥah, Salam, Ijārah, Qard Ḥasan, Muḍārabah |
-| Institution setup | `phase1/setup.html` | Province, society class, finance mode |
-| Cooperative law | `phase1/compliance.html` | AGM, audit, reserve, share 1/5, bye-laws |
-| Registration checklist | `phase1/registration.html` | Pakistan Act 1925 interactive checklist |
-
----
-
-## Explored topics → product mapping
-
-| Research | Delivered in Forge |
-|----------|-------------------|
-| Cooperative Societies Act 1925 compliance | `compliance.html` + `COOPERATIVE_LAW.md` |
-| Non-agricultural classes (housing, consumers…) | `setup.html` society class selector |
-| Punjab vs Sindh vs KP vs Balochistan | `setup.html` province + rule notes |
-| Pakistan registration checklist | `registration.html` + `PAKISTAN_REGISTRATION_CHECKLIST.md` |
-| Cooperative banking (SBP / FBC repeal / DPC) | Setup “institution kind”; banking modules for primary society only |
-| Islamic cooperative + microfinance models | `islamic.html` product pack |
-| Banking gaps (PAR, MCL, collateral, instruments, cards) | `loans`, `collateral`, `instruments`, `cards`, `member360` |
-
----
-
-## Integration docs
-
-| Doc | Path |
-|-----|------|
-| API mapping | `integration/API_MAPPING.md` |
-| Angular services | `integration/ANGULAR_SERVICES.md` |
-| Cooperative law gaps | `integration/COOPERATIVE_LAW.md` |
-| Registration checklist | `integration/PAKISTAN_REGISTRATION_CHECKLIST.md` |
-| Banking modules | `integration/BANKING_MODULES.md` |
-
----
-
-## Out of scope (by design)
-
-- ATM / debit / credit card issuing (SBP licensed banks only)
-- Full commercial bank capital / CRR stack
-- Changing existing Digital Kisaan backend contracts without migration plan
-
----
-
-## How to review
-
-Open HTML files in a browser. Sidebar links navigate between modules.  
-Login prototype: any credentials on `index.html` → dashboard (demo).
-
----
-
-## Backend (MySQL)
-
-Path: `backend/`
+## Quick start
 
 ```bash
-cd backend
-cp .env.example .env
-npm install
-# MySQL must be running
-npm run db:init
-npm start
+./start.sh
+# or
+cd backend && npm install && npm run db:init && npm run db:seed-admin -- 'YourPass!' && npm start
 ```
 
-- Schema: `backend/sql/01_schema.sql`
-- Seed: `backend/sql/02_seed.sql`
-- API docs: `backend/README.md`
-- Mapping: `integration/BACKEND_MYSQL.md`
+Open **http://localhost:4000** · Login: `superadmin` / your seed password
 
-Login: **superadmin** / **12345678**
+## Docs
 
-## Islamic facility ops
-- Murābaḥah: `phase1/murabaha.html`
-- Salam / Ijārah / Qard: `phase1/islamic-ops.html`
-- SQL: `backend/sql/03_murabaha.sql`, `04_islamic_modes.sql`
+| Doc | Topic |
+|-----|--------|
+| [SYSTEM.md](SYSTEM.md) | Full module map |
+| [PRODUCTION.md](PRODUCTION.md) | Hardened deploy |
+| [AUTO.md](AUTO.md) | Zero-touch / CI |
+| [deploy/README.md](deploy/README.md) | nginx + HTTPS |
+| [GIT_DEPLOY.md](GIT_DEPLOY.md) | Git push |
 
-## Production
-See [PRODUCTION.md](PRODUCTION.md) — hardened API + Docker. phase1 HTML is still a prototype UI.
+## Stack
+
+Node.js · Express · MySQL 8 · phase1 UI (served by API) · Docker Compose
+
+Legacy origin: redesigned from an older “Digital Kisaan” app; this codebase is **Forge**.

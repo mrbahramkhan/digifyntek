@@ -466,7 +466,7 @@
             <input type="checkbox" id="isFarmer" checked />
             <div>
               <div class="check-label">This member is a Farmer</div>
-              <div class="check-hint">Maps to existing Farmer entity · API: POST /farmer/save</div>
+              <div class="check-hint">Optional tag on Member · Forge CRM</div>
             </div>
           </label>
 
@@ -585,11 +585,11 @@
           </div>
 
           <div class="api-note">
-            <strong>Backend mapping</strong><br>
-            Save → <code>POST /digitalkisaan/farmer/save</code><br>
-            Update → <code>PUT /digitalkisaan/farmer/update</code><br>
-            List → <code>GET /digitalkisaan/farmer/getByVacs?porOrgacode=&amp;vacCode=</code><br>
-            “Is Farmer” tick → existing farmer entity (all current records are farmers; use for UI filter / future memberType)
+            <strong>Forge API</strong><br>
+            Save → <code>POST /api/members</code><br>
+            Update → <code>PUT /api/members/:id</code><br>
+            List → <code>GET /api/members</code><br>
+            “Is Farmer” → optional CRM flag on Member
           </div>
         </form>
       </div>
