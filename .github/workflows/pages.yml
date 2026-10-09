@@ -1,0 +1,59 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare site (phase1 UI)
+        run: |
+          mkdir -p _site
+          cp -a phase1/. _site/
+          # Project Pages live under /digifyntek/ — keep relative links
+          # Optional config page for API base URL
+          cat > _site/config.js << 'CFG'
+          // Override API base for demo on GitHub Pages (set your live API URL)
+          // Example: localStorage.setItem('DIGIFYNTEK_API_BASE', 'https://api.yourdomain.com');
+          (function () {
+            if (!localStorage.getItem('DIGIFYNTEK_API_BASE')) {
+              // Same-origin has no API on Pages — leave unset so UI shows login errors clearly
+              // Or point to a public demo API if you host one:
+              // localStorage.setItem('DIGIFYNTEK_API_BASE', 'https://YOUR_API_HOST');
+            }
+          })();
+          CFG
+          # inject config.js into index if missing
+          if ! grep -q 'config.js' _site/index.html; then
+            sed -i 's#<script src="js/api.js"></script>#<script src="config.js"></script>\n<script src="js/api.js"></script>#' _site/index.html || true
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

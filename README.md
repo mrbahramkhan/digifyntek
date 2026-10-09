@@ -31,3 +31,15 @@ Open **http://localhost:4000** · Login: `superadmin` / your seed password
 ## Stack
 
 Node.js · Express · MySQL 8 · UI served by API · Docker Compose
+
+
+## GitHub Pages (UI demo)
+
+Static UI: **https://mrbahramkhan.github.io/digifyntek/**
+
+1. Repo **Settings → Pages → Source: GitHub Actions**
+2. Push to `main` (workflow `pages.yml` deploys `phase1/`)
+3. Backend is **not** on Pages — set API URL in browser:
+   ```js
+   localStorage.setItem('DIGIFYNTEK_API_BASE', 'https://YOUR_API_HOST')
+   ```
