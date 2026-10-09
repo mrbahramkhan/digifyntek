@@ -3,1144 +3,382 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DigiFyntek — Cooperative & Fintech Platform</title>
+  <title>DigiFyntek — Cooperative Fintech Platform</title>
+  <meta name="description" content="DigiFyntek is the digital platform for cooperative societies — members, shares, credit, Islamic finance, and compliance in one place." />
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #f6f7f9;
+      --bg: #f8fafc;
       --surface: #ffffff;
-      --surface-2: #f0f2f5;
-      --ink: #111827;
-      --ink-2: #4b5563;
-      --ink-3: #9ca3af;
+      --ink: #0f172a;
+      --muted: #64748b;
       --brand: #0e7490;
       --brand-bright: #06b6d4;
-      --brand-soft: #ecfeff;
       --brand-deep: #164e63;
+      --border: #e2e8f0;
       --green: #059669;
-      --green-soft: #d1fae5;
-      --amber: #d97706;
-      --amber-soft: #fef3c7;
-      --rose: #e11d48;
-      --blue: #2563eb;
-      --blue-soft: #dbeafe;
-      --border: #e5e7eb;
-      --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
-      --shadow-md: 0 8px 24px rgba(0,0,0,0.06);
-      --r: 12px;
-      --r-sm: 8px;
-      --font: 'Inter', system-ui, sans-serif;
-      --serif: 'Source Serif 4', Georgia, serif;
-      --side: 250px;
-      --top: 60px;
+      --radius: 16px;
+      --font: Inter, system-ui, -apple-system, sans-serif;
     }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.55; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--ink);
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* LOGIN */
-    .login {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .login-left {
-      background: var(--brand-deep);
-      color: #ecfeff;
-      padding: 48px 52px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .login-left::before {
-      content: '';
-      position: absolute;
-      width: 400px;
-      height: 400px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(6,182,212,0.18), transparent 70%);
-      top: -100px;
-      right: -80px;
-    }
-
-    .brand-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .brand-mark {
-      width: 42px;
-      height: 42px;
-      background: var(--brand-bright);
-      border-radius: 11px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .brand-mark svg { width: 22px; height: 22px; color: #fff; }
-
-    .brand-name {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-    }
-
-    .hero {
-      position: relative;
-      z-index: 1;
-      max-width: 400px;
-    }
-
-    .hero h1 {
-      font-family: var(--serif);
-      font-size: 38px;
-      font-weight: 500;
-      line-height: 1.2;
-      letter-spacing: -0.02em;
-      margin-bottom: 16px;
-    }
-
-    .hero h1 em {
-      font-style: italic;
-      color: var(--brand-bright);
-    }
-
-    .hero p {
-      font-size: 15px;
-      opacity: 0.75;
-      line-height: 1.65;
-      margin-bottom: 24px;
-    }
-
-    .pills {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .pill {
-      padding: 5px 12px;
-      background: rgba(6,182,212,0.12);
-      border: 1px solid rgba(6,182,212,0.25);
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 500;
-      color: #a5f3fc;
-    }
-
-    .login-foot {
-      position: relative;
-      z-index: 1;
-      font-size: 12px;
-      opacity: 0.4;
-    }
-
-    .login-right {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 48px;
-      background: var(--bg);
-    }
-
-    .form-box {
-      width: 100%;
-      max-width: 370px;
-      background: var(--surface);
-      border-radius: 16px;
-      padding: 36px 32px;
-      box-shadow: var(--shadow-md);
-      border: 1px solid var(--border);
-    }
-
-    .form-box h2 {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 4px;
-    }
-
-    .form-box .sub {
-      font-size: 14px;
-      color: var(--ink-2);
-      margin-bottom: 26px;
-    }
-
-    .field { margin-bottom: 16px; }
-
-    .field label {
-      display: block;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--ink-2);
-      margin-bottom: 6px;
-    }
-
-    .field input {
-      width: 100%;
-      height: 44px;
-      padding: 0 14px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--r-sm);
-      font-size: 14px;
-      font-family: inherit;
-      background: var(--surface-2);
-      color: var(--ink);
-      outline: none;
-      transition: 0.15s;
-    }
-
-    .field input:focus {
-      border-color: var(--brand);
-      background: #fff;
-      box-shadow: 0 0 0 3px rgba(14,116,144,0.12);
-    }
-
-    .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 22px;
-      font-size: 13px;
-    }
-
-    .row label {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      color: var(--ink-2);
-      cursor: pointer;
-    }
-
-    .row input { width: 15px; height: 15px; accent-color: var(--brand); }
-
-    .row a {
-      color: var(--brand);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .btn {
-      width: 100%;
-      height: 46px;
-      background: var(--brand);
-      color: #fff;
-      border: none;
-      border-radius: var(--r-sm);
-      font-size: 14px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      transition: 0.15s;
-    }
-
-    .btn:hover { background: #0c657a; }
-
-    .meta {
-      margin-top: 22px;
-      text-align: center;
-      font-size: 12px;
-      color: var(--ink-3);
-    }
-
-    /* APP */
-    .app { display: none; min-height: 100vh; }
-    .app.on { display: flex; }
-
-    .sidebar {
-      width: var(--side);
-      background: var(--brand-deep);
-      color: #ecfeff;
-      position: fixed;
-      top: 0; left: 0; bottom: 0;
-      display: flex;
-      flex-direction: column;
-      z-index: 40;
-    }
-
-    .side-brand {
-      height: var(--top);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 0 18px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .side-brand .m {
-      width: 32px;
-      height: 32px;
-      background: var(--brand-bright);
-      border-radius: 9px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .side-brand .m svg { width: 16px; height: 16px; color: #fff; }
-
-    .side-brand .n {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-
+    /* Nav */
     .nav {
-      flex: 1;
-      overflow-y: auto;
-      padding: 14px 10px;
-    }
-
-    .sec { margin-bottom: 18px; }
-
-    .sec-t {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      opacity: 0.4;
-      padding: 0 10px;
-      margin-bottom: 5px;
-    }
-
-    .nav a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 11px;
-      border-radius: 9px;
-      color: rgba(236,254,255,0.65);
-      text-decoration: none;
-      font-size: 13.5px;
-      font-weight: 500;
-      margin-bottom: 1px;
-      cursor: pointer;
-      transition: 0.15s;
-    }
-
-    .nav a:hover {
-      background: rgba(255,255,255,0.06);
-      color: #fff;
-    }
-
-    .nav a.active {
-      background: var(--brand);
-      color: #fff;
-    }
-
-    .nav a svg {
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
-      opacity: 0.8;
-    }
-
-    .nav a.active svg { opacity: 1; }
-
-    .badge {
-      margin-left: auto;
-      background: rgba(255,255,255,0.15);
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 999px;
-    }
-
-    .main {
-      margin-left: var(--side);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    .topbar {
-      height: var(--top);
-      background: rgba(246,247,249,0.9);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      position: sticky;
-      top: 0;
-      z-index: 30;
-    }
-
-    .top-title {
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .top-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .search {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 7px 14px;
-      width: 200px;
-    }
-
-    .search input {
-      border: none;
-      outline: none;
-      background: transparent;
-      font-size: 13px;
-      font-family: inherit;
-      width: 100%;
-    }
-
-    .search input::placeholder { color: var(--ink-3); }
-    .search svg { width: 14px; height: 14px; color: var(--ink-3); }
-
-    .ib {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--ink-2);
-      position: relative;
-    }
-
-    .ib:hover { border-color: var(--brand); color: var(--brand); }
-    .ib svg { width: 16px; height: 16px; }
-
-    .ib .d {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 7px;
-      height: 7px;
-      background: var(--rose);
-      border-radius: 50%;
-      border: 2px solid var(--bg);
-    }
-
-    .av {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: var(--brand);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .content { padding: 24px; flex: 1; }
-
-    .org {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      background: var(--brand-soft);
-      color: var(--brand);
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 500;
-      margin-bottom: 16px;
-    }
-
-    .welcome {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-bottom: 22px;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .welcome h1 {
-      font-family: var(--serif);
-      font-size: 26px;
-      font-weight: 500;
-      letter-spacing: -0.02em;
-      margin-bottom: 4px;
-    }
-
-    .welcome p {
-      font-size: 14px;
-      color: var(--ink-2);
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-o {
-      height: 36px;
-      padding: 0 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r-sm);
-      font-size: 13px;
-      font-weight: 500;
-      font-family: inherit;
-      color: var(--ink);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn-o:hover {
-      border-color: var(--brand);
-      color: var(--brand);
-      background: var(--brand-soft);
-    }
-
-    .btn-o svg { width: 14px; height: 14px; }
-
-    .btn-p {
-      height: 36px;
-      padding: 0 14px;
-      background: var(--brand);
-      border: none;
-      border-radius: var(--r-sm);
-      font-size: 13px;
-      font-weight: 600;
-      font-family: inherit;
-      color: #fff;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn-p:hover { background: #0c657a; }
-    .btn-p svg { width: 14px; height: 14px; }
-
-    /* KPI CARDS */
-    .kpis {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .kpi {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 18px;
-      box-shadow: var(--shadow);
-      transition: 0.15s;
-    }
-
-    .kpi:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-1px);
-    }
-
-    .kpi-t {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-
-    .kpi-i {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .kpi-i.c { background: var(--brand-soft); color: var(--brand); }
-    .kpi-i.g { background: var(--green-soft); color: var(--green); }
-    .kpi-i.a { background: var(--amber-soft); color: var(--amber); }
-    .kpi-i.b { background: var(--blue-soft); color: var(--blue); }
-
-    .kpi-i svg { width: 17px; height: 17px; }
-
-    .delta {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 999px;
-    }
-
-    .delta.up {
-      color: var(--green);
-      background: var(--green-soft);
-    }
-
-    .delta.neutral {
-      color: var(--ink-2);
-      background: var(--surface-2);
-    }
-
-    .delta.warn {
-      color: var(--amber);
-      background: var(--amber-soft);
-    }
-
-    .kpi-n {
-      font-size: 26px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-
-    .kpi-n .unit {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--ink-3);
-      margin-left: 2px;
-    }
-
-    .kpi-l {
-      font-size: 12px;
-      color: var(--ink-2);
-      font-weight: 500;
-    }
-
-    .kpi-sub {
-      font-size: 11px;
-      color: var(--ink-3);
-      margin-top: 6px;
-    }
-
-    .grid2 {
-      display: grid;
-      grid-template-columns: 1.3fr 1fr;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .panel-h {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255,255,255,.85); backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
     }
-
-    .panel-h h3 {
-      font-size: 13px;
-      font-weight: 600;
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      height: 64px; display: flex; align-items: center; gap: 28px;
     }
-
-    .panel-b { padding: 16px; }
-
-    .note {
-      font-size: 12px;
-      color: var(--ink-3);
-      margin-bottom: 12px;
-      padding: 8px 10px;
-      background: var(--surface-2);
-      border-radius: 8px;
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+    .logo img { width: 36px; height: 36px; border-radius: 10px; }
+    .nav-links { display: flex; gap: 22px; margin-left: 12px; flex: 1; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: var(--muted); }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-cta { display: flex; gap: 10px; align-items: center; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 40px; padding: 0 18px; border-radius: 10px; font-size: 14px; font-weight: 600;
+      border: none; cursor: pointer; font-family: inherit; transition: .15s ease;
     }
+    .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: #f1f5f9; }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover { background: var(--brand-deep); }
+    .btn-lg { height: 48px; padding: 0 24px; font-size: 15px; border-radius: 12px; }
 
-    .member-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    /* Hero */
+    .hero {
+      max-width: 1100px; margin: 0 auto; padding: 72px 24px 56px;
+      display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px; align-items: center;
     }
-
-    .member {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px;
-      background: var(--surface-2);
-      border-radius: 10px;
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+      color: var(--brand); background: #ecfeff; border: 1px solid #a5f3fc;
+      padding: 6px 12px; border-radius: 999px; margin-bottom: 18px;
     }
-
-    .member .av2 {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: var(--brand);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 600;
-      flex-shrink: 0;
+    .hero h1 {
+      font-size: clamp(32px, 4.5vw, 48px); font-weight: 800; letter-spacing: -0.03em;
+      line-height: 1.12; margin-bottom: 16px;
     }
+    .hero h1 span { color: var(--brand); }
+    .hero-lead { font-size: 18px; color: var(--muted); max-width: 520px; margin-bottom: 28px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 20px; font-size: 13px; color: var(--muted); }
+    .hero-meta strong { color: var(--ink); display: block; font-size: 16px; }
 
-    .member .info { flex: 1; min-width: 0; }
-    .member .name { font-size: 13px; font-weight: 600; }
-    .member .meta2 { font-size: 11px; color: var(--ink-3); }
-
-    .tag {
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: var(--green-soft);
-      color: var(--green);
+    .hero-card {
+      background: linear-gradient(145deg, var(--brand-deep), var(--brand));
+      border-radius: 24px; padding: 28px; color: #ecfeff;
+      box-shadow: 0 24px 48px rgba(14, 116, 144, .28);
+      position: relative; overflow: hidden;
     }
-
-    .tag.member-only {
-      background: #e0e7ff;
-      color: #4338ca;
+    .hero-card::after {
+      content: ''; position: absolute; right: -40px; top: -40px;
+      width: 160px; height: 160px; border-radius: 50%;
+      background: rgba(255,255,255,.08);
     }
-
-    .grid3 {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-    }
-
+    .hero-card h3 { font-size: 15px; opacity: .8; font-weight: 500; margin-bottom: 8px; }
+    .hero-card .big { font-size: 28px; font-weight: 700; margin-bottom: 20px; }
+    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .stat {
-      display: flex;
-      justify-content: space-between;
-      padding: 9px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
+      background: rgba(255,255,255,.1); border-radius: 14px; padding: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .stat .l { font-size: 11px; opacity: .75; }
+    .stat .v { font-size: 18px; font-weight: 700; margin-top: 4px; }
+
+    /* Sections */
+    section { padding: 72px 24px; }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .sec-h { text-align: center; max-width: 640px; margin: 0 auto 40px; }
+    .sec-h h2 { font-size: clamp(26px, 3vw, 34px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
+    .sec-h p { color: var(--muted); font-size: 16px; }
+
+    .features {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+    }
+    .feature {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+      transition: box-shadow .15s ease, transform .15s ease;
+    }
+    .feature:hover { box-shadow: 0 12px 28px rgba(15, 23, 42, .06); transform: translateY(-2px); }
+    .feature .icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: #ecfeff; color: var(--brand); display: grid; place-items: center;
+      margin-bottom: 14px; font-size: 20px;
+    }
+    .feature h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .feature p { font-size: 14px; color: var(--muted); }
+
+    .band {
+      background: var(--brand-deep); color: #ecfeff; padding: 64px 24px;
+    }
+    .band .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+    .band h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
+    .band p { opacity: .85; margin-bottom: 20px; }
+    .checklist { list-style: none; }
+    .checklist li {
+      display: flex; gap: 10px; align-items: flex-start;
+      font-size: 14px; margin-bottom: 10px; opacity: .95;
+    }
+    .checklist li::before {
+      content: '✓'; flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(6, 182, 212, .25); color: #67e8f9;
+      display: grid; place-items: center; font-size: 12px; font-weight: 700;
     }
 
-    .stat:last-child { border-bottom: none; }
-    .stat-l { color: var(--ink-2); }
-    .stat-v { font-weight: 600; }
+    .modes {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    }
+    .mode {
+      background: #fff; border: 1px solid var(--border); border-radius: 14px;
+      padding: 18px; text-align: center;
+    }
+    .mode strong { display: block; font-size: 15px; margin-bottom: 4px; }
+    .mode span { font-size: 12px; color: var(--muted); }
 
-    .q {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+    .cta {
+      text-align: center; padding: 80px 24px;
+      background: linear-gradient(180deg, #f8fafc, #ecfeff);
+    }
+    .cta h2 { font-size: 32px; font-weight: 800; margin-bottom: 12px; }
+    .cta p { color: var(--muted); margin-bottom: 24px; }
+
+    footer {
+      border-top: 1px solid var(--border); background: #fff;
+      padding: 40px 24px 28px;
+    }
+    .foot-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 28px;
+    }
+    .foot-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; margin-bottom: 10px; }
+    .foot-brand img { width: 28px; height: 28px; border-radius: 8px; }
+    footer p { font-size: 13px; color: var(--muted); max-width: 280px; }
+    footer h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 12px; }
+    footer ul { list-style: none; }
+    footer li { margin-bottom: 8px; }
+    footer a { font-size: 14px; color: var(--ink); }
+    footer a:hover { color: var(--brand); }
+    .foot-bottom {
+      max-width: 1100px; margin: 28px auto 0; padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px; color: var(--muted);
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
     }
 
-    .q-b {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      padding: 12px 8px;
-      background: var(--surface-2);
-      border: 1px solid transparent;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--ink-2);
-      cursor: pointer;
-      font-family: inherit;
-      transition: 0.15s;
-    }
-
-    .q-b:hover {
-      background: var(--brand-soft);
-      color: var(--brand);
-      border-color: #a5f3fc;
-    }
-
-    .q-b svg { width: 18px; height: 18px; }
-
-    .demo {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 100;
-      display: flex;
-      gap: 4px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 4px;
-      box-shadow: var(--shadow-md);
-    }
-
-    .demo button {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 500;
-      font-family: inherit;
-      cursor: pointer;
-      background: transparent;
-      color: var(--ink-2);
-    }
-
-    .demo button.on {
-      background: var(--brand);
-      color: #fff;
-    }
-
-    @media (max-width: 1100px) {
-      .kpis { grid-template-columns: repeat(2, 1fr); }
-      .grid2, .grid3 { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 800px) {
-      .login { grid-template-columns: 1fr; }
-      .login-left { display: none; }
-      .sidebar { transform: translateX(-100%); }
-      .main { margin-left: 0; }
+    @media (max-width: 900px) {
+      .hero, .band .wrap, .features, .modes, .foot-inner { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .hero { padding-top: 40px; }
     }
   </style>
 </head>
 <body>
-
-  <div class="login" id="login">
-    <div class="login-left">
-      <div class="brand-row">
-        <div class="brand-mark">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/>
-            <path d="M12 7v5l3 3"/>
-          </svg>
-        </div>
-        <div class="brand-row" style="display:flex;align-items:center;gap:12px">
-          <img src="assets/logo.svg" alt="DigiFyntek" width="40" height="40" style="border-radius:10px" />
-          <div class="brand-name">DigiFyntek</div>
-        </div>
-      </div>
-
-      <div class="hero">
-        <h1>One platform for <em>cooperatives</em> &amp; financial institutions</h1>
-        <p>Members, credit, savings, inventory and governance — built flexible so you can serve farmers, traders, or any member type.</p>
-        <div class="pills">
-          <span class="pill">CRM-ready</span>
-          <span class="pill">Multi-product</span>
-          <span class="pill">Secure</span>
-        </div>
-      </div>
-
-      <div class="login-foot">© 2026 MFSYS Technologies</div>
-    </div>
-
-    <div class="login-right">
-      <div class="form-box">
-        <h2>Sign in</h2>
-        <p class="sub">Continue to DigiFyntek</p>
-        <form id="loginForm" onsubmit="event.preventDefault(); doLogin()">
-          <div class="field">
-            <label>User ID</label>
-            <input type="text" id="loginUser" placeholder="User ID" value="superadmin" autocomplete="username" />
-          </div>
-          <div class="field">
-            <label>Password</label>
-            <input type="password" id="loginPass" placeholder="Password" value="12345678" autocomplete="current-password" />
-          </div>
-          <div class="row">
-            <label><input type="checkbox" checked /> Remember me</label>
-            <a href="#">Forgot password?</a>
-          </div>
-          <button type="submit" class="btn" id="loginBtn">Sign in</button>
-          <p id="loginError" style="display:none;color:#e11d48;font-size:13px;margin-top:10px;"></p>
-        </form>
-        <div class="meta">API · <span id="apiBaseHint">localhost:4000</span> · MFSYS</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="app" id="app">
-    <aside class="sidebar">
-      <div class="side-brand">
-        <div class="m" style="padding:0;background:transparent;overflow:hidden">
-          <img src="assets/logo.svg" alt="" width="32" height="32" style="display:block;border-radius:9px" />
-        </div>
-        <div class="n">DigiFyntek</div>
-      </div>
-
-      <nav class="nav">
-        <div class="sec">
-          <div class="sec-t">Overview</div>
-          <a class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a>
-        </div>
-        <div class="sec">
-          <div class="sec-t">CRM</div>
-          <a href="members.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Members</a>
-          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Member</a>
-          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg> Shares</a>
-        </div>
-        <div class="sec">
-          <div class="sec-t">Governance</div>
-          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Institution</a>
-          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Staff & Board</a>
-          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Meetings & Audit</a>
-        </div>
-        <div class="sec">
-          <div class="sec-t">Finance</div>
-          <a href="loans.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Credit & Lending</a>
-          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Revolving Fund</a>
-          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> Inventory</a>
-          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Accounting</a>
-          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2z"/></svg> Savings</a>
-        </div>
-        <div class="sec">
-          <div class="sec-t">System</div>
-          <a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</a>
-        </div>
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="logo" href="index.html">
+        <img src="assets/logo.svg" alt="DigiFyntek" />
+        DigiFyntek
+      </a>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#islamic">Islamic finance</a>
+        <a href="#compliance">Compliance</a>
+        <a href="#product">Product</a>
       </nav>
-    </aside>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="app.html">Sign in</a>
+        <a class="btn btn-primary" href="app.html">Open platform</a>
+      </div>
+    </div>
+  </header>
 
-    <div class="main">
-      <header class="topbar">
-        <div class="top-title">Dashboard</div>
-        <div class="top-right">
-          <div class="search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input type="text" placeholder="Search members..." />
-          </div>
-          <button class="ib">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <span class="d"></span>
-          </button>
-          <div class="av">SA</div>
+  <main>
+    <div class="hero">
+      <div>
+        <div class="eyebrow">Cooperative fintech</div>
+        <h1>Digital finance for <span>member-owned</span> institutions</h1>
+        <p class="hero-lead">
+          DigiFyntek helps cooperative societies run members, shares, credit, savings,
+          and Sharīʿah-compliant products — with governance and risk tools built in.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-lg" href="app.html">Launch app</a>
+          <a class="btn btn-ghost btn-lg" href="#features">Explore features</a>
         </div>
-      </header>
-
-      <div class="content">
-        <div class="org">Gayal Agriculture Cooperative Society · 24 Sep 2026</div>
-
-        <div class="welcome">
-          <div>
-            <h1>Good afternoon</h1>
-            <p>Key performance metrics for your institution.</p>
-          </div>
-          <div class="actions">
-            <button class="btn-o">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Export
-            </button>
-            <button class="btn-p">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add Member
-            </button>
-          </div>
+        <div class="hero-meta">
+          <div><strong>CRM</strong> Members &amp; profiles</div>
+          <div><strong>Credit</strong> PAR · MCL · collateral</div>
+          <div><strong>Islamic</strong> Murābaḥah · Salam · more</div>
         </div>
-
-        <!-- IMPROVED KPIs -->
-        <div class="kpis">
-          <div class="kpi">
-            <div class="kpi-t">
-              <div class="kpi-i c">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </div>
-              <span class="delta up">↑ 12%</span>
-            </div>
-            <div class="kpi-n" id="kpiMembers">—</div>
-            <div class="kpi-l">Total Members</div>
-            <div class="kpi-sub" id="kpiFarmers">— tagged as Farmer</div>
-          </div>
-
-          <div class="kpi">
-            <div class="kpi-t">
-              <div class="kpi-i g">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-              </div>
-              <span class="delta warn">3 pending</span>
-            </div>
-            <div class="kpi-n" id="kpiLoans">—</div>
-            <div class="kpi-l">Active Loans</div>
-            <div class="kpi-sub">From portfolio</div>
-          </div>
-
-          <div class="kpi">
-            <div class="kpi-t">
-              <div class="kpi-i a">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              </div>
-              <span class="delta neutral">PKR</span>
-            </div>
-            <div class="kpi-n" id="kpiPortfolio">—</div>
-            <div class="kpi-l">Portfolio Outstanding</div>
-            <div class="kpi-sub">Across all products</div>
-          </div>
-
-          <div class="kpi">
-            <div class="kpi-t">
-              <div class="kpi-i b">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              </div>
-              <span class="delta up">↑ 2.1%</span>
-            </div>
-            <div class="kpi-n" id="kpiPar">—</div>
-            <div class="kpi-l">PAR (approx)</div>
-            <div class="kpi-sub">Non-current outstanding %</div>
-          </div>
-        </div>
-
-        <div class="grid2">
-          <div class="panel">
-            <div class="panel-h"><h3>Recent Members</h3></div>
-            <div class="panel-b">
-              <div class="note">CRM view — when adding a member, tick “Farmer” if they are a farmer. Same form works for any member type.</div>
-              <div class="member-list" id="recentMembers">
-                <div class="member"><div class="info"><div class="name">Loading…</div></div></div>
-              </div>
-            </div>
-          </div>
-          <div class="panel">
-            <div class="panel-h"><h3>Portfolio Snapshot</h3></div>
-            <div class="panel-b">
-              <div class="stat"><span class="stat-l">Total Members</span><span class="stat-v" id="snapMembers">—</span></div>
-              <div class="stat"><span class="stat-l">Farmers (tagged)</span><span class="stat-v" id="snapFarmers" style="color:var(--green)">—</span></div>
-              <div class="stat"><span class="stat-l">Active Loans</span><span class="stat-v" id="snapLoans">—</span></div>
-              <div class="stat"><span class="stat-l">Outstanding</span><span class="stat-v" id="snapOs">—</span></div>
-              <div class="stat"><span class="stat-l">PAR approx</span><span class="stat-v" id="snapPar" style="color:var(--green)">—</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid3">
-          <div class="panel">
-            <div class="panel-h"><h3>Household Outreach</h3></div>
-            <div class="panel-b">
-              <div style="font-size:24px;font-weight:700;">0.23%</div>
-              <div style="font-size:12px;color:var(--ink-2);margin:4px 0 12px;">17 of 7,352 households</div>
-              <div class="stat"><span class="stat-l">Registered</span><span class="stat-v" style="color:var(--brand)">17</span></div>
-              <div class="stat"><span class="stat-l">Unregistered</span><span class="stat-v">7,335</span></div>
-            </div>
-          </div>
-          <div class="panel">
-            <div class="panel-h"><h3>Quick Actions</h3></div>
-            <div class="panel-b">
-              <div class="q">
-                <button class="q-b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Add Member</button>
-                <button class="q-b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> New Loan</button>
-                <button class="q-b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Revolving Fund</button>
-                <button class="q-b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Meetings</button>
-              </div>
-            </div>
-          </div>
-          <div class="panel">
-            <div class="panel-h"><h3>Recent Activity</h3></div>
-            <div class="panel-b" style="padding-top:6px;">
-              <div class="stat"><span class="stat-l">Hasnain Malik added</span><span class="stat-v" style="font-size:11px;color:var(--ink-3)">Yesterday</span></div>
-              <div class="stat"><span class="stat-l">Zain Ali added</span><span class="stat-v" style="font-size:11px;color:var(--ink-3)">Yesterday</span></div>
-              <div class="stat"><span class="stat-l">arslan added</span><span class="stat-v" style="font-size:11px;color:var(--ink-3)">Yesterday</span></div>
-              <div class="stat"><span class="stat-l">Share purchase</span><span class="stat-v" style="font-size:11px;color:var(--ink-3)">2 days ago</span></div>
-            </div>
-          </div>
+      </div>
+      <div class="hero-card">
+        <h3>Platform snapshot</h3>
+        <div class="big">One system for the society</div>
+        <div class="stat-row">
+          <div class="stat"><div class="l">Members</div><div class="v">CRM + cards</div></div>
+          <div class="stat"><div class="l">Capital</div><div class="v">Shares</div></div>
+          <div class="stat"><div class="l">Credit</div><div class="v">Loans + PAR</div></div>
+          <div class="stat"><div class="l">Savings</div><div class="v">Accounts</div></div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="demo">
-    <button class="on" id="b1" onclick="goLogin()">Login</button>
-    <button id="b2" onclick="goApp()">Dashboard</button>
-  </div>
+    <section id="features">
+      <div class="wrap">
+        <div class="sec-h">
+          <h2>Built for real cooperative operations</h2>
+          <p>From village credit societies to multi-product institutions — modules that match how you work.</p>
+        </div>
+        <div class="features">
+          <div class="feature">
+            <div class="icon">👤</div>
+            <h3>Member CRM</h3>
+            <p>Onboard members, optional farmer tag, 360° view, membership cards, and share folios.</p>
+          </div>
+          <div class="feature">
+            <div class="icon">📊</div>
+            <h3>Credit &amp; risk</h3>
+            <p>Loan products, disbursement, repayments, PAR buckets, aging, and MCL-style exposure checks.</p>
+          </div>
+          <div class="feature">
+            <div class="icon">💰</div>
+            <h3>Shares &amp; savings</h3>
+            <p>Share capital register and savings accounts with deposits and withdrawals.</p>
+          </div>
+          <div class="feature">
+            <div class="icon">📋</div>
+            <h3>Collateral &amp; instruments</h3>
+            <p>Register security, guarantees, and formal instruments linked to facilities.</p>
+          </div>
+          <div class="feature">
+            <div class="icon">⚖️</div>
+            <h3>Compliance</h3>
+            <p>Institution setup, province rules, and Pakistan cooperative registration checklist.</p>
+          </div>
+          <div class="feature">
+            <div class="icon">🌙</div>
+            <h3>Islamic modes</h3>
+            <p>Murābaḥah with ownership gates, plus Salam, Ijārah, and Qard Ḥasan workflows.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <script src="config.js"></script>
-<script src="js/api.js"></script>
-<script src="js/shell.js"></script>
-  <script>
-    document.getElementById('apiBaseHint').textContent = (DigiFyntekAPI.BASE || '').replace(/^https?:\/\//, '');
+    <div class="band" id="islamic">
+      <div class="wrap">
+        <div>
+          <h2>Islamic finance, structured properly</h2>
+          <p>Product flows designed around cost disclosure, ownership, and stage control — not a simple interest rename.</p>
+          <a class="btn btn-primary" href="app.html" style="background:#06b6d4;color:#164e63">Try Islamic ops</a>
+        </div>
+        <ul class="checklist">
+          <li>Murābaḥah — cost, profit, sale price, ownership confirmation</li>
+          <li>Salam — advance purchase for agricultural cycles</li>
+          <li>Ijārah — lease-style asset use</li>
+          <li>Qard Ḥasan — benevolent zero-profit lending</li>
+        </ul>
+      </div>
+    </div>
 
-    function goLogin() {
-      document.getElementById('login').style.display = 'grid';
-      document.getElementById('app').classList.remove('on');
-      document.getElementById('b1').classList.add('on');
-      document.getElementById('b2').classList.remove('on');
-    }
-    function goApp() {
-      document.getElementById('login').style.display = 'none';
-      document.getElementById('app').classList.add('on');
-      document.getElementById('b1').classList.remove('on');
-      document.getElementById('b2').classList.add('on');
-      loadDashboard();
-    }
+    <section id="product">
+      <div class="wrap">
+        <div class="sec-h">
+          <h2>Product modes at a glance</h2>
+          <p>Conventional, Islamic, or hybrid — configured in institution setup.</p>
+        </div>
+        <div class="modes">
+          <div class="mode"><strong>Conventional</strong><span>Interest products</span></div>
+          <div class="mode"><strong>Islamic</strong><span>Profit / rent / cost-plus</span></div>
+          <div class="mode"><strong>Hybrid</strong><span>Both under one roof</span></div>
+          <div class="mode"><strong>Governance</strong><span>Setup &amp; checklist</span></div>
+        </div>
+      </div>
+    </section>
 
-    async function doLogin() {
-      const err = document.getElementById('loginError');
-      const btn = document.getElementById('loginBtn');
-      err.style.display = 'none';
-      btn.disabled = true;
-      btn.textContent = 'Signing in…';
-      try {
-        await DigiFyntekAPI.login(
-          document.getElementById('loginUser').value.trim(),
-          document.getElementById('loginPass').value
-        );
-        goApp();
-      } catch (e) {
-        err.textContent = e.message || 'Login failed — is API running on ' + DigiFyntekAPI.BASE + '?';
-        err.style.display = 'block';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Sign in';
-      }
-    }
+    <section id="compliance" style="padding-top:0">
+      <div class="wrap">
+        <div class="sec-h">
+          <h2>Compliance-aware by design</h2>
+          <p>Province, society class, and registration readiness — so software follows cooperative practice.</p>
+        </div>
+        <div class="features">
+          <div class="feature">
+            <div class="icon">🏛️</div>
+            <h3>Institution setup</h3>
+            <p>Province, society class, finance mode, and registered identity.</p>
+          </div>
+          <div class="feature">
+            <div class="icon">✅</div>
+            <h3>Registration checklist</h3>
+            <p>Pakistan-oriented steps for cooperative registration readiness.</p>
+          </div>
+          <div class="feature">
+            <div class="icon">🔒</div>
+            <h3>Hardened API</h3>
+            <p>JWT auth, bcrypt passwords, rate limits, and health probes for deployment.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    async function loadDashboard() {
-      if (!DigiFyntekAPI.token()) return;
-      try {
-        const k = await DigiFyntekAPI.kpis();
-        document.getElementById('kpiMembers').textContent = k.totalMembers;
-        document.getElementById('kpiFarmers').textContent = k.farmers + ' tagged as Farmer';
-        document.getElementById('kpiLoans').textContent = k.activeLoans;
-        document.getElementById('kpiPortfolio').textContent = DigiFyntekAPI.fmtPKR(k.portfolioOutstanding);
-        document.getElementById('kpiPar').textContent = (Number(k.par30ApproxPct) || 0).toFixed(1) + '%';
-        document.getElementById('snapMembers').textContent = k.totalMembers;
-        document.getElementById('snapFarmers').textContent = k.farmers;
-        document.getElementById('snapLoans').textContent = k.activeLoans;
-        document.getElementById('snapOs').textContent = DigiFyntekAPI.fmtPKR(k.portfolioOutstanding);
-        document.getElementById('snapPar').textContent = (Number(k.par30ApproxPct) || 0).toFixed(1) + '%';
+    <div class="cta">
+      <h2>Ready to run DigiFyntek?</h2>
+      <p>Open the platform UI. Connect your API host for live data.</p>
+      <a class="btn btn-primary btn-lg" href="app.html">Sign in to platform</a>
+    </div>
+  </main>
 
-        const members = await DigiFyntekAPI.members();
-        const box = document.getElementById('recentMembers');
-        const latest = (members || []).slice(0, 5);
-        if (!latest.length) {
-          box.innerHTML = '<div class="member"><div class="info"><div class="name">No members yet</div></div></div>';
-        } else {
-          box.innerHTML = latest.map(m => {
-            const tag = m.is_farmer ? '<span class="tag">Farmer</span>' : '<span class="tag member-only">Member</span>';
-            return '<div class="member"><div class="av2">' + DigiFyntekAPI.initials(m.full_name) +
-              '</div><div class="info"><div class="name">' + (m.full_name || '') +
-              '</div><div class="meta2">CNIC · ' + (m.cnic || '') + '</div></div>' + tag + '</div>';
-          }).join('');
-        }
-      } catch (e) {
-        console.error(e);
-        if (e.status === 401) { DigiFyntekAPI.clearSession(); goLogin(); }
-      }
-    }
-
-    // Auto-enter app if already logged in
-    if (DigiFyntekAPI.token()) goApp();
-  </script>
+  <footer>
+    <div class="foot-inner">
+      <div>
+        <div class="foot-brand">
+          <img src="assets/logo.svg" alt="" />
+          DigiFyntek
+        </div>
+        <p>Cooperative fintech for member-owned institutions — credit, capital, compliance, and Islamic modes.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#islamic">Islamic finance</a></li>
+          <li><a href="app.html">Platform login</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="https://github.com/mrbahramkhan/digifyntek" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://github.com/mrbahramkhan/digifyntek#readme" target="_blank" rel="noopener">Documentation</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="members.html">Members</a></li>
+          <li><a href="loans.html">Loans</a></li>
+          <li><a href="murabaha.html">Murābaḥah</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© DigiFyntek</span>
+      <span>Cooperative &amp; fintech platform</span>
+    </div>
+  </footer>
 </body>
 </html>

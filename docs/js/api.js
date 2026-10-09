@@ -82,7 +82,7 @@
 
     logout() {
       clearSession();
-      window.location.href = 'index.html';
+      window.location.href = 'app.html';
     },
 
     kpis() {

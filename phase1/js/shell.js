@@ -2,7 +2,7 @@
 (function (g) {
   const LINKS = [
     { sec: 'Overview', items: [
-      { href: 'index.html', label: 'Dashboard' },
+      { href: 'app.html', label: 'Dashboard' },
     ]},
     { sec: 'CRM', items: [
       { href: 'members.html', label: 'Members' },
@@ -43,7 +43,7 @@
       if (g.DigiFyntekAPI) DigiFyntekAPI.logout();
       else {
         localStorage.removeItem('FORGE_TOKEN');
-        location.href = 'index.html';
+        location.href = 'app.html';
       }
     };
     // place before avatar if present
@@ -158,7 +158,7 @@
       injectLogo();
       injectTheme();
       if (g.DigiFyntekAPI && pageName() !== 'index.html') {
-        DigiFyntekAPI.requireAuth('index.html');
+        DigiFyntekAPI.requireAuth('app.html');
       }
     } catch (e) {
       console.warn(e);
