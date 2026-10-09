@@ -2,14 +2,11 @@ const express = require('express');
 const { auth } = require('../middleware/auth');
 const legacy = require('../legacy/queries');
 const router = express.Router();
-const LEGACY = process.env.DB_MODE === 'legacy' || process.env.DB_NAME === 'digitalkisaan';
 
 router.get('/', auth(), async (req, res, next) => {
   try {
-    if (LEGACY) {
-      return res.json(await legacy.listDeposits({ orgCode: req.user.orgCode || req.user.orgId || '001' }));
-    }
-    res.json([]);
+    const orgCode = req.user.orgCode || req.user.orgId || '001';
+    res.json(await legacy.listVacs({ orgCode }));
   } catch (e) {
     next(e);
   }
