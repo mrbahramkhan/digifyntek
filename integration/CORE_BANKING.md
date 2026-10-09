@@ -25,3 +25,18 @@ Requires `DB_MODE=legacy` and database `digifyntek` with Digital Kisaan tables.
 - Automated day-end batch
 - Interest accrual engine
 - Inter-account transfer wizard with authorization workflow
+
+## Posting / Day-end / Accrual
+
+| Action | API | Behavior |
+|--------|-----|----------|
+| Journal posting | `POST /api/core/posting` | Balanced Dr/Cr lines → `tbl_mastertransaction` + `tbl_generaltransaction` |
+| Day-end | `POST /api/core/day-end` | Marks authorized unposted txns as `tran_posted=1` for date |
+| Interest accrual | `POST /api/core/accrual` | Daily interest on open loans; `tbl_dailyaccountbalanceandprofit`; updates `loan_totalinterest` + balance |
+| Unposted count | `GET /api/core/unposted-count` | Authorized but not posted |
+
+### Accrual formula
+
+`profit = balance × (annual_rate / 100) / 365 × days`
+
+Optional journal if `interest_gl` + `income_gl` provided.

@@ -202,6 +202,16 @@
     api.coreStatement = function (accountNo) {
       return request('/api/core/statement/' + encodeURIComponent(accountNo));
     };
+    api.corePosting = function (body) {
+      return request('/api/core/posting', { method: 'POST', body: JSON.stringify(body) });
+    };
+    api.coreDayEnd = function (body) {
+      return request('/api/core/day-end', { method: 'POST', body: JSON.stringify(body || {}) });
+    };
+    api.coreAccrual = function (body) {
+      return request('/api/core/accrual', { method: 'POST', body: JSON.stringify(body || {}) });
+    };
+    api.coreUnposted = function () { return request('/api/core/unposted-count'); };
     global.DigiFyntekAPI = api;
 
 })(window);

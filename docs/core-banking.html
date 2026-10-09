@@ -60,6 +60,9 @@
         <button class="tab" data-t="dp" onclick="showTab(this,'dp')">Deposit products</button>
         <button class="tab" data-t="lp" onclick="showTab(this,'lp')">Loan products</button>
         <button class="tab" data-t="stmt" onclick="showTab(this,'stmt')">Account statement</button>
+        <button class="tab" data-t="post" onclick="showTab(this,'post')">Posting</button>
+        <button class="tab" data-t="day" onclick="showTab(this,'day')">Day-end</button>
+        <button class="tab" data-t="accrual" onclick="showTab(this,'accrual')">Interest accrual</button>
       </div>
 
       <div id="panel-txn" class="panel">
@@ -89,7 +92,72 @@
         </div>
         <div class="card"><table><thead><tr><th>Date</th><th>Txn #</th><th>Code</th><th>Narration</th><th>Dr/Cr</th><th>Amount</th><th>GL</th></tr></thead>
         <tbody id="tb-stmt"><tr><td colspan="7">Enter account number</td></tr></tbody></table></div>
+      
+      <div id="panel-post" class="panel" hidden>
+        <div class="card" style="padding:16px">
+          <div class="tools">
+            <input id="pVac" placeholder="VAC code" value="0001" style="min-width:100px" />
+            <input id="pDate" type="date" />
+            <input id="pNarr" placeholder="Narration" style="min-width:220px;flex:1" />
+            <label style="font-size:12px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="pPost" /> Post now</label>
+          </div>
+          <table><thead><tr><th>GL code</th><th>Dr/Cr</th><th>Amount</th><th>Account # (opt)</th><th></th></tr></thead>
+          <tbody id="postLines">
+            <tr>
+              <td><input class="gl" placeholder="GL" style="min-width:120px;width:100%" /></td>
+              <td><select class="dc"><option value="D">Debit</option><option value="C">Credit</option></select></td>
+              <td><input class="amt" type="number" step="0.01" placeholder="0" style="min-width:100px;width:100%" /></td>
+              <td><input class="acc" placeholder="Account" style="min-width:100px;width:100%" /></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><input class="gl" placeholder="GL" style="min-width:120px;width:100%" /></td>
+              <td><select class="dc"><option value="C">Credit</option><option value="D">Debit</option></select></td>
+              <td><input class="amt" type="number" step="0.01" placeholder="0" style="min-width:100px;width:100%" /></td>
+              <td><input class="acc" placeholder="Account" style="min-width:100px;width:100%" /></td>
+              <td></td>
+            </tr>
+          </tbody></table>
+          <div class="tools" style="margin-top:12px">
+            <button class="btn" type="button" onclick="addPostLine()">+ Line</button>
+            <button class="btn btn-p" type="button" onclick="submitPosting()">Submit journal</button>
+            <span id="postMsg" style="font-size:13px;color:var(--ink-2)"></span>
+          </div>
+        </div>
       </div>
+
+      <div id="panel-day" class="panel" hidden>
+        <div class="card" style="padding:16px;max-width:480px">
+          <p class="sub" style="margin-bottom:12px">Posts all authorized, unposted transactions for the selected date.</p>
+          <div class="tools">
+            <input id="dDate" type="date" />
+            <input id="dVac" placeholder="VAC (optional)" style="min-width:120px" />
+            <button class="btn btn-p" type="button" onclick="runDayEnd()">Run day-end</button>
+          </div>
+          <p id="dayMsg" style="font-size:13px;margin-top:10px;color:var(--ink-2)"></p>
+          <p style="font-size:13px;color:var(--ink-2)">Unposted (authorized): <strong id="unpostedN">—</strong></p>
+        </div>
+      </div>
+
+      <div id="panel-accrual" class="panel" hidden>
+        <div class="card" style="padding:16px;max-width:520px">
+          <p class="sub" style="margin-bottom:12px">Simple daily interest on open loan balances (annual rate ÷ 365). Writes daily profit snapshot and updates loan interest totals.</p>
+          <div class="tools" style="flex-direction:column;align-items:stretch">
+            <input id="aDate" type="date" />
+            <input id="aDays" type="number" value="1" min="1" placeholder="Days" />
+            <input id="aVac" placeholder="VAC (optional)" />
+            <input id="aIntGl" placeholder="Interest receivable GL (optional journal)" />
+            <input id="aIncGl" placeholder="Interest income GL (optional journal)" />
+            <button class="btn btn-p" type="button" onclick="runAccrual()">Run accrual</button>
+          </div>
+          <p id="accMsg" style="font-size:13px;margin-top:10px;color:var(--ink-2)"></p>
+          <div class="card" style="margin-top:12px;max-height:240px;overflow:auto">
+            <table><thead><tr><th>Account</th><th>Balance</th><th>Rate</th><th>Profit</th></tr></thead>
+            <tbody id="tb-acc"><tr><td colspan="4">—</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
