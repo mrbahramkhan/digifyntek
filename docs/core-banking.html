@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Core Banking</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f6f7f9;--surface:#fff;--ink:#111827;--ink-2:#4b5563;--ink-3:#9ca3af;--brand:#0e7490;--brand-deep:#164e63;--border:#e5e7eb;--side:250px;--top:60px;--font:Inter,system-ui,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font);background:var(--bg);color:var(--ink)}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--side);background:var(--brand-deep);color:#ecfeff;position:fixed;inset:0 auto 0 0}
+    .side-brand{height:var(--top);display:flex;align-items:center;padding:0 18px;font-weight:700;gap:10px}
+    .nav{padding:14px 10px}.nav a{display:block;padding:8px 11px;border-radius:9px;color:rgba(236,254,255,.7);text-decoration:none;font-size:13px}
+    .nav a.active,.nav a:hover{background:var(--brand);color:#fff}
+    .sec-t{font-size:10px;opacity:.4;text-transform:uppercase;padding:0 10px;margin:10px 0 4px}
+    .main{margin-left:var(--side);flex:1}.topbar{height:var(--top);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;font-weight:600;background:rgba(246,247,249,.92)}
+    .content{padding:24px}h1{font-size:22px;margin-bottom:4px}.sub{color:var(--ink-2);font-size:14px;margin-bottom:18px}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+    .kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}.kpi .l{font-size:11px;color:var(--ink-2)}.kpi .v{font-size:18px;font-weight:700;margin-top:4px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .tab{height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+    .tab.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+    .card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}th{background:#f0f2f5;font-size:11px;text-transform:uppercase;color:var(--ink-2)}
+    .tools{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+    input{height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;min-width:200px}
+    .btn{height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--border);background:#fff;font-weight:600;cursor:pointer;font-family:inherit}
+    .btn-p{background:var(--brand);color:#fff;border:none}
+    .mono{font-variant-numeric:tabular-nums}
+    .err{color:#e11d48;font-size:13px;padding:12px}
+    @media(max-width:900px){.kpis{grid-template-columns:1fr}.sidebar{display:none}.main{margin-left:0}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-brand">DigiFyntek</div>
+    <nav class="nav"></nav>
+  </aside>
+  <div class="main">
+    <header class="topbar"><span>Core Banking</span></header>
+    <div class="content">
+      <h1>Basic Core Banking</h1>
+      <p class="sub">Chart of accounts, GL balances, products, transactions &amp; account statements — mapped to your cooperative ledger.</p>
+
+      <div class="kpis">
+        <div class="kpi"><div class="l">GL accounts</div><div class="v" id="kGl">—</div></div>
+        <div class="kpi"><div class="l">Deposit balance</div><div class="v" id="kDep">—</div></div>
+        <div class="kpi"><div class="l">Loan outstanding</div><div class="v" id="kLoan">—</div></div>
+        <div class="kpi"><div class="l">Deposit A/Cs</div><div class="v" id="kDepN">—</div></div>
+        <div class="kpi"><div class="l">Loan A/Cs</div><div class="v" id="kLoanN">—</div></div>
+        <div class="kpi"><div class="l">Txns (30 days)</div><div class="v" id="kTxn">—</div></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab on" data-t="txn" onclick="showTab(this,'txn')">Transactions</button>
+        <button class="tab" data-t="coa" onclick="showTab(this,'coa')">Chart of accounts</button>
+        <button class="tab" data-t="gl" onclick="showTab(this,'gl')">GL balances</button>
+        <button class="tab" data-t="dp" onclick="showTab(this,'dp')">Deposit products</button>
+        <button class="tab" data-t="lp" onclick="showTab(this,'lp')">Loan products</button>
+        <button class="tab" data-t="stmt" onclick="showTab(this,'stmt')">Account statement</button>
+      </div>
+
+      <div id="panel-txn" class="panel">
+        <div class="card"><table><thead><tr><th>Date</th><th>Txn #</th><th>VAC</th><th>Narration</th><th>Debit</th><th>Credit</th><th>Status</th></tr></thead>
+        <tbody id="tb-txn"><tr><td colspan="7">Loading…</td></tr></tbody></table></div>
+      </div>
+      <div id="panel-coa" class="panel" hidden>
+        <div class="card"><table><thead><tr><th>GL code</th><th>Name</th><th>Level</th><th>Nature</th><th>Type</th><th>Active</th></tr></thead>
+        <tbody id="tb-coa"><tr><td colspan="6">Loading…</td></tr></tbody></table></div>
+      </div>
+      <div id="panel-gl" class="panel" hidden>
+        <div class="card"><table><thead><tr><th>GL</th><th>Name</th><th>VAC</th><th>Debit</th><th>Credit</th><th>Net</th></tr></thead>
+        <tbody id="tb-gl"><tr><td colspan="6">Loading…</td></tr></tbody></table></div>
+      </div>
+      <div id="panel-dp" class="panel" hidden>
+        <div class="card"><table><thead><tr><th>Code</th><th>Name</th><th>Type</th><th>GL</th><th>Active</th></tr></thead>
+        <tbody id="tb-dp"><tr><td colspan="5">Loading…</td></tr></tbody></table></div>
+      </div>
+      <div id="panel-lp" class="panel" hidden>
+        <div class="card"><table><thead><tr><th>Code</th><th>Name</th><th>Min</th><th>Max</th><th>Tenure</th><th>Type</th></tr></thead>
+        <tbody id="tb-lp"><tr><td colspan="6">Loading…</td></tr></tbody></table></div>
+      </div>
+      <div id="panel-stmt" class="panel" hidden>
+        <div class="tools">
+          <input id="accNo" placeholder="Account number" />
+          <button class="btn btn-p" onclick="loadStmt()">Load statement</button>
+        </div>
+        <div class="card"><table><thead><tr><th>Date</th><th>Txn #</th><th>Code</th><th>Narration</th><th>Dr/Cr</th><th>Amount</th><th>GL</th></tr></thead>
+        <tbody id="tb-stmt"><tr><td colspan="7">Enter account number</td></tr></tbody></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+function showTab(btn, id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.panel').forEach(p => p.hidden = true);
+  document.getElementById('panel-' + id).hidden = false;
+}
+
+function money(n) { return DigiFyntekAPI.fmtPKR ? DigiFyntekAPI.fmtPKR(n) : n; }
+
+async function loadAll() {
+  try {
+    const s = await DigiFyntekAPI.coreSummary();
+    document.getElementById('kGl').textContent = s.gl_accounts;
+    document.getElementById('kDep').textContent = money(s.deposit_balance);
+    document.getElementById('kLoan').textContent = money(s.loan_outstanding);
+    document.getElementById('kDepN').textContent = s.deposit_accounts;
+    document.getElementById('kLoanN').textContent = s.loan_accounts;
+    document.getElementById('kTxn').textContent = s.txns_30d;
+  } catch (e) {
+    document.getElementById('kGl').textContent = '—';
+    console.warn(e);
+  }
+  try {
+    const tx = await DigiFyntekAPI.coreTransactions();
+    const tb = document.getElementById('tb-txn');
+    if (!tx.length) tb.innerHTML = '<tr><td colspan="7">No transactions</td></tr>';
+    else tb.innerHTML = tx.map(r =>
+      `<tr><td>${r.date?String(r.date).slice(0,10):'—'}</td><td class="mono">${r.tran_number}</td><td>${r.vac_code||''}</td>
+       <td>${r.narration||''}</td><td class="mono">${money(r.debit)}</td><td class="mono">${money(r.credit)}</td>
+       <td>${r.posted?'Posted':r.authorized?'Authorized':'Pending'}</td></tr>`
+    ).join('');
+  } catch (e) {
+    document.getElementById('tb-txn').innerHTML = `<tr><td colspan="7" class="err">${e.message}</td></tr>`;
+  }
+  // lazy load others on first open is fine; preload
+  try {
+    const coa = await DigiFyntekAPI.coreCoa();
+    document.getElementById('tb-coa').innerHTML = coa.length ? coa.slice(0,500).map(r =>
+      `<tr><td class="mono">${r.gl_code}</td><td>${r.name||''}</td><td>${r.level??''}</td><td>${r.nature||''}</td><td>${r.type||''}</td><td>${r.active?'Yes':'No'}</td></tr>`
+    ).join('') : '<tr><td colspan="6">No COA</td></tr>';
+  } catch (e) {
+    document.getElementById('tb-coa').innerHTML = `<tr><td colspan="6" class="err">${e.message}</td></tr>`;
+  }
+  try {
+    const gl = await DigiFyntekAPI.coreGlBalances();
+    document.getElementById('tb-gl').innerHTML = gl.length ? gl.slice(0,500).map(r =>
+      `<tr><td class="mono">${r.gl_code}</td><td>${r.name||''}</td><td>${r.vac_code||''}</td>
+       <td class="mono">${money(r.debit)}</td><td class="mono">${money(r.credit)}</td><td class="mono">${money(r.net)}</td></tr>`
+    ).join('') : '<tr><td colspan="6">No balances</td></tr>';
+  } catch (e) {
+    document.getElementById('tb-gl').innerHTML = `<tr><td colspan="6" class="err">${e.message}</td></tr>`;
+  }
+  try {
+    const dp = await DigiFyntekAPI.coreDepositProducts();
+    document.getElementById('tb-dp').innerHTML = dp.length ? dp.map(r =>
+      `<tr><td class="mono">${r.code}</td><td>${r.name||''}</td><td>${r.type||''}</td><td class="mono">${r.gl||''}</td><td>${r.active?'Yes':'No'}</td></tr>`
+    ).join('') : '<tr><td colspan="5">No products</td></tr>';
+  } catch (e) {
+    document.getElementById('tb-dp').innerHTML = `<tr><td colspan="5" class="err">${e.message}</td></tr>`;
+  }
+  try {
+    const lp = await DigiFyntekAPI.coreLoanProducts();
+    document.getElementById('tb-lp').innerHTML = lp.length ? lp.map(r =>
+      `<tr><td class="mono">${r.code}</td><td>${r.name||''}</td><td class="mono">${money(r.min_amount)}</td>
+       <td class="mono">${money(r.max_amount)}</td><td>${r.tenure_months??''}</td><td>${r.type||''}</td></tr>`
+    ).join('') : '<tr><td colspan="6">No products</td></tr>';
+  } catch (e) {
+    document.getElementById('tb-lp').innerHTML = `<tr><td colspan="6" class="err">${e.message}</td></tr>`;
+  }
+}
+
+async function loadStmt() {
+  const acc = document.getElementById('accNo').value.trim();
+  if (!acc) return;
+  try {
+    const rows = await DigiFyntekAPI.coreStatement(acc);
+    const tb = document.getElementById('tb-stmt');
+    if (!rows.length) tb.innerHTML = '<tr><td colspan="7">No entries</td></tr>';
+    else tb.innerHTML = rows.map(r =>
+      `<tr><td>${r.date?String(r.date).slice(0,10):''}</td><td class="mono">${r.tran_number}</td><td>${r.code||''}</td>
+       <td>${r.narration||''}</td><td>${r.dr_cr||''}</td><td class="mono">${money(r.amount)}</td><td class="mono">${r.gl_code||''}</td></tr>`
+    ).join('');
+  } catch (e) {
+    document.getElementById('tb-stmt').innerHTML = `<tr><td colspan="7" class="err">${e.message}</td></tr>`;
+  }
+}
+
+loadAll();
+</script>
+</body>
+</html>

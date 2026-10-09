@@ -21,6 +21,7 @@ const islamicRoutes = require('./routes/islamic');
 const sharesRoutes = require('./routes/shares');
 const savingsRoutes = require('./routes/savings');
 const vacsRoutes = require('./routes/vacs');
+const coreBankingRoutes = require('./routes/corebanking');
 
 const app = express();
 
@@ -97,6 +98,7 @@ app.use('/api/islamic', islamicRoutes);
 app.use('/api/shares', sharesRoutes);
 app.use('/api/savings', savingsRoutes);
 app.use('/api/vacs', vacsRoutes);
+app.use('/api/core', coreBankingRoutes);
 
 // Serve full UI (phase1) from same process — one deploy = full system
 const fs = require('fs');

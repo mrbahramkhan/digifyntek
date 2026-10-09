@@ -190,5 +190,18 @@
     },
   };
 
-  global.DigiFyntekAPI = api;
+  
+    api.coreSummary = function () { return request('/api/core/summary'); };
+    api.coreCoa = function () { return request('/api/core/coa'); };
+    api.coreGlBalances = function (vacCode) {
+      return request('/api/core/gl-balances' + (vacCode ? '?vacCode=' + encodeURIComponent(vacCode) : ''));
+    };
+    api.coreDepositProducts = function () { return request('/api/core/products/deposits'); };
+    api.coreLoanProducts = function () { return request('/api/core/products/loans'); };
+    api.coreTransactions = function () { return request('/api/core/transactions'); };
+    api.coreStatement = function (accountNo) {
+      return request('/api/core/statement/' + encodeURIComponent(accountNo));
+    };
+    global.DigiFyntekAPI = api;
+
 })(window);
