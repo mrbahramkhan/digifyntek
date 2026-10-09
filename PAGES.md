@@ -1,30 +1,21 @@
-# GitHub Pages setup
+# GitHub Pages — fix 404
 
-## Enable (one time on GitHub)
+## Recommended (works without Actions permissions)
 
-1. Open https://github.com/mrbahramkhan/digifyntek/settings/pages  
-2. **Build and deployment → Source** = **GitHub Actions**  
-3. Save
+1. Open: https://github.com/mrbahramkhan/digifyntek/settings/pages  
+2. **Build and deployment → Source** = **Deploy from a branch**  
+3. Branch: **main**  
+4. Folder: **/docs**  
+5. Save  
 
-## After push
-
-Workflow **Deploy GitHub Pages** runs on every `main` push.
-
-Site URL:
+Wait 1–2 minutes, then open:
 
 **https://mrbahramkhan.github.io/digifyntek/**
 
-## Important
+## Optional: GitHub Actions source
 
-| Works on Pages | Does not work on Pages |
-|----------------|------------------------|
-| Login UI, layout, static flows | MySQL, Node API, real login data |
-| Logo, navigation, design demo | JWT auth against live DB |
+1. Same Pages settings page  
+2. Source = **GitHub Actions**  
+3. Re-run failed workflow under Actions tab  
 
-For full app, run API on a server and:
-
-```js
-localStorage.setItem('DIGIFYNTEK_API_BASE', 'https://api.yourdomain.com')
-```
-
-Then refresh the Pages site.
+If Actions deploy fails with “Get Pages site” / 404, use **branch /docs** method above first.

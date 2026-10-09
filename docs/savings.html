@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Savings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f6f7f9;--surface:#fff;--ink:#111827;--ink-2:#4b5563;--brand:#0e7490;--brand-deep:#164e63;--border:#e5e7eb;--side:250px;--top:60px;--font:Inter,system-ui,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font);background:var(--bg);color:var(--ink)}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--side);background:var(--brand-deep);color:#ecfeff;position:fixed;inset:0 auto 0 0}
+    .side-brand{height:var(--top);display:flex;align-items:center;padding:0 18px;font-weight:700}
+    .nav{padding:14px 10px}.nav a{display:block;padding:8px 11px;border-radius:9px;color:rgba(236,254,255,.7);text-decoration:none;font-size:13px}
+    .nav a.active,.nav a:hover{background:var(--brand);color:#fff}
+    .main{margin-left:var(--side);flex:1}.topbar{height:var(--top);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;font-weight:600}
+    .content{padding:24px}h1{font-size:22px;margin-bottom:4px}.sub{color:var(--ink-2);font-size:14px;margin-bottom:16px}
+    .card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 14px;border-bottom:1px solid var(--border);text-align:left}th{background:#f0f2f5;font-size:11px;text-transform:uppercase;color:var(--ink-2)}
+    .btn{height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:#fff;font-weight:600;cursor:pointer;font-size:12px}
+    .btn-p{background:var(--brand);color:#fff;border:none}.fg{margin-bottom:10px}label{font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px}
+    input,select{width:100%;height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px}
+    .layout{display:grid;grid-template-columns:1.4fr .6fr;gap:16px}@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{display:none}.main{margin-left:0}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand">DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">Savings accounts</header>
+    <div class="content">
+      <h1>Savings</h1>
+      <p class="sub">Conventional / muḍārabah / qard-style member savings.</p>
+      <div class="layout">
+        <div class="card">
+          <table>
+            <thead><tr><th>Account</th><th>Member</th><th>Mode</th><th>Balance</th><th>Status</th><th></th></tr></thead>
+            <tbody id="tb"><tr><td colspan="6">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card" style="padding:16px">
+          <strong style="display:block;margin-bottom:12px">Open account</strong>
+          <div class="fg"><label>Member ID</label><input id="mid" type="number" /></div>
+          <div class="fg"><label>Mode</label>
+            <select id="mode"><option value="conventional">Conventional</option><option value="mudaraba">Muḍārabah</option><option value="qard">Qard</option></select>
+          </div>
+          <div class="fg"><label>Opening deposit</label><input id="ob" type="number" value="0" /></div>
+          <button class="btn btn-p" style="width:100%;height:36px" onclick="openAcc()">Open</button>
+          <hr style="margin:16px 0;border:none;border-top:1px solid var(--border)" />
+          <strong style="display:block;margin-bottom:12px">Deposit / Withdraw</strong>
+          <div class="fg"><label>Account ID</label><input id="aid" type="number" /></div>
+          <div class="fg"><label>Amount</label><input id="amt" type="number" /></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-p" style="flex:1;height:36px" onclick="dep()">Deposit</button>
+            <button class="btn" style="flex:1;height:36px" onclick="wd()">Withdraw</button>
+          </div>
+          <p id="msg" style="font-size:12px;margin-top:8px"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+async function load() {
+  try {
+    const rows = await DigiFyntekAPI.request('/api/savings');
+    const tb = document.getElementById('tb');
+    if (!rows.length) { tb.innerHTML = '<tr><td colspan="6">No accounts</td></tr>'; return; }
+    tb.innerHTML = rows.map(r =>
+      `<tr><td>${r.account_no}</td><td>${r.full_name||''}</td><td>${r.mode}</td>
+       <td>${DigiFyntekAPI.fmtPKR(r.balance)}</td><td>${r.status}</td>
+       <td><button class="btn" onclick="document.getElementById('aid').value=${r.id}">Select</button></td></tr>`
+    ).join('');
+  } catch (e) {
+    document.getElementById('tb').innerHTML = `<tr><td colspan="6" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+async function openAcc() {
+  try {
+    const r = await DigiFyntekAPI.request('/api/savings', {
+      method: 'POST',
+      body: JSON.stringify({
+        member_id: Number(document.getElementById('mid').value),
+        mode: document.getElementById('mode').value,
+        opening_balance: Number(document.getElementById('ob').value)||0,
+      }),
+    });
+    document.getElementById('msg').textContent = 'Opened ' + r.account_no;
+    load();
+  } catch (e) { document.getElementById('msg').textContent = e.message; }
+}
+async function dep() {
+  try {
+    await DigiFyntekAPI.request('/api/savings/'+document.getElementById('aid').value+'/deposit', {
+      method:'POST', body: JSON.stringify({ amount: Number(document.getElementById('amt').value) })
+    });
+    document.getElementById('msg').textContent = 'Deposited'; load();
+  } catch (e) { document.getElementById('msg').textContent = e.message; }
+}
+async function wd() {
+  try {
+    await DigiFyntekAPI.request('/api/savings/'+document.getElementById('aid').value+'/withdraw', {
+      method:'POST', body: JSON.stringify({ amount: Number(document.getElementById('amt').value) })
+    });
+    document.getElementById('msg').textContent = 'Withdrawn'; load();
+  } catch (e) { document.getElementById('msg').textContent = e.message; }
+}
+load();
+</script>
+</body>
+</html>

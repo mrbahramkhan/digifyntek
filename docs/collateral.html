@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Collateral & Guarantees</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f6f7f9;--surface:#fff;--surface-2:#f0f2f5;--ink:#111827;--ink-2:#4b5563;--ink-3:#9ca3af;--brand:#0e7490;--brand-bright:#06b6d4;--brand-soft:#ecfeff;--brand-deep:#164e63;--green:#059669;--green-soft:#d1fae5;--amber:#d97706;--amber-soft:#fef3c7;--rose:#e11d48;--rose-soft:#ffe4e6;--blue:#2563eb;--blue-soft:#dbeafe;--border:#e5e7eb;--shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.03);--r:12px;--r-sm:8px;--font:'Inter',system-ui,sans-serif;--serif:'Source Serif 4',Georgia,serif;--side:250px;--top:60px}
+    *{margin:0;padding:0;box-sizing:border-box}body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.5}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--side);background:var(--brand-deep);color:#ecfeff;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:40}
+    .side-brand{height:var(--top);display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .side-brand .m{width:32px;height:32px;background:var(--brand-bright);border-radius:9px;display:flex;align-items:center;justify-content:center}.side-brand .m svg{width:16px;height:16px;color:#fff}.side-brand .n{font-size:16px;font-weight:700}
+    .nav{flex:1;overflow-y:auto;padding:14px 10px}.sec{margin-bottom:16px}.sec-t{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;opacity:.4;padding:0 10px;margin-bottom:5px}
+    .nav a{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;color:rgba(236,254,255,.65);text-decoration:none;font-size:13.5px;font-weight:500;margin-bottom:1px}
+    .nav a:hover{background:rgba(255,255,255,.06);color:#fff}.nav a.active{background:var(--brand);color:#fff}.nav a svg{width:16px;height:16px;flex-shrink:0;opacity:.8}
+    .main{margin-left:var(--side);flex:1}.topbar{height:var(--top);background:rgba(246,247,249,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:30}
+    .top-title{font-size:15px;font-weight:600}.av{width:34px;height:34px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+    .content{padding:24px}.page-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:16px;flex-wrap:wrap}
+    .page-head h1{font-family:var(--serif);font-size:24px;font-weight:500;margin-bottom:4px}.page-head p{font-size:14px;color:var(--ink-2)}
+    .btn{height:36px;padding:0 14px;border-radius:var(--r-sm);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px}
+    .btn-p{background:var(--brand);color:#fff}.btn-s{background:var(--surface);border:1px solid var(--border);color:var(--ink)}
+    .tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border)}
+    .tab{padding:10px 14px;font-size:13px;font-weight:500;color:var(--ink-2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}.tab.active{color:var(--brand);border-bottom-color:var(--brand)}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{text-align:left;padding:10px 14px;background:var(--surface-2);color:var(--ink-2);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--border)}
+    td{padding:12px 14px;border-bottom:1px solid var(--border)}tr:last-child td{border-bottom:none}
+    .tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;display:inline-block}
+    .tag-g{background:var(--green-soft);color:var(--green)}.tag-a{background:var(--amber-soft);color:var(--amber)}.tag-r{background:var(--rose-soft);color:var(--rose)}.tag-b{background:var(--blue-soft);color:var(--blue)}.tag-n{background:var(--surface-2);color:var(--ink-2)}
+    .mono{font-family:ui-monospace,monospace;font-size:12px}
+    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+    .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow)}
+    .kpi .l{font-size:11px;color:var(--ink-3);font-weight:500;text-transform:uppercase}.kpi .v{font-size:20px;font-weight:700;margin-top:4px}
+    .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+    .filters input,.filters select{height:36px;padding:0 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:inherit;background:#fff}
+    @media(max-width:900px){.kpi-row{grid-template-columns:1fr 1fr}.sidebar{transform:translateX(-100%)}.main{margin-left:0}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-brand"><div class="m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></svg></div><div class="n">DigiFyntek</div></div>
+    <nav class="nav">
+      <div class="sec"><div class="sec-t">Overview</div><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
+      <div class="sec"><div class="sec-t">CRM</div>
+        <a href="members.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Members</a>
+        <a href="cards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Membership cards</a>
+      </div>
+      <div class="sec"><div class="sec-t">Credit &amp; risk</div>
+        <a href="loans.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Loans &amp; PAR</a>
+        <a class="active" href="collateral.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Collateral &amp; guarantees</a>
+        <a href="instruments.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Instruments</a>
+      </div>
+      <div class="sec"><div class="sec-t">Compliance</div><a href="compliance.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Cooperative law</a></div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar"><div class="top-title">Collateral · guarantees · liens</div><div class="av">SA</div></header>
+    <div class="content">
+      <div class="page-head">
+        <div><h1>Collateral &amp; guarantees</h1><p>Pledged assets, valuation, charge/release, guarantor exposure — full security register.</p></div>
+        <div style="display:flex;gap:8px"><button class="btn btn-s" onclick="addGuarantee()">+ Add guarantee</button><button class="btn btn-p" onclick="addCollateral()">+ Register collateral</button></div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi"><div class="l">Active collateral</div><div class="v">186</div></div>
+        <div class="kpi"><div class="l">Total collateral value</div><div class="v">PKR 42.1M</div></div>
+        <div class="kpi"><div class="l">Active guarantees</div><div class="v">298</div></div>
+        <div class="kpi"><div class="l">Pending release</div><div class="v">7</div></div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active">Collateral</div>
+        <div class="tab">Guarantees</div>
+        <div class="tab">Released / discharged</div>
+      </div>
+
+      <div class="filters">
+        <input type="search" placeholder="Member, loan #, asset ref…" />
+        <select><option>All types</option><option>Agricultural land</option><option>Residential land</option><option>Livestock</option><option>Gold / jewelry</option><option>Equipment</option><option>Other</option></select>
+        <select><option>All status</option><option>Charged</option><option>Pending release</option><option>Released</option></select>
+        <button class="btn btn-s">Filter</button>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Collateral ID</th>
+              <th>Type</th>
+              <th>Member / owner</th>
+              <th>Linked loan</th>
+              <th>Declared value</th>
+              <th>Charge date</th>
+              <th>Status</th>
+              <th>Docs</th>
+            </tr>
+          </thead>
+          <tbody id="colBody"><tr><td colspan="8">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size:14px;font-weight:600;margin:8px 0 12px">Guarantor register</h3>
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Guarantee #</th>
+              <th>Guarantor</th>
+              <th>Borrower</th>
+              <th>Loan</th>
+              <th>Guaranteed amount</th>
+              <th>Guarantor total exposure</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="guBody"><tr><td colspan="7">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+async function loadCol() {
+  try {
+    const [cols, gus] = await Promise.all([DigiFyntekAPI.collaterals(), DigiFyntekAPI.guarantees()]);
+    const cb = document.getElementById('colBody');
+    const gb = document.getElementById('guBody');
+    if (!cols.length) cb.innerHTML = '<tr><td colspan="8">No collateral</td></tr>';
+    else cb.innerHTML = cols.map(c =>
+      '<tr><td class="mono">'+(c.collateral_code||'')+'</td><td>'+(c.coll_type||'')+'</td>'+
+      '<td>'+(c.full_name||'')+'<br><span style="font-size:11px;color:var(--ink-3)">'+(c.description||'')+'</span></td>'+
+      '<td class="mono">'+(c.loan_number||'—')+'</td><td>'+DigiFyntekAPI.fmtPKR(c.declared_value)+'</td>'+
+      '<td>'+(c.charge_date?String(c.charge_date).slice(0,10):'—')+'</td>'+
+      '<td><span class="tag tag-g">'+(c.status||'')+'</span></td><td>—</td></tr>'
+    ).join('');
+    if (!gus.length) gb.innerHTML = '<tr><td colspan="7">No guarantees</td></tr>';
+    else gb.innerHTML = gus.map(g =>
+      '<tr><td class="mono">'+(g.guarantee_code||'')+'</td><td>'+(g.guarantor_name||'')+'</td>'+
+      '<td>'+(g.borrower_name||'')+'</td><td class="mono">'+(g.loan_number||'')+'</td>'+
+      '<td>'+DigiFyntekAPI.fmtPKR(g.amount)+'</td><td>—</td>'+
+      '<td><span class="tag tag-g">'+(g.status||'')+'</span></td></tr>'
+    ).join('');
+  } catch (e) {
+    const cb = document.getElementById('colBody');
+    if (cb) cb.innerHTML = '<tr><td colspan="8" style="color:#e11d48">'+e.message+'</td></tr>';
+  }
+}
+async function addCollateral() {
+  const mid = prompt('Member ID');
+  const type = prompt('Type: agri_land | residential | livestock | gold | equipment | other', 'agri_land');
+  const val = prompt('Declared value PKR', '100000');
+  const desc = prompt('Description', '');
+  const lid = prompt('Loan ID (optional)', '');
+  if (!mid) return;
+  try {
+    await DigiFyntekAPI.request('/api/collateral', {
+      method:'POST',
+      body: JSON.stringify({
+        member_id: Number(mid), loan_id: lid ? Number(lid) : null,
+        coll_type: type, declared_value: Number(val), description: desc
+      })
+    });
+    loadCol();
+  } catch (e) { alert(e.message); }
+}
+async function addGuarantee() {
+  const g = prompt('Guarantor member ID');
+  const b = prompt('Borrower member ID');
+  const loan = prompt('Loan ID');
+  const amt = prompt('Amount PKR');
+  if (!g || !b || !loan) return;
+  try {
+    await DigiFyntekAPI.request('/api/collateral/guarantees', {
+      method:'POST',
+      body: JSON.stringify({
+        guarantor_member_id: Number(g), borrower_member_id: Number(b),
+        loan_id: Number(loan), amount: Number(amt)
+      })
+    });
+    loadCol();
+  } catch (e) { alert(e.message); }
+}
+loadCol();
+</script>
+
+</body>
+</html>
