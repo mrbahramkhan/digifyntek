@@ -2,7 +2,7 @@ const express = require('express');
 const { auth } = require('../middleware/auth');
 const legacy = require('../legacy/queries');
 const router = express.Router();
-const LEGACY = process.env.DB_MODE === 'legacy' || process.env.DB_NAME === 'digitalkisaan';
+const LEGACY = process.env.DB_MODE === 'legacy' || process.env.LEGACY_SCHEMA === '1';
 
 router.get('/', auth(), async (req, res, next) => {
   try {

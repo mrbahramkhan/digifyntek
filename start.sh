@@ -19,7 +19,7 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=
-DB_NAME=forge_coop
+DB_NAME=digifyntek
 JWT_SECRET=$JWT
 JWT_EXPIRES=8h
 CORS_ORIGINS=http://localhost:4000,http://127.0.0.1:4000,http://localhost:8080
@@ -38,7 +38,7 @@ start_mysql() {
     docker rm -f forge-mysql 2>/dev/null || true
     docker run -d --name forge-mysql \
       -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
-      -e MYSQL_DATABASE=forge_coop \
+      -e MYSQL_DATABASE=digifyntek \
       -p 3306:3306 \
       mysql:8.0
     log "Waiting for MySQL..."
@@ -53,7 +53,7 @@ start_mysql() {
   fi
   if command -v mysql >/dev/null 2>&1; then
     log "Using local mysql client"
-    mysql -u root -e "CREATE DATABASE IF NOT EXISTS forge_coop;" 2>/dev/null || true
+    mysql -u root -e "CREATE DATABASE IF NOT EXISTS digifyntek;" 2>/dev/null || true
     return 0
   fi
   return 1

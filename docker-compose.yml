@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_change_me}
-      MYSQL_DATABASE: forge_coop
+      MYSQL_DATABASE: digifyntek
       MYSQL_USER: forge
       MYSQL_PASSWORD: ${DB_PASSWORD:-forge_change_me}
     volumes:
@@ -30,7 +30,7 @@ services:
       DB_PORT: 3306
       DB_USER: forge
       DB_PASSWORD: ${DB_PASSWORD:-forge_change_me}
-      DB_NAME: forge_coop
+      DB_NAME: digifyntek
       JWT_SECRET: ${JWT_SECRET:-MUST_SET_A_LONG_RANDOM_SECRET_AT_LEAST_32_CHARS_XX}
       JWT_EXPIRES: 8h
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4000}

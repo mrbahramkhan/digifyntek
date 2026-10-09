@@ -30,6 +30,6 @@ Cannot set stage sold/delivered/active unless `ownership_confirmed = 1`.
 
 ## Run migration
 ```bash
-mysql -u ... forge_coop < backend/sql/03_murabaha.sql
+mysql -u ... digifyntek < backend/sql/03_murabaha.sql
 # or npm run db:init (includes 03)
 ```

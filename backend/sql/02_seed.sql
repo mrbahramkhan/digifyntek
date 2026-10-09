@@ -1,4 +1,4 @@
-USE forge_coop;
+USE digifyntek;
 
 INSERT INTO organisations (code, name, province, society_class, institution_kind, finance_mode, reg_number, address)
 VALUES ('001', 'Demo Village Agriculture Cooperative Society Ltd', 'punjab', 'resource', 'primary', 'hybrid', 'REG-DEMO-001', 'Demo Village, Punjab');

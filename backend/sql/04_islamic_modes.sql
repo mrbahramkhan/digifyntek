@@ -1,4 +1,4 @@
-USE forge_coop;
+USE digifyntek;
 
 -- Shared extras for Salam / Ijarah / Qard (murabaha fields already in 03)
 ALTER TABLE loans ADD COLUMN quantity DECIMAL(14,3) NULL COMMENT 'Salam: agreed quantity';

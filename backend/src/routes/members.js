@@ -3,7 +3,7 @@ const { auth } = require('../middleware/auth');
 const legacy = require('../legacy/queries');
 const pool = require('../config/db');
 const router = express.Router();
-const LEGACY = process.env.DB_MODE === 'legacy' || process.env.DB_NAME === 'digitalkisaan';
+const LEGACY = process.env.DB_MODE === 'legacy' || process.env.LEGACY_SCHEMA === '1';
 
 function orgCode(req) {
   return req.user.orgCode || req.user.orgId || '001';

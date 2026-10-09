@@ -19,7 +19,7 @@ const env = {
     port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'forge_coop',
+    database: process.env.DB_NAME || 'digifyntek',
   },
   jwtSecret: process.env.JWT_SECRET || 'forge-dev-secret-ONLY-for-local',
   jwtExpires: process.env.JWT_EXPIRES || '8h',

@@ -1,11 +1,22 @@
 # DigiFyntek ↔ Digital Kisaan DB mapping
 
-Dump: `DigitalKissan-old_backuo.sql` · Database: `digitalkisaan` · **63 tables**
+Dump: `DigitalKissan-old_backuo.sql` · Database: `digifyntek` (renamed from digitalkisaan dump) · **63 tables**
+
+## Import dump as digifyntek
+
+```bash
+# Option A — rename while importing
+sed 's/\`digitalkisaan\`/\`digifyntek\`/g' DigitalKissan-old_backuo.sql | mysql -u root -p
+
+# Option B — after import
+# mysql> CREATE DATABASE digifyntek;
+# mysql> RENAME TABLE ... (or re-import into digifyntek)
+```
 
 ## Enable
 
 ```env
-DB_NAME=digitalkisaan
+DB_NAME=digifyntek
 DB_MODE=legacy
 DB_HOST=127.0.0.1
 DB_USER=root

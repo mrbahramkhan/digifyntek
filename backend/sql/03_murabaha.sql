@@ -1,4 +1,4 @@
-USE forge_coop;
+USE digifyntek;
 
 -- Run once after 01_schema. Ignore "duplicate column" if re-run.
 

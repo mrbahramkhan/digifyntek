@@ -15,7 +15,7 @@ async function main() {
     port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'forge_coop',
+    database: process.env.DB_NAME || 'digifyntek',
     namedPlaceholders: true,
   });
   const [orgs] = await conn.query('SELECT id FROM organisations ORDER BY id LIMIT 1');

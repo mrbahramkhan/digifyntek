@@ -3,9 +3,9 @@
 -- Engine: InnoDB · Charset: utf8mb4
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS forge_coop
+CREATE DATABASE IF NOT EXISTS digifyntek
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE forge_coop;
+USE digifyntek;
 
 -- ------------------------------------------------------------
 -- 1. ORGANISATION / VAC / SETUP

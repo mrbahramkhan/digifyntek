@@ -9,7 +9,7 @@ const legacy = require('../legacy/queries');
 const pool = require('../config/db');
 const router = express.Router();
 
-const LEGACY = process.env.DB_MODE === 'legacy' || process.env.DB_NAME === 'digitalkisaan';
+const LEGACY = process.env.DB_MODE === 'legacy' || process.env.LEGACY_SCHEMA === '1';
 
 router.post('/login', requireFields(['userId', 'password']), async (req, res, next) => {
   try {
