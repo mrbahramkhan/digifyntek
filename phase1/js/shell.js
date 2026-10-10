@@ -14,7 +14,8 @@
     { sec: 'Credit', items: [
       { href: 'loans.html', label: 'Loans & PAR' },
       { href: 'core-banking.html', label: 'Core Banking' },
-      { href: 'cbs.html', label: 'CBS (Temenos-style)' },,
+      { href: 'cbs.html', label: 'CBS (Temenos-style)' },
+      { href: 'mfb.html', label: 'MFB Prudential' },,
       { href: 'murabaha.html', label: 'Murābaḥah' },
       { href: 'islamic-ops.html', label: 'Salam · Ijārah · Qard' },
       { href: 'collateral.html', label: 'Collateral' },

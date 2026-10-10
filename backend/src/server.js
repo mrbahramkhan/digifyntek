@@ -23,6 +23,7 @@ const savingsRoutes = require('./routes/savings');
 const vacsRoutes = require('./routes/vacs');
 const coreBankingRoutes = require('./routes/corebanking');
 const cbsRoutes = require('./routes/cbs');
+const mfbRoutes = require('./routes/mfb');
 
 const app = express();
 
@@ -101,6 +102,7 @@ app.use('/api/savings', savingsRoutes);
 app.use('/api/vacs', vacsRoutes);
 app.use('/api/core', coreBankingRoutes);
 app.use('/api/cbs', cbsRoutes);
+app.use('/api/mfb', mfbRoutes);
 
 // Serve full UI (phase1) from same process — one deploy = full system
 const fs = require('fs');

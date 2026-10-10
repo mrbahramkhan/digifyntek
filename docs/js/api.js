@@ -233,7 +233,17 @@
     api.cbsTransfer = function (b) { return request('/api/cbs/transfers', { method: 'POST', body: JSON.stringify(b) }); };
     api.cbsIntegrations = function () { return request('/api/cbs/integrations'); };
     api.cbsSbp = function () { return request('/api/cbs/sbp-controls'); };
+    
+    api.mfbSummary = function () { return request('/api/mfb/summary'); };
+    api.mfbConfig = function () { return request('/api/mfb/config'); };
+    api.mfbUpdateConfig = function (b) { return request('/api/mfb/config', { method: 'PUT', body: JSON.stringify(b) }); };
+    api.mfbLoans = function (q) { return request('/api/mfb/loans' + (q ? '?q=' + encodeURIComponent(q) : '')); };
+    api.mfbUpsertLoan = function (b) { return request('/api/mfb/loans', { method: 'POST', body: JSON.stringify(b) }); };
+    api.mfbReclassify = function () { return request('/api/mfb/reclassify', { method: 'POST', body: '{}' }); };
+    api.mfbPack = function () { return request('/api/mfb/regulatory-pack'); };
+    api.mfbImportLegacy = function () { return request('/api/mfb/import-legacy', { method: 'POST', body: '{}' }); };
     global.DigiFyntekAPI = api;
+
 
 
 })(window);
