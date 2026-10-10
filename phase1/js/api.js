@@ -222,6 +222,18 @@
       return request('/api/core/accrual', { method: 'POST', body: JSON.stringify(body || {}) });
     };
     api.coreUnposted = function () { return request('/api/core/unposted-count'); };
+    
+    api.cbsSummary = function () { return request('/api/cbs/summary'); };
+    api.cbsCustomers = function (q) { return request('/api/cbs/customers' + (q ? '?q=' + encodeURIComponent(q) : '')); };
+    api.cbsCreateCustomer = function (b) { return request('/api/cbs/customers', { method: 'POST', body: JSON.stringify(b) }); };
+    api.cbsAccounts = function (q) { return request('/api/cbs/accounts' + (q ? '?q=' + encodeURIComponent(q) : '')); };
+    api.cbsOpenAccount = function (b) { return request('/api/cbs/accounts', { method: 'POST', body: JSON.stringify(b) }); };
+    api.cbsProducts = function () { return request('/api/cbs/products'); };
+    api.cbsTxns = function () { return request('/api/cbs/transactions'); };
+    api.cbsTransfer = function (b) { return request('/api/cbs/transfers', { method: 'POST', body: JSON.stringify(b) }); };
+    api.cbsIntegrations = function () { return request('/api/cbs/integrations'); };
+    api.cbsSbp = function () { return request('/api/cbs/sbp-controls'); };
     global.DigiFyntekAPI = api;
+
 
 })(window);

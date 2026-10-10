@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — CBS Core Banking</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f6f7f9;--ink:#111827;--ink-2:#4b5563;--brand:#0e7490;--brand-deep:#164e63;--border:#e5e7eb;--side:250px;--top:60px;--font:Inter,system-ui,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font);background:var(--bg);color:var(--ink)}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--side);background:var(--brand-deep);color:#ecfeff;position:fixed;inset:0 auto 0 0}
+    .side-brand{height:var(--top);display:flex;align-items:center;padding:0 18px;font-weight:700}
+    .nav{padding:14px 10px}.nav a{display:block;padding:8px 11px;border-radius:9px;color:rgba(236,254,255,.7);text-decoration:none;font-size:13px}
+    .nav a.active,.nav a:hover{background:var(--brand);color:#fff}
+    .main{margin-left:var(--side);flex:1}.topbar{height:var(--top);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;font-weight:600}
+    .content{padding:24px}h1{font-size:22px;margin-bottom:4px}.sub{color:var(--ink-2);font-size:14px;margin-bottom:16px}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+    .kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}.kpi .l{font-size:11px;color:var(--ink-2)}.kpi .v{font-size:18px;font-weight:700;margin-top:4px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .tab{height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+    .tab.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+    .card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}th{background:#f0f2f5;font-size:11px;text-transform:uppercase;color:var(--ink-2)}
+    .tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:12px}
+    input,select{height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit}
+    .btn{height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--border);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px}
+    .btn-p{background:var(--brand);color:#fff;border:none}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+    .tag-g{background:#d1fae5;color:#047857}.tag-a{background:#fef3c7;color:#b45309}.tag-r{background:#fee2e2;color:#b91c1c}.tag-n{background:#f3f4f6;color:#4b5563}.tag-b{background:#e0f2fe;color:#0369a1}
+    .mono{font-variant-numeric:tabular-nums}.note{font-size:12px;color:var(--ink-2);padding:12px 14px;background:#f8fafc;border-bottom:1px solid var(--border)}
+    @media(max-width:900px){.kpis{grid-template-columns:1fr}.sidebar{display:none}.main{margin-left:0}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand">DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">CBS — Temenos-style basic core</header>
+    <div class="content">
+      <h1>Core Banking System</h1>
+      <p class="sub">CIF · Accounts · Transfers · Products · Integrations · SBP controls — basic operations layer.</p>
+
+      <div class="kpis">
+        <div class="kpi"><div class="l">Customers (CIF)</div><div class="v" id="kCif">—</div></div>
+        <div class="kpi"><div class="l">Accounts</div><div class="v" id="kAcc">—</div></div>
+        <div class="kpi"><div class="l">Deposit balance</div><div class="v" id="kDep">—</div></div>
+        <div class="kpi"><div class="l">Loan accounts</div><div class="v" id="kLn">—</div></div>
+        <div class="kpi"><div class="l">Loan outstanding</div><div class="v" id="kOs">—</div></div>
+        <div class="kpi"><div class="l">Txns (7 days)</div><div class="v" id="kTx">—</div></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab on" onclick="tab(this,'cust')">Customers</button>
+        <button class="tab" onclick="tab(this,'acc')">Accounts</button>
+        <button class="tab" onclick="tab(this,'txn')">Transfers / Txns</button>
+        <button class="tab" onclick="tab(this,'prod')">Products</button>
+        <button class="tab" onclick="tab(this,'int')">Integrations</button>
+        <button class="tab" onclick="tab(this,'sbp')">SBP controls</button>
+      </div>
+
+      <div id="p-cust" class="panel">
+        <div class="card">
+          <div class="tools">
+            <input id="cName" placeholder="Full name *" />
+            <input id="cCnic" placeholder="CNIC" />
+            <input id="cMobile" placeholder="Mobile" />
+            <input id="cBranch" placeholder="Branch code" />
+            <select id="cKyc"><option value="pending">KYC pending</option><option value="verified">KYC verified</option></select>
+            <select id="cAml"><option value="low">AML low</option><option value="medium">AML medium</option><option value="high">AML high</option></select>
+            <button class="btn btn-p" onclick="createCust()">Create CIF</button>
+          </div>
+          <table><thead><tr><th>CIF</th><th>Name</th><th>CNIC</th><th>Branch</th><th>KYC</th><th>AML</th><th>Status</th></tr></thead>
+          <tbody id="tbC"><tr><td colspan="7">Loading…</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <div id="p-acc" class="panel" hidden>
+        <div class="card">
+          <div class="tools">
+            <input id="aCif" placeholder="CIF no *" />
+            <input id="aProd" placeholder="Product code *" />
+            <select id="aType"><option value="savings">Savings</option><option value="current">Current</option><option value="loan">Loan</option><option value="share">Share</option><option value="islamic">Islamic</option></select>
+            <input id="aBranch" placeholder="Branch code" />
+            <button class="btn btn-p" onclick="openAcc()">Open account</button>
+          </div>
+          <table><thead><tr><th>Account</th><th>CIF</th><th>Product</th><th>Type</th><th>Balance</th><th>Status</th></tr></thead>
+          <tbody id="tbA"><tr><td colspan="6">Loading…</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <div id="p-txn" class="panel" hidden>
+        <div class="card">
+          <div class="note">Transfer posts double-entry on CBS accounts (debit → credit). Channel defaults to branch.</div>
+          <div class="tools">
+            <input id="tDeb" placeholder="Debit account *" />
+            <input id="tCre" placeholder="Credit account *" />
+            <input id="tAmt" type="number" step="0.01" placeholder="Amount *" />
+            <input id="tNarr" placeholder="Narration" style="min-width:160px" />
+            <button class="btn btn-p" onclick="doTransfer()">Post transfer</button>
+          </div>
+          <table><thead><tr><th>Txn ID</th><th>Date</th><th>Type</th><th>Debit</th><th>Credit</th><th>Amount</th><th>Channel</th><th>Status</th></tr></thead>
+          <tbody id="tbT"><tr><td colspan="8">Loading…</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <div id="p-prod" class="panel" hidden>
+        <div class="card">
+          <table><thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Rate</th><th>Min balance</th></tr></thead>
+          <tbody id="tbP"><tr><td colspan="5">Loading…</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <div id="p-int" class="panel" hidden>
+        <div class="card">
+          <div class="note">Sandbox integration registry (NADRA, SBP, Raast, 1Link, SMS). Wire real endpoints in production.</div>
+          <table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Auth</th><th>Status</th></tr></thead>
+          <tbody id="tbI"><tr><td colspan="5">Loading…</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <div id="p-sbp" class="panel" hidden>
+        <div class="card">
+          <div class="note">SBP-oriented control checklist for cooperatives / deposit-taking institutions. Track gaps before go-live.</div>
+          <table><thead><tr><th>Code</th><th>Control</th><th>Category</th><th>Status</th><th></th></tr></thead>
+          <tbody id="tbS"><tr><td colspan="5">Loading…</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+function tab(btn, id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  ['cust','acc','txn','prod','int','sbp'].forEach(p => {
+    document.getElementById('p-' + p).hidden = p !== id;
+  });
+}
+function money(n) { return DigiFyntekAPI.fmtPKR ? DigiFyntekAPI.fmtPKR(n) : n; }
+const st = { active:'tag-g', pending:'tag-a', verified:'tag-g', posted:'tag-g', sandbox:'tag-a', inactive:'tag-n', high:'tag-r', medium:'tag-a', low:'tag-g', compliant:'tag-g', gap:'tag-r', in_progress:'tag-a', not_started:'tag-n' };
+
+async function loadSum() {
+  try {
+    const s = await DigiFyntekAPI.cbsSummary();
+    document.getElementById('kCif').textContent = s.customers;
+    document.getElementById('kAcc').textContent = s.accounts;
+    document.getElementById('kDep').textContent = money(s.deposit_balance);
+    document.getElementById('kLn').textContent = s.loans;
+    document.getElementById('kOs').textContent = money(s.loan_outstanding);
+    document.getElementById('kTx').textContent = s.txns_7d;
+  } catch (e) { console.warn(e); }
+}
+async function loadCust() {
+  try {
+    const rows = await DigiFyntekAPI.cbsCustomers();
+    document.getElementById('tbC').innerHTML = rows.length ? rows.map(r =>
+      `<tr><td class="mono">${r.cif_no}</td><td>${r.full_name}</td><td class="mono">${r.cnic||'—'}</td><td>${r.branch_code||'—'}</td>
+       <td><span class="tag ${st[r.kyc_status]||'tag-n'}">${r.kyc_status}</span></td>
+       <td><span class="tag ${st[r.aml_risk]||'tag-n'}">${r.aml_risk}</span></td>
+       <td>${r.status}</td></tr>`).join('') : '<tr><td colspan="7">No customers — create CIF</td></tr>';
+  } catch (e) {
+    document.getElementById('tbC').innerHTML = `<tr><td colspan="7" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+async function createCust() {
+  try {
+    await DigiFyntekAPI.cbsCreateCustomer({
+      full_name: document.getElementById('cName').value.trim(),
+      cnic: document.getElementById('cCnic').value.trim() || undefined,
+      mobile: document.getElementById('cMobile').value.trim() || undefined,
+      branch_code: document.getElementById('cBranch').value.trim() || undefined,
+      kyc_status: document.getElementById('cKyc').value,
+      aml_risk: document.getElementById('cAml').value,
+    });
+    loadCust(); loadSum();
+  } catch (e) { alert(e.message); }
+}
+async function loadAcc() {
+  try {
+    const rows = await DigiFyntekAPI.cbsAccounts();
+    document.getElementById('tbA').innerHTML = rows.length ? rows.map(r =>
+      `<tr><td class="mono">${r.account_no}</td><td class="mono">${r.cif_no}</td><td>${r.product_code}</td><td>${r.account_type}</td>
+       <td class="mono">${money(r.balance)}</td><td>${r.status}</td></tr>`).join('') : '<tr><td colspan="6">No accounts</td></tr>';
+  } catch (e) {
+    document.getElementById('tbA').innerHTML = `<tr><td colspan="6" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+async function openAcc() {
+  try {
+    await DigiFyntekAPI.cbsOpenAccount({
+      cif_no: document.getElementById('aCif').value.trim(),
+      product_code: document.getElementById('aProd').value.trim(),
+      account_type: document.getElementById('aType').value,
+      branch_code: document.getElementById('aBranch').value.trim() || undefined,
+    });
+    loadAcc(); loadSum();
+  } catch (e) { alert(e.message); }
+}
+async function loadTx() {
+  try {
+    const rows = await DigiFyntekAPI.cbsTxns();
+    document.getElementById('tbT').innerHTML = rows.length ? rows.map(r =>
+      `<tr><td class="mono">${r.txn_id}</td><td>${String(r.txn_date).slice(0,10)}</td><td>${r.txn_type}</td>
+       <td class="mono">${r.debit_account||''}</td><td class="mono">${r.credit_account||''}</td>
+       <td class="mono">${money(r.amount)}</td><td>${r.channel}</td>
+       <td><span class="tag ${st[r.status]||'tag-n'}">${r.status}</span></td></tr>`).join('') : '<tr><td colspan="8">No transactions</td></tr>';
+  } catch (e) {
+    document.getElementById('tbT').innerHTML = `<tr><td colspan="8" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+async function doTransfer() {
+  try {
+    await DigiFyntekAPI.cbsTransfer({
+      debit_account: document.getElementById('tDeb').value.trim(),
+      credit_account: document.getElementById('tCre').value.trim(),
+      amount: Number(document.getElementById('tAmt').value),
+      narration: document.getElementById('tNarr').value.trim() || undefined,
+      channel: 'branch',
+    });
+    loadTx(); loadAcc(); loadSum();
+  } catch (e) { alert(e.message); }
+}
+async function loadProd() {
+  try {
+    const rows = await DigiFyntekAPI.cbsProducts();
+    document.getElementById('tbP').innerHTML = rows.map(r =>
+      `<tr><td class="mono">${r.product_code}</td><td>${r.product_name}</td><td>${r.product_type}</td>
+       <td>${r.interest_rate ?? '—'}</td><td class="mono">${money(r.min_balance||0)}</td></tr>`).join('');
+  } catch (e) {
+    document.getElementById('tbP').innerHTML = `<tr><td colspan="5" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+async function loadInt() {
+  try {
+    const rows = await DigiFyntekAPI.cbsIntegrations();
+    document.getElementById('tbI').innerHTML = rows.map(r =>
+      `<tr><td class="mono">${r.code}</td><td>${r.name}</td><td>${r.category}</td><td>${r.auth_type}</td>
+       <td><span class="tag ${st[r.status]||'tag-n'}">${r.status}</span></td></tr>`).join('');
+  } catch (e) {
+    document.getElementById('tbI').innerHTML = `<tr><td colspan="5" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+async function loadSbp() {
+  try {
+    const rows = await DigiFyntekAPI.cbsSbp();
+    document.getElementById('tbS').innerHTML = rows.map(r =>
+      `<tr><td class="mono">${r.control_code}</td><td><strong>${r.title}</strong><br><span style="color:#6b7280;font-size:12px">${r.description||''}</span></td>
+       <td>${r.category}</td><td><span class="tag ${st[r.status]||'tag-n'}">${r.status}</span></td>
+       <td><button class="btn" style="height:28px;font-size:11px" onclick="markSbp('${r.control_code}')">Update</button></td></tr>`).join('');
+  } catch (e) {
+    document.getElementById('tbS').innerHTML = `<tr><td colspan="5" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+async function markSbp(code) {
+  const status = prompt('Status: not_started | in_progress | compliant | gap', 'in_progress');
+  if (!status) return;
+  try {
+    await DigiFyntekAPI.request('/api/cbs/sbp-controls/' + code, {
+      method: 'PATCH', body: JSON.stringify({ status })
+    });
+    loadSbp();
+  } catch (e) { alert(e.message); }
+}
+
+loadSum(); loadCust(); loadAcc(); loadTx(); loadProd(); loadInt(); loadSbp();
+</script>
+</body>
+</html>
