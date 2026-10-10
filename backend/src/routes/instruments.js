@@ -62,6 +62,8 @@ async function ensureTables() {
         member_ref VARCHAR(64) NOT NULL,
         member_name VARCHAR(150) NULL,
         account_no VARCHAR(64) NULL,
+        bank_branch VARCHAR(100) NULL,
+        branch_code VARCHAR(20) NULL,
         leaves_requested INT UNSIGNED NOT NULL DEFAULT 25,
         request_date DATE NOT NULL,
         status ENUM('pending','approved','rejected','issued','cancelled') NOT NULL DEFAULT 'pending',
@@ -77,6 +79,10 @@ async function ensureTables() {
   } catch (e) {
     /* table may already exist with FKs */
   }
+  try { await pool.query('ALTER TABLE cheque_book_requests ADD COLUMN bank_branch VARCHAR(100) NULL'); } catch (_) {}
+  try { await pool.query('ALTER TABLE cheque_book_requests ADD COLUMN branch_code VARCHAR(20) NULL'); } catch (_) {}
+  try { await pool.query('ALTER TABLE cheque_books ADD COLUMN bank_branch VARCHAR(100) NULL'); } catch (_) {}
+  try { await pool.query('ALTER TABLE cheque_books ADD COLUMN branch_code VARCHAR(20) NULL'); } catch (_) {}
 }
 
 router.use(async (_req, _res, next) => {
@@ -474,6 +480,40 @@ router.get('/stops', auth(), async (req, res, next) => {
 
 
 
+
+/** Bank / society branches for dropdown */
+router.get('/branches', auth(), async (req, res, next) => {
+  try {
+    const org = orgCode(req);
+    const LEGACY = process.env.DB_MODE === 'legacy' || process.env.LEGACY_SCHEMA === '1';
+    if (LEGACY) {
+      try {
+        const [rows] = await pool.query(
+          `SELECT vac_code AS code, vac_name AS name
+           FROM tbl_vacs WHERE por_orgacode = :org AND vac_active = 1
+           ORDER BY vac_name LIMIT 200`,
+          { org }
+        );
+        if (rows.length) {
+          return res.json(rows.map((r) => ({
+            code: r.code,
+            name: r.name,
+            label: r.code + ' — ' + r.name,
+          })));
+        }
+      } catch (_) {}
+    }
+    res.json([
+      { code: 'HQ', name: 'Head Office', label: 'HQ — Head Office' },
+      { code: 'BR01', name: 'Main Branch', label: 'BR01 — Main Branch' },
+      { code: 'BR02', name: 'City Branch', label: 'BR02 — City Branch' },
+      { code: 'BR03', name: 'Rural Branch', label: 'BR03 — Rural Branch' },
+    ]);
+  } catch (e) {
+    next(e);
+  }
+});
+
 /** Cheque book requests */
 router.get('/requests', auth(), async (req, res, next) => {
   try {
@@ -509,9 +549,9 @@ router.post('/requests', auth(), async (req, res, next) => {
     const [ins] = await pool.query(
       `INSERT INTO cheque_book_requests
         (por_orgacode, vac_code, request_no, member_ref, member_name, account_no,
-         leaves_requested, request_date, status, reason, created_by)
+         bank_branch, branch_code, leaves_requested, request_date, status, reason, created_by)
        VALUES
-        (:org, :vac, :rno, :mref, :mname, :acc, :leaves, :rdate, 'pending', :reason, :by)`,
+        (:org, :vac, :rno, :mref, :mname, :acc, :branch, :bcode, :leaves, :rdate, 'pending', :reason, :by)`,
       {
         org,
         vac: b.vac_code || req.user.vacCode || null,
@@ -519,6 +559,8 @@ router.post('/requests', auth(), async (req, res, next) => {
         mref: String(b.member_ref || b.member_id),
         mname: b.member_name || null,
         acc: b.account_no || null,
+        branch: b.bank_branch || b.branch_name || null,
+        bcode: b.branch_code || null,
         leaves,
         rdate: b.request_date || new Date().toISOString().slice(0, 10),
         reason: b.reason || null,
@@ -587,9 +629,9 @@ router.post('/requests/:id/issue', auth(), async (req, res, next) => {
       const [ins] = await conn.query(
         `INSERT INTO cheque_books
           (por_orgacode, vac_code, book_no, member_ref, account_no, member_name, bank_name,
-           leaf_start, leaf_end, total_leaves, issue_date, status, notes, created_by)
+           bank_branch, branch_code, leaf_start, leaf_end, total_leaves, issue_date, status, notes, created_by)
          VALUES
-          (:org, :vac, :book, :mref, :acc, :mname, 'Society', :ls, :le, :tot, :idt, 'active', :notes, :by)`,
+          (:org, :vac, :book, :mref, :acc, :mname, 'Society', :branch, :bcode, :ls, :le, :tot, :idt, 'active', :notes, :by)`,
         {
           org,
           vac: reqRow.vac_code,
@@ -597,6 +639,8 @@ router.post('/requests/:id/issue', auth(), async (req, res, next) => {
           mref: reqRow.member_ref,
           acc: reqRow.account_no,
           mname: reqRow.member_name,
+          branch: reqRow.bank_branch || null,
+          bcode: reqRow.branch_code || null,
           ls: start,
           le: end,
           tot: total,

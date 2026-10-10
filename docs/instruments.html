@@ -106,14 +106,16 @@
               <tr>
                 <th>Request #</th>
                 <th>Date</th>
-                <th>Member</th>
+                <th>Member ref</th>
+                <th>Member name</th>
+                <th>Branch</th>
                 <th>Account</th>
                 <th>Leaves</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody id="tbReq"><tr><td colspan="7">Loading…</td></tr></tbody>
+            <tbody id="tbReq"><tr><td colspan="9">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -220,7 +222,7 @@
         <div class="card">
           <table>
             <thead><tr><th>Cheque #</th><th>Book</th><th>Member</th><th>Payee</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="tbLeaves"><tr><td colspan="7">Loading…</td></tr></tbody>
+            <tbody id="tbLeaves"><tr><td colspan="9">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -236,6 +238,7 @@
     <div class="fg"><label>Member ref (farmer/member no)</label><input id="memberRef" /></div>
     <div class="fg"><label>Member name</label><input id="memberName" /></div>
     <div class="fg"><label>Account number</label><input id="accountNo" /></div>
+    <div class="fg"><label>Bank branch</label><select id="issBranch"><option value="">Select…</option></select></div>
     <div class="fg"><label>VAC code</label><input id="vacCode" placeholder="optional" /></div>
     <div class="fg"><label>Leaf start</label><input id="leafStart" type="number" value="1" /></div>
     <div class="fg"><label>Leaf end</label><input id="leafEnd" type="number" value="25" /></div>
@@ -255,10 +258,17 @@
 <aside class="drawer" id="reqDrawer">
   <div class="drawer-h"><strong>Cheque book request</strong><button class="btn" onclick="closeReqDrawer()">Close</button></div>
   <div class="drawer-b">
-    <div class="fg"><label>Member ref *</label><input id="reqMemberRef" /></div>
-    <div class="fg"><label>Member name</label><input id="reqMemberName" /></div>
-    <div class="fg"><label>Account number</label><input id="reqAccount" /></div>
-    <div class="fg"><label>VAC code</label><input id="reqVac" /></div>
+    <div class="fg">
+      <label>Member ref * <span style="color:#9ca3af;font-weight:400">(farmer / member number)</span></label>
+      <input id="reqMemberRef" placeholder="e.g. 000123" required />
+    </div>
+    <div class="fg"><label>Member name</label><input id="reqMemberName" placeholder="Full name" /></div>
+    <div class="fg"><label>Account number</label><input id="reqAccount" placeholder="Linked A/C" /></div>
+    <div class="fg">
+      <label>Bank branch *</label>
+      <select id="reqBranch"><option value="">Loading branches…</option></select>
+    </div>
+    <div class="fg"><label>VAC code</label><input id="reqVac" placeholder="optional" /></div>
     <div class="fg"><label>Leaves requested</label><input id="reqLeaves" type="number" value="25" min="1" max="200" /></div>
     <div class="fg"><label>Request date</label><input id="reqDate" type="date" /></div>
     <div class="fg"><label>Reason</label><input id="reqReason" placeholder="e.g. New account / exhausted book" /></div>
@@ -374,10 +384,150 @@ async function submitStop() {
 }
 
 
-function openDrawer() {
+
+async function loadBranches(selId) {
+  var sel = document.getElementById(selId || 'reqBranch');
+  if (!sel) return;
+  try {
+    var rows = await DigiFyntekAPI.request('/api/instruments/branches');
+    sel.innerHTML = '<option value="">Select branch…</option>' +
+      rows.map(function (b) {
+        var name = (b.name || '').replace(/"/g, '');
+        return '<option value="' + (b.code || '') + '" data-name="' + name + '">' +
+          (b.label || (b.code + ' — ' + b.name)) + '</option>';
+      }).join('');
+  } catch (e) {
+    sel.innerHTML = '<option value="HQ" data-name="Head Office">HQ — Head Office</option>' +
+      '<option value="BR01" data-name="Main Branch">BR01 — Main Branch</option>';
+  }
+}
+
+function openReqDrawer() {
+  document.getElementById('reqDrawer').classList.add('open');
+  document.getElementById('reqBg').classList.add('open');
+  var d = document.getElementById('reqDate');
+  if (d) d.value = new Date().toISOString().slice(0, 10);
+  loadBranches('reqBranch');
+}
+function closeReqDrawer() {
+  document.getElementById('reqDrawer').classList.remove('open');
+  document.getElementById('reqBg').classList.remove('open');
+}
+
+async function loadRequests() {
+  try {
+    var p = new URLSearchParams();
+    var qEl = document.getElementById('rq');
+    var stEl = document.getElementById('rStatus');
+    if (qEl && qEl.value.trim()) p.set('q', qEl.value.trim());
+    if (stEl && stEl.value) p.set('status', stEl.value);
+    var rows = await DigiFyntekAPI.request('/api/instruments/requests' + (p.toString() ? '?' + p : ''));
+    var tb = document.getElementById('tbReq');
+    if (!tb) return;
+    if (!rows.length) {
+      tb.innerHTML = '<tr><td colspan="9">No requests</td></tr>';
+      return;
+    }
+    tb.innerHTML = rows.map(function (r) {
+      var acts = '';
+      if (r.status === 'pending') {
+        acts += '<button class="btn" style="height:28px;font-size:11px" onclick="reviewReq(' + r.id + ',\'approve\')">Approve</button> ';
+        acts += '<button class="btn btn-d" style="height:28px;font-size:11px" onclick="reviewReq(' + r.id + ',\'reject\')">Reject</button> ';
+      }
+      if (r.status === 'approved' || r.status === 'pending') {
+        acts += '<button class="btn btn-p" style="height:28px;font-size:11px" onclick="issueFromReq(' + r.id + ')">Issue book</button>';
+      }
+      if (r.status === 'issued' && r.issued_book_id) acts = 'Book #' + r.issued_book_id;
+      return '<tr>' +
+        '<td class="mono">' + (r.request_no || '') + '</td>' +
+        '<td>' + (r.request_date ? String(r.request_date).slice(0, 10) : '—') + '</td>' +
+        '<td class="mono"><strong>' + (r.member_ref || '—') + '</strong></td>' +
+        '<td>' + (r.member_name || '—') + '</td>' +
+        '<td>' + (r.bank_branch || r.branch_code || '—') + '</td>' +
+        '<td class="mono">' + (r.account_no || '—') + '</td>' +
+        '<td>' + (r.leaves_requested || '') + '</td>' +
+        '<td><span class="tag ' + (stTag[r.status] || 'tag-n') + '">' + r.status + '</span></td>' +
+        '<td>' + (acts || '—') + '</td></tr>';
+    }).join('');
+  } catch (e) {
+    var tb = document.getElementById('tbReq');
+    if (tb) tb.innerHTML = '<tr><td colspan="9" style="color:#e11d48">' + e.message + '</td></tr>';
+  }
+}
+
+async function submitRequest() {
+  var msg = document.getElementById('reqMsg');
+  msg.textContent = 'Submitting…';
+  try {
+    var branchSel = document.getElementById('reqBranch');
+    var branchOpt = branchSel.options[branchSel.selectedIndex];
+    var body = {
+      member_ref: document.getElementById('reqMemberRef').value.trim(),
+      member_name: document.getElementById('reqMemberName').value.trim() || undefined,
+      account_no: document.getElementById('reqAccount').value.trim() || undefined,
+      branch_code: branchSel.value || undefined,
+      bank_branch: branchOpt && branchOpt.value ? (branchOpt.getAttribute('data-name') || branchOpt.text) : undefined,
+      vac_code: document.getElementById('reqVac').value.trim() || undefined,
+      leaves_requested: Number(document.getElementById('reqLeaves').value) || 25,
+      request_date: document.getElementById('reqDate').value || undefined,
+      reason: document.getElementById('reqReason').value.trim() || undefined,
+    };
+    if (!body.member_ref) throw new Error('Member ref required');
+    if (!body.branch_code) throw new Error('Bank branch required');
+    var r = await DigiFyntekAPI.request('/api/instruments/requests', {
+      method: 'POST', body: JSON.stringify(body)
+    });
+    msg.textContent = 'Created ' + r.request_no;
+    msg.style.color = '#059669';
+    closeReqDrawer();
+    loadRequests();
+  } catch (e) {
+    msg.textContent = e.message;
+    msg.style.color = '#e11d48';
+  }
+}
+
+async function reviewReq(id, action) {
+  var notes = action === 'reject' ? prompt('Rejection notes') : (prompt('Approval notes (optional)') || '');
+  if (action === 'reject' && notes === null) return;
+  try {
+    await DigiFyntekAPI.request('/api/instruments/requests/' + id + '/review', {
+      method: 'POST', body: JSON.stringify({ action: action, review_notes: notes })
+    });
+    loadRequests();
+  } catch (e) { alert(e.message); }
+}
+
+async function issueFromReq(id) {
+  if (!confirm('Issue cheque book from this request?')) return;
+  try {
+    var r = await DigiFyntekAPI.request('/api/instruments/requests/' + id + '/issue', {
+      method: 'POST', body: JSON.stringify({})
+    });
+    alert('Issued book ' + r.book_no + ' (' + r.total_leaves + ' leaves)');
+    loadRequests();
+    loadSummary();
+    loadBooks();
+  } catch (e) { alert(e.message); }
+}
+
+
+async function openDrawer() {
   document.getElementById('drawer').classList.add('open');
   document.getElementById('bg').classList.add('open');
   document.getElementById('issueDate').value = new Date().toISOString().slice(0,10);
+  loadBranches('issBranch');
+  var sel = document.getElementById('issBranch');
+  if (sel && sel.options.length <= 1) {
+    try {
+      var rows = await DigiFyntekAPI.request('/api/instruments/branches');
+      sel.innerHTML = '<option value="">Select branch…</option>' +
+        rows.map(function (b) {
+          return '<option value="' + (b.code||'') + '" data-name="' + (b.name||'').replace(/"/g,'') + '">' +
+            (b.label || b.code + ' — ' + b.name) + '</option>';
+        }).join('');
+    } catch (_) {}
+  }
 }
 function closeDrawer() {
   document.getElementById('drawer').classList.remove('open');
@@ -437,7 +587,7 @@ async function loadLeaves() {
     if (bid) p.set('book_id', bid);
     const rows = await DigiFyntekAPI.request('/api/instruments/leaves' + (p.toString() ? '?' + p : ''));
     const tb = document.getElementById('tbLeaves');
-    if (!rows.length) tb.innerHTML = '<tr><td colspan="7">No leaves</td></tr>';
+    if (!rows.length) tb.innerHTML = '<tr><td colspan="9">No leaves</td></tr>';
     else tb.innerHTML = rows.map(r => {
       const acts = [];
       if (r.status === 'available' || r.status === 'issued') {
@@ -459,7 +609,7 @@ async function loadLeaves() {
       </tr>`;
     }).join('');
   } catch (e) {
-    document.getElementById('tbLeaves').innerHTML = `<tr><td colspan="7" style="color:#e11d48">${e.message}</td></tr>`;
+    document.getElementById('tbLeaves').innerHTML = `<tr><td colspan="9" style="color:#e11d48">${e.message}</td></tr>`;
   }
 }
 
