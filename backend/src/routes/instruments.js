@@ -500,7 +500,7 @@ router.get('/branches', auth(), async (req, res, next) => {
           return res.json(rows.map((r) => ({
             code: r.code,
             name: r.name,
-            label: r.code + ' — ' + r.name,
+            label: (r.code || '') + ' — ' + (r.name || ''),
           })));
         }
       } catch (_) {}

@@ -238,7 +238,10 @@
     <div class="fg"><label>Member ref (farmer/member no)</label><input id="memberRef" /></div>
     <div class="fg"><label>Member name</label><input id="memberName" /></div>
     <div class="fg"><label>Account number</label><input id="accountNo" /></div>
-    <div class="fg"><label>Branch code *</label><select id="issBranch"><option value="">Select branch…</option></select></div>
+    <div class="fg">
+      <label>Branch * <span style="color:#9ca3af;font-weight:400">(code — name)</span></label>
+      <select id="issBranch"><option value="">Select branch…</option></select>
+    </div>
     
     <div class="fg"><label>Leaf start</label><input id="leafStart" type="number" value="1" /></div>
     <div class="fg"><label>Leaf end</label><input id="leafEnd" type="number" value="25" /></div>
@@ -265,7 +268,7 @@
     <div class="fg"><label>Member name</label><input id="reqMemberName" placeholder="Full name" /></div>
     <div class="fg"><label>Account number</label><input id="reqAccount" placeholder="Linked A/C" /></div>
     <div class="fg">
-      <label>Branch code *</label>
+      <label>Branch * <span style="color:#9ca3af;font-weight:400">(code — name)</span></label>
       <select id="reqBranch"><option value="">Select branch…</option></select>
     </div>
     <div class="fg"><label>Leaves requested</label><input id="reqLeaves" type="number" value="25" min="1" max="200" /></div>
@@ -387,17 +390,27 @@ async function submitStop() {
 async function loadBranches(selId) {
   var sel = document.getElementById(selId || 'reqBranch');
   if (!sel) return;
+  function optText(b) {
+    var code = (b.code || '').trim();
+    var name = (b.name || '').trim();
+    if (code && name) return code + ' — ' + name;
+    return b.label || code || name || '—';
+  }
   try {
     var rows = await DigiFyntekAPI.request('/api/instruments/branches');
-    sel.innerHTML = '<option value="">Select branch…</option>' +
+    sel.innerHTML = '<option value="">Select branch (code — name)…</option>' +
       rows.map(function (b) {
         var name = (b.name || '').replace(/"/g, '');
-        return '<option value="' + (b.code || '') + '" data-name="' + name + '">' +
-          (b.label || (b.code + ' — ' + b.name)) + '</option>';
+        var code = (b.code || '').replace(/"/g, '');
+        return '<option value="' + code + '" data-name="' + name + '">' + optText(b) + '</option>';
       }).join('');
   } catch (e) {
-    sel.innerHTML = '<option value="HQ" data-name="Head Office">HQ — Head Office</option>' +
-      '<option value="BR01" data-name="Main Branch">BR01 — Main Branch</option>';
+    sel.innerHTML =
+      '<option value="">Select branch (code — name)…</option>' +
+      '<option value="HQ" data-name="Head Office">HQ — Head Office</option>' +
+      '<option value="BR01" data-name="Main Branch">BR01 — Main Branch</option>' +
+      '<option value="BR02" data-name="City Branch">BR02 — City Branch</option>' +
+      '<option value="BR03" data-name="Rural Branch">BR03 — Rural Branch</option>';
   }
 }
 
