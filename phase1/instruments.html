@@ -50,7 +50,10 @@
           <h1>Chequebooks</h1>
           <p class="sub">Issue books, track leaves, stop payment, clear / bounce status.</p>
         </div>
-        <button class="btn btn-p" onclick="openDrawer()">+ Issue chequebook</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn" onclick="openReqDrawer()">+ New request</button>
+          <button class="btn btn-p" onclick="openDrawer()">+ Issue chequebook</button>
+        </div>
       </div>
 
       <div class="kpis">
@@ -62,6 +65,7 @@
 
       <div class="tabs">
         <button class="tab on" onclick="showTab(this,'books')">Books</button>
+        <button class="tab" onclick="showTab(this,'requests')">Requests</button>
         <button class="tab" onclick="showTab(this,'leaves')">Cheque leaves</button>
         <button class="tab" onclick="showTab(this,'issues')">Book issues</button>
         <button class="tab" onclick="showTab(this,'stops')">Stop payment</button>
@@ -81,6 +85,38 @@
         </div>
       </div>
 
+
+      
+      <div id="panel-requests" hidden>
+        <div class="filters">
+          <input id="rq" placeholder="Request #, member, account…" onkeydown="if(event.key==='Enter')loadRequests()" />
+          <select id="rStatus">
+            <option value="">All status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="issued">Issued</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button class="btn" onclick="loadRequests()">Filter</button>
+        </div>
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Request #</th>
+                <th>Date</th>
+                <th>Member</th>
+                <th>Account</th>
+                <th>Leaves</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tbReq"><tr><td colspan="7">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
 
       <div id="panel-issues" hidden>
         <p class="sub">History of cheque books issued to members/accounts.</p>
@@ -214,22 +250,43 @@
   </div>
 </aside>
 
+
+<div class="drawer-bg" id="reqBg" onclick="closeReqDrawer()"></div>
+<aside class="drawer" id="reqDrawer">
+  <div class="drawer-h"><strong>Cheque book request</strong><button class="btn" onclick="closeReqDrawer()">Close</button></div>
+  <div class="drawer-b">
+    <div class="fg"><label>Member ref *</label><input id="reqMemberRef" /></div>
+    <div class="fg"><label>Member name</label><input id="reqMemberName" /></div>
+    <div class="fg"><label>Account number</label><input id="reqAccount" /></div>
+    <div class="fg"><label>VAC code</label><input id="reqVac" /></div>
+    <div class="fg"><label>Leaves requested</label><input id="reqLeaves" type="number" value="25" min="1" max="200" /></div>
+    <div class="fg"><label>Request date</label><input id="reqDate" type="date" /></div>
+    <div class="fg"><label>Reason</label><input id="reqReason" placeholder="e.g. New account / exhausted book" /></div>
+    <p id="reqMsg" style="font-size:12px;color:var(--ink-2)"></p>
+  </div>
+  <div class="drawer-f">
+    <button class="btn" onclick="closeReqDrawer()">Cancel</button>
+    <button class="btn btn-p" onclick="submitRequest()">Submit request</button>
+  </div>
+</aside>
+
 <script src="config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/shell.js"></script>
 <script>
 const stTag = {
   available:'tag-g', active:'tag-g', used:'tag-b', cleared:'tag-n', issued:'tag-a',
-  stopped:'tag-r', bounced:'tag-r', cancelled:'tag-r', exhausted:'tag-a', returned:'tag-n'
+  stopped:'tag-r', bounced:'tag-r', cancelled:'tag-r', exhausted:'tag-a', returned:'tag-n', pending:'tag-a', approved:'tag-b', rejected:'tag-r', issued:'tag-g'
 };
 
 function showTab(btn, id) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
   btn.classList.add('on');
-  ['books','leaves','issues','stops'].forEach(function (p) {
+  ['books','requests','leaves','issues','stops'].forEach(function (p) {
     var el = document.getElementById('panel-' + p);
     if (el) el.hidden = p !== id;
   });
+  if (id === 'requests') loadRequests();
   if (id === 'leaves') loadLeaves();
   if (id === 'issues') loadIssues();
   if (id === 'stops') { loadStops(); toggleStopMode(); }

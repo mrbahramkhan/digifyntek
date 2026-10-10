@@ -44,3 +44,27 @@ CREATE TABLE IF NOT EXISTS cheque_leaves (
   KEY idx_status (status),
   CONSTRAINT fk_leaf_book FOREIGN KEY (book_id) REFERENCES cheque_books(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+CREATE TABLE IF NOT EXISTS cheque_book_requests (
+  id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  por_orgacode    VARCHAR(10) NULL,
+  vac_code        VARCHAR(10) NULL,
+  request_no      VARCHAR(40) NOT NULL,
+  member_ref      VARCHAR(64) NOT NULL,
+  member_name     VARCHAR(150) NULL,
+  account_no      VARCHAR(64) NULL,
+  leaves_requested INT UNSIGNED NOT NULL DEFAULT 25,
+  request_date    DATE NOT NULL,
+  status          ENUM('pending','approved','rejected','issued','cancelled') NOT NULL DEFAULT 'pending',
+  reason          VARCHAR(255) NULL,
+  review_notes    VARCHAR(500) NULL,
+  reviewed_by     VARCHAR(50) NULL,
+  reviewed_at     DATETIME NULL,
+  issued_book_id  INT UNSIGNED NULL,
+  created_by      VARCHAR(50) NULL,
+  created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_req (por_orgacode, request_no),
+  KEY idx_status (status),
+  KEY idx_member (member_ref)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

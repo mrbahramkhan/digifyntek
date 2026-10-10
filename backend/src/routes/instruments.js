@@ -53,6 +53,27 @@ async function ensureTables() {
         UNIQUE KEY uk_cheque (por_orgacode, cheque_no),
         KEY idx_book (book_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS cheque_book_requests (
+        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        por_orgacode VARCHAR(10) NULL,
+        vac_code VARCHAR(10) NULL,
+        request_no VARCHAR(40) NOT NULL,
+        member_ref VARCHAR(64) NOT NULL,
+        member_name VARCHAR(150) NULL,
+        account_no VARCHAR(64) NULL,
+        leaves_requested INT UNSIGNED NOT NULL DEFAULT 25,
+        request_date DATE NOT NULL,
+        status ENUM('pending','approved','rejected','issued','cancelled') NOT NULL DEFAULT 'pending',
+        reason VARCHAR(255) NULL,
+        review_notes VARCHAR(500) NULL,
+        reviewed_by VARCHAR(50) NULL,
+        reviewed_at DATETIME NULL,
+        issued_book_id INT UNSIGNED NULL,
+        created_by VARCHAR(50) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_req (por_orgacode, request_no)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
   } catch (e) {
     /* table may already exist with FKs */
   }
@@ -446,6 +467,177 @@ router.get('/stops', auth(), async (req, res, next) => {
       { org }
     );
     res.json(rows);
+  } catch (e) {
+    next(e);
+  }
+});
+
+
+
+/** Cheque book requests */
+router.get('/requests', auth(), async (req, res, next) => {
+  try {
+    const org = orgCode(req);
+    let sql = `SELECT * FROM cheque_book_requests
+               WHERE (por_orgacode = :org OR por_orgacode IS NULL)`;
+    const params = { org };
+    if (req.query.status) {
+      sql += ` AND status = :status`;
+      params.status = req.query.status;
+    }
+    if (req.query.q) {
+      sql += ` AND (request_no LIKE :q OR member_ref LIKE :q OR member_name LIKE :q OR account_no LIKE :q)`;
+      params.q = `%${req.query.q}%`;
+    }
+    sql += ` ORDER BY id DESC LIMIT 300`;
+    const [rows] = await pool.query(sql, params);
+    res.json(rows);
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post('/requests', auth(), async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    if (!b.member_ref && !b.member_id) {
+      return res.status(400).json({ error: 'member_ref required' });
+    }
+    const org = orgCode(req);
+    const reqNo = b.request_no || `CBR-${Date.now().toString().slice(-8)}`;
+    const leaves = Math.min(200, Math.max(1, Number(b.leaves_requested) || 25));
+    const [ins] = await pool.query(
+      `INSERT INTO cheque_book_requests
+        (por_orgacode, vac_code, request_no, member_ref, member_name, account_no,
+         leaves_requested, request_date, status, reason, created_by)
+       VALUES
+        (:org, :vac, :rno, :mref, :mname, :acc, :leaves, :rdate, 'pending', :reason, :by)`,
+      {
+        org,
+        vac: b.vac_code || req.user.vacCode || null,
+        rno: reqNo,
+        mref: String(b.member_ref || b.member_id),
+        mname: b.member_name || null,
+        acc: b.account_no || null,
+        leaves,
+        rdate: b.request_date || new Date().toISOString().slice(0, 10),
+        reason: b.reason || null,
+        by: String(req.user.userId || req.user.id || '').slice(0, 50),
+      }
+    );
+    res.status(201).json({ id: ins.insertId, request_no: reqNo, status: 'pending' });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** Approve or reject request */
+router.post('/requests/:id/review', auth(), async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const action = b.action; // approve | reject
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ error: 'action must be approve or reject' });
+    }
+    const status = action === 'approve' ? 'approved' : 'rejected';
+    const [r] = await pool.query(
+      `UPDATE cheque_book_requests
+       SET status = :status, review_notes = :notes, reviewed_by = :by, reviewed_at = NOW()
+       WHERE id = :id AND status = 'pending'`,
+      {
+        status,
+        notes: b.review_notes || b.notes || null,
+        by: String(req.user.userId || req.user.id || '').slice(0, 50),
+        id: req.params.id,
+      }
+    );
+    if (!r.affectedRows) return res.status(404).json({ error: 'Pending request not found' });
+    res.json({ ok: true, status });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/**
+ * Issue book from approved request
+ * body optional: leaf_start, cheque_prefix
+ */
+router.post('/requests/:id/issue', auth(), async (req, res, next) => {
+  try {
+    const org = orgCode(req);
+    const [[reqRow]] = await pool.query(
+      `SELECT * FROM cheque_book_requests WHERE id = :id LIMIT 1`,
+      { id: req.params.id }
+    );
+    if (!reqRow) return res.status(404).json({ error: 'Request not found' });
+    if (!['approved', 'pending'].includes(reqRow.status)) {
+      return res.status(400).json({ error: `Cannot issue from status ${reqRow.status}` });
+    }
+
+    const b = req.body || {};
+    const total = Number(reqRow.leaves_requested) || 25;
+    const start = Number(b.leaf_start) || 1;
+    const end = start + total - 1;
+    const bookNo = b.book_no || `CB-${Date.now().toString().slice(-8)}`;
+    const issueDate = b.issue_date || new Date().toISOString().slice(0, 10);
+
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [ins] = await conn.query(
+        `INSERT INTO cheque_books
+          (por_orgacode, vac_code, book_no, member_ref, account_no, member_name, bank_name,
+           leaf_start, leaf_end, total_leaves, issue_date, status, notes, created_by)
+         VALUES
+          (:org, :vac, :book, :mref, :acc, :mname, 'Society', :ls, :le, :tot, :idt, 'active', :notes, :by)`,
+        {
+          org,
+          vac: reqRow.vac_code,
+          book: bookNo,
+          mref: reqRow.member_ref,
+          acc: reqRow.account_no,
+          mname: reqRow.member_name,
+          ls: start,
+          le: end,
+          tot: total,
+          idt: issueDate,
+          notes: `From request ${reqRow.request_no}`,
+          by: String(req.user.userId || req.user.id || '').slice(0, 50),
+        }
+      );
+      const bookId = ins.insertId;
+      const prefix = b.cheque_prefix || bookNo.replace(/[^A-Za-z0-9]/g, '').slice(0, 6) || 'CHQ';
+      for (let n = start; n <= end; n++) {
+        const chequeNo = b.cheque_prefix
+          ? `${b.cheque_prefix}${String(n).padStart(6, '0')}`
+          : `${prefix}-${n}`;
+        await conn.query(
+          `INSERT INTO cheque_leaves (book_id, por_orgacode, cheque_no, leaf_seq, status)
+           VALUES (:bid, :org, :cno, :seq, 'available')`,
+          { bid: bookId, org, cno: chequeNo, seq: n }
+        );
+      }
+      await conn.query(
+        `UPDATE cheque_book_requests
+         SET status = 'issued', issued_book_id = :bid, reviewed_by = COALESCE(reviewed_by, :by),
+             reviewed_at = COALESCE(reviewed_at, NOW())
+         WHERE id = :id`,
+        { bid: bookId, by: String(req.user.userId || '').slice(0, 50), id: req.params.id }
+      );
+      await conn.commit();
+      res.status(201).json({
+        request_id: reqRow.id,
+        book_id: bookId,
+        book_no: bookNo,
+        total_leaves: total,
+        status: 'issued',
+      });
+    } catch (e) {
+      await conn.rollback();
+      throw e;
+    } finally {
+      conn.release();
+    }
   } catch (e) {
     next(e);
   }
