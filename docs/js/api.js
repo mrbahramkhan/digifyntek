@@ -130,8 +130,18 @@
       return request('/api/collateral/guarantees');
     },
 
-    instruments() {
-      return request('/api/instruments');
+    instruments(params) {
+      const q = params ? new URLSearchParams(params).toString() : '';
+      return request('/api/instruments' + (q ? '?' + q : ''));
+    },
+    instrumentSummary() { return request('/api/instruments/summary'); },
+    createInstrument(body) {
+      return request('/api/instruments', { method: 'POST', body: JSON.stringify(body) });
+    },
+    setInstrumentStatus(id, status) {
+      return request('/api/instruments/' + id + '/status', {
+        method: 'PATCH', body: JSON.stringify({ status }),
+      });
     },
 
     cards() {
