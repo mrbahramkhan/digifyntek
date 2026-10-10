@@ -63,6 +63,8 @@
       <div class="tabs">
         <button class="tab on" onclick="showTab(this,'books')">Books</button>
         <button class="tab" onclick="showTab(this,'leaves')">Cheque leaves</button>
+        <button class="tab" onclick="showTab(this,'issues')">Book issues</button>
+        <button class="tab" onclick="showTab(this,'stops')">Stop payment</button>
       </div>
 
       <div id="panel-books">
@@ -75,6 +77,91 @@
           <table>
             <thead><tr><th>Book #</th><th>Member</th><th>Account</th><th>Leaves</th><th>Range</th><th>Issue date</th><th>Status</th><th></th></tr></thead>
             <tbody id="tbBooks"><tr><td colspan="8">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+
+      <div id="panel-issues" hidden>
+        <p class="sub">History of cheque books issued to members/accounts.</p>
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Issue date</th>
+                <th>Book #</th>
+                <th>Member</th>
+                <th>Account</th>
+                <th>Leaves</th>
+                <th>Available</th>
+                <th>Used</th>
+                <th>Stopped</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbIssues"><tr><td colspan="9">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="panel-stops" hidden>
+        <div class="card" style="padding:16px;margin-bottom:14px">
+          <h3 style="font-size:15px;margin-bottom:10px">New stop payment</h3>
+          <div class="filters" style="align-items:flex-end">
+            <div>
+              <label style="display:block;font-size:11px;color:var(--ink-2);margin-bottom:4px">Mode</label>
+              <select id="stopMode" onchange="toggleStopMode()">
+                <option value="single">Single cheque</option>
+                <option value="range">Leaf range (in book)</option>
+                <option value="book">Entire book</option>
+              </select>
+            </div>
+            <div id="stopSingle">
+              <label style="display:block;font-size:11px;color:var(--ink-2);margin-bottom:4px">Cheque number</label>
+              <input id="stopChequeNo" placeholder="Cheque #" />
+            </div>
+            <div id="stopRange" hidden>
+              <label style="display:block;font-size:11px;color:var(--ink-2);margin-bottom:4px">Book ID</label>
+              <input id="stopBookId" type="number" placeholder="Book ID" style="width:100px" />
+              <input id="stopLeafFrom" type="number" placeholder="From leaf" style="width:100px" />
+              <input id="stopLeafTo" type="number" placeholder="To leaf" style="width:100px" />
+            </div>
+            <div id="stopBookOnly" hidden>
+              <label style="display:block;font-size:11px;color:var(--ink-2);margin-bottom:4px">Book ID</label>
+              <input id="stopBookOnlyId" type="number" placeholder="Book ID" style="width:120px" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--ink-2);margin-bottom:4px">Reason code</label>
+              <select id="stopCode">
+                <option value="SP">SP — Stop payment</option>
+                <option value="LOST">LOST — Lost / stolen</option>
+                <option value="DAMAGED">DAMAGED — Damaged</option>
+                <option value="FRAUD">FRAUD — Suspected fraud</option>
+                <option value="MEMBER">MEMBER — Member request</option>
+                <option value="OTHER">OTHER</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--ink-2);margin-bottom:4px">Reason detail</label>
+              <input id="stopReason" placeholder="Details" style="min-width:180px" />
+            </div>
+            <button class="btn btn-d" onclick="submitStop()">Stop payment</button>
+          </div>
+          <p id="stopMsg" style="font-size:13px;margin-top:10px;color:var(--ink-2)"></p>
+        </div>
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Stop date</th>
+                <th>Cheque #</th>
+                <th>Book</th>
+                <th>Member</th>
+                <th>Amount</th>
+                <th>Reason</th>
+              </tr>
+            </thead>
+            <tbody id="tbStops"><tr><td colspan="6">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -139,10 +226,96 @@ const stTag = {
 function showTab(btn, id) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
   btn.classList.add('on');
-  document.getElementById('panel-books').hidden = id !== 'books';
-  document.getElementById('panel-leaves').hidden = id !== 'leaves';
+  ['books','leaves','issues','stops'].forEach(function (p) {
+    var el = document.getElementById('panel-' + p);
+    if (el) el.hidden = p !== id;
+  });
   if (id === 'leaves') loadLeaves();
+  if (id === 'issues') loadIssues();
+  if (id === 'stops') { loadStops(); toggleStopMode(); }
 }
+
+function toggleStopMode() {
+  var m = document.getElementById('stopMode').value;
+  document.getElementById('stopSingle').hidden = m !== 'single';
+  document.getElementById('stopRange').hidden = m !== 'range';
+  document.getElementById('stopBookOnly').hidden = m !== 'book';
+}
+
+async function loadIssues() {
+  try {
+    var rows = await DigiFyntekAPI.request('/api/instruments/issues');
+    var tb = document.getElementById('tbIssues');
+    if (!rows.length) tb.innerHTML = '<tr><td colspan="9">No issues yet</td></tr>';
+    else tb.innerHTML = rows.map(function (r) {
+      return '<tr>' +
+        '<td>' + (r.issue_date ? String(r.issue_date).slice(0,10) : '—') + '</td>' +
+        '<td class="mono">' + (r.book_no||'') + '</td>' +
+        '<td>' + (r.member_name||r.member_ref||'—') + '</td>' +
+        '<td class="mono">' + (r.account_no||'—') + '</td>' +
+        '<td>' + (r.total_leaves||0) + '</td>' +
+        '<td>' + (r.leaves_available||0) + '</td>' +
+        '<td>' + (r.leaves_used||0) + '</td>' +
+        '<td>' + (r.leaves_stopped||0) + '</td>' +
+        '<td><span class="tag ' + (stTag[r.status]||'tag-n') + '">' + r.status + '</span></td>' +
+        '</tr>';
+    }).join('');
+  } catch (e) {
+    document.getElementById('tbIssues').innerHTML = '<tr><td colspan="9" style="color:#e11d48">' + e.message + '</td></tr>';
+  }
+}
+
+async function loadStops() {
+  try {
+    var rows = await DigiFyntekAPI.request('/api/instruments/stops');
+    var tb = document.getElementById('tbStops');
+    if (!rows.length) tb.innerHTML = '<tr><td colspan="6">No stop payments</td></tr>';
+    else tb.innerHTML = rows.map(function (r) {
+      return '<tr>' +
+        '<td>' + (r.stop_date ? String(r.stop_date).slice(0,10) : '—') + '</td>' +
+        '<td class="mono">' + (r.cheque_no||'') + '</td>' +
+        '<td class="mono">' + (r.book_no||'') + '</td>' +
+        '<td>' + (r.member_name||r.member_ref||'—') + '</td>' +
+        '<td class="mono">' + (r.amount!=null?DigiFyntekAPI.fmtPKR(r.amount):'—') + '</td>' +
+        '<td>' + (r.stop_reason||'—') + '</td>' +
+        '</tr>';
+    }).join('');
+  } catch (e) {
+    document.getElementById('tbStops').innerHTML = '<tr><td colspan="6" style="color:#e11d48">' + e.message + '</td></tr>';
+  }
+}
+
+async function submitStop() {
+  var msg = document.getElementById('stopMsg');
+  msg.textContent = 'Submitting…';
+  var mode = document.getElementById('stopMode').value;
+  var body = {
+    mode: mode,
+    reason_code: document.getElementById('stopCode').value,
+    reason: document.getElementById('stopReason').value.trim() || 'Stop payment',
+  };
+  if (mode === 'single') body.cheque_no = document.getElementById('stopChequeNo').value.trim();
+  if (mode === 'range') {
+    body.book_id = Number(document.getElementById('stopBookId').value);
+    body.leaf_from = Number(document.getElementById('stopLeafFrom').value);
+    body.leaf_to = Number(document.getElementById('stopLeafTo').value);
+  }
+  if (mode === 'book') body.book_id = Number(document.getElementById('stopBookOnlyId').value);
+  try {
+    var r = await DigiFyntekAPI.request('/api/instruments/stop-payment', {
+      method: 'POST', body: JSON.stringify(body)
+    });
+    msg.textContent = 'Stopped ' + r.stopped_count + ' cheque(s)';
+    msg.style.color = '#059669';
+    loadStops();
+    loadSummary();
+    loadLeaves();
+  } catch (e) {
+    msg.textContent = e.message;
+    msg.style.color = '#e11d48';
+  }
+}
+
 
 function openDrawer() {
   document.getElementById('drawer').classList.add('open');

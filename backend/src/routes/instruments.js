@@ -300,4 +300,156 @@ router.get('/', auth(), async (req, res, next) => {
   }
 });
 
+
+/** Issue history — issued cheque books */
+router.get('/issues', auth(), async (req, res, next) => {
+  try {
+    const org = orgCode(req);
+    const [rows] = await pool.query(
+      `SELECT b.*,
+              (SELECT COUNT(*) FROM cheque_leaves l WHERE l.book_id = b.id AND l.status = 'available') AS leaves_available,
+              (SELECT COUNT(*) FROM cheque_leaves l WHERE l.book_id = b.id AND l.status = 'stopped') AS leaves_stopped,
+              (SELECT COUNT(*) FROM cheque_leaves l WHERE l.book_id = b.id AND l.status IN ('used','cleared')) AS leaves_used
+       FROM cheque_books b
+       WHERE (b.por_orgacode = :org OR b.por_orgacode IS NULL)
+       ORDER BY b.issue_date DESC, b.id DESC
+       LIMIT 300`,
+      { org }
+    );
+    res.json(rows);
+  } catch (e) {
+    next(e);
+  }
+});
+
+/**
+ * Stop payment options:
+ * body: {
+ *   mode: 'single' | 'range' | 'book',
+ *   cheque_no?: string,          // single
+ *   cheque_from?: string|number, // range
+ *   cheque_to?: string|number,
+ *   book_id?: number,            // book or range within book
+ *   leaf_from?: number,
+ *   leaf_to?: number,
+ *   reason?: string,
+ *   reason_code?: string
+ * }
+ */
+router.post('/stop-payment', auth(), async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const mode = b.mode || 'single';
+    const reason = b.reason || b.stop_reason || 'Stop payment requested';
+    const reasonCode = b.reason_code || null;
+    const fullReason = reasonCode ? `[${reasonCode}] ${reason}` : reason;
+    const org = orgCode(req);
+
+    let ids = [];
+
+    if (mode === 'single') {
+      if (!b.cheque_no && !b.leaf_id) {
+        return res.status(400).json({ error: 'cheque_no or leaf_id required for single stop' });
+      }
+      if (b.leaf_id) {
+        ids = [Number(b.leaf_id)];
+      } else {
+        const [rows] = await pool.query(
+          `SELECT id FROM cheque_leaves
+           WHERE cheque_no = :cno AND (por_orgacode = :org OR por_orgacode IS NULL)
+             AND status IN ('available','issued','used')`,
+          { cno: String(b.cheque_no).trim(), org }
+        );
+        ids = rows.map((r) => r.id);
+      }
+    } else if (mode === 'range') {
+      if (b.book_id && b.leaf_from != null && b.leaf_to != null) {
+        const [rows] = await pool.query(
+          `SELECT id FROM cheque_leaves
+           WHERE book_id = :bid AND leaf_seq BETWEEN :a AND :c
+             AND status IN ('available','issued','used')`,
+          { bid: b.book_id, a: Number(b.leaf_from), c: Number(b.leaf_to) }
+        );
+        ids = rows.map((r) => r.id);
+      } else if (b.cheque_from && b.cheque_to) {
+        const [rows] = await pool.query(
+          `SELECT id FROM cheque_leaves
+           WHERE cheque_no BETWEEN :a AND :c
+             AND (por_orgacode = :org OR por_orgacode IS NULL)
+             AND status IN ('available','issued','used')`,
+          { a: String(b.cheque_from), c: String(b.cheque_to), org }
+        );
+        ids = rows.map((r) => r.id);
+      } else {
+        return res.status(400).json({ error: 'range needs book_id+leaf_from+leaf_to or cheque_from+cheque_to' });
+      }
+    } else if (mode === 'book') {
+      if (!b.book_id) return res.status(400).json({ error: 'book_id required' });
+      const [rows] = await pool.query(
+        `SELECT id FROM cheque_leaves
+         WHERE book_id = :bid AND status IN ('available','issued','used')`,
+        { bid: b.book_id }
+      );
+      ids = rows.map((r) => r.id);
+    } else {
+      return res.status(400).json({ error: 'mode must be single, range, or book' });
+    }
+
+    if (!ids.length) {
+      return res.status(404).json({ error: 'No eligible cheques found to stop' });
+    }
+
+    await pool.query(
+      `UPDATE cheque_leaves
+       SET status = 'stopped', stop_date = CURDATE(), stop_reason = :reason
+       WHERE id IN (${ids.map(() => '?').join(',')})`,
+      [fullReason, ...ids]
+    );
+
+    // If whole book stop and no available left, mark book cancelled
+    if (mode === 'book' && b.book_id) {
+      const [[cnt]] = await pool.query(
+        `SELECT SUM(status='available') AS avail FROM cheque_leaves WHERE book_id = :bid`,
+        { bid: b.book_id }
+      );
+      if (Number(cnt.avail || 0) === 0) {
+        await pool.query(
+          `UPDATE cheque_books SET status = 'cancelled' WHERE id = :bid AND status = 'active'`,
+          { bid: b.book_id }
+        );
+      }
+    }
+
+    res.json({
+      ok: true,
+      mode,
+      stopped_count: ids.length,
+      reason: fullReason,
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** List stop-payment records */
+router.get('/stops', auth(), async (req, res, next) => {
+  try {
+    const org = orgCode(req);
+    const [rows] = await pool.query(
+      `SELECT l.*, b.book_no, b.member_name, b.member_ref, b.account_no
+       FROM cheque_leaves l
+       JOIN cheque_books b ON b.id = l.book_id
+       WHERE l.status = 'stopped'
+         AND (l.por_orgacode = :org OR l.por_orgacode IS NULL)
+       ORDER BY l.stop_date DESC, l.id DESC
+       LIMIT 300`,
+      { org }
+    );
+    res.json(rows);
+  } catch (e) {
+    next(e);
+  }
+});
+
+
 module.exports = router;
