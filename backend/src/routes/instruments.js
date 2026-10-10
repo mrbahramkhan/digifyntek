@@ -171,18 +171,20 @@ router.post('/books', auth(), async (req, res, next) => {
       const [ins] = await conn.query(
         `INSERT INTO cheque_books
           (org_id, por_orgacode, vac_code, book_no, member_ref, account_no, member_name, bank_name,
-           leaf_start, leaf_end, total_leaves, issue_date, status, notes, created_by)
+           bank_branch, branch_code, leaf_start, leaf_end, total_leaves, issue_date, status, notes, created_by)
          VALUES
-          (:org_id, :org, :vac, :book, :mref, :acc, :mname, :bank, :ls, :le, :tot, :idt, 'active', :notes, :by)`,
+          (:org_id, :org, :vac, :book, :mref, :acc, :mname, :bank, :branch, :bcode, :ls, :le, :tot, :idt, 'active', :notes, :by)`,
         {
           org_id: typeof req.user.orgId === 'number' ? req.user.orgId : null,
           org,
-          vac: b.vac_code || req.user.vacCode || null,
+          vac: b.branch_code || b.vac_code || req.user.vacCode || null,
           book: bookNo,
           mref: b.member_ref || b.member_id || null,
           acc: b.account_no || null,
           mname: b.member_name || null,
           bank: b.bank_name || 'Society',
+          branch: b.bank_branch || null,
+          bcode: b.branch_code || null,
           ls: start,
           le: end,
           tot: total,
@@ -481,7 +483,7 @@ router.get('/stops', auth(), async (req, res, next) => {
 
 
 
-/** Bank / society branches for dropdown */
+/** Bank branches for dropdown (treated as branch_code; maps from VAC list when legacy) */
 router.get('/branches', auth(), async (req, res, next) => {
   try {
     const org = orgCode(req);
@@ -554,7 +556,7 @@ router.post('/requests', auth(), async (req, res, next) => {
         (:org, :vac, :rno, :mref, :mname, :acc, :branch, :bcode, :leaves, :rdate, 'pending', :reason, :by)`,
       {
         org,
-        vac: b.vac_code || req.user.vacCode || null,
+        vac: b.branch_code || b.vac_code || req.user.vacCode || null,
         rno: reqNo,
         mref: String(b.member_ref || b.member_id),
         mname: b.member_name || null,

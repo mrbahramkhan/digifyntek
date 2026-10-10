@@ -48,7 +48,7 @@
       <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start">
         <div>
           <h1>Chequebooks</h1>
-          <p class="sub">Issue books, track leaves, stop payment, clear / bounce status.</p>
+          <p class="sub">Issue books by bank branch, track leaves, stop payment, clear / bounce status.</p>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn" onclick="openReqDrawer()">+ New request</button>
@@ -238,8 +238,8 @@
     <div class="fg"><label>Member ref (farmer/member no)</label><input id="memberRef" /></div>
     <div class="fg"><label>Member name</label><input id="memberName" /></div>
     <div class="fg"><label>Account number</label><input id="accountNo" /></div>
-    <div class="fg"><label>Bank branch</label><select id="issBranch"><option value="">Select…</option></select></div>
-    <div class="fg"><label>VAC code</label><input id="vacCode" placeholder="optional" /></div>
+    <div class="fg"><label>Branch code *</label><select id="issBranch"><option value="">Select branch…</option></select></div>
+    
     <div class="fg"><label>Leaf start</label><input id="leafStart" type="number" value="1" /></div>
     <div class="fg"><label>Leaf end</label><input id="leafEnd" type="number" value="25" /></div>
     <div class="fg"><label>Cheque # prefix (optional)</label><input id="prefix" placeholder="e.g. PK" /></div>
@@ -265,10 +265,9 @@
     <div class="fg"><label>Member name</label><input id="reqMemberName" placeholder="Full name" /></div>
     <div class="fg"><label>Account number</label><input id="reqAccount" placeholder="Linked A/C" /></div>
     <div class="fg">
-      <label>Bank branch *</label>
-      <select id="reqBranch"><option value="">Loading branches…</option></select>
+      <label>Branch code *</label>
+      <select id="reqBranch"><option value="">Select branch…</option></select>
     </div>
-    <div class="fg"><label>VAC code</label><input id="reqVac" placeholder="optional" /></div>
     <div class="fg"><label>Leaves requested</label><input id="reqLeaves" type="number" value="25" min="1" max="200" /></div>
     <div class="fg"><label>Request date</label><input id="reqDate" type="date" /></div>
     <div class="fg"><label>Reason</label><input id="reqReason" placeholder="e.g. New account / exhausted book" /></div>
@@ -467,7 +466,7 @@ async function submitRequest() {
       account_no: document.getElementById('reqAccount').value.trim() || undefined,
       branch_code: branchSel.value || undefined,
       bank_branch: branchOpt && branchOpt.value ? (branchOpt.getAttribute('data-name') || branchOpt.text) : undefined,
-      vac_code: document.getElementById('reqVac').value.trim() || undefined,
+      vac_code: branchSel.value || undefined,
       leaves_requested: Number(document.getElementById('reqLeaves').value) || 25,
       request_date: document.getElementById('reqDate').value || undefined,
       reason: document.getElementById('reqReason').value.trim() || undefined,
@@ -631,7 +630,9 @@ async function issueBook() {
       member_ref: document.getElementById('memberRef').value.trim() || undefined,
       member_name: document.getElementById('memberName').value.trim() || undefined,
       account_no: document.getElementById('accountNo').value.trim() || undefined,
-      vac_code: document.getElementById('vacCode').value.trim() || undefined,
+      branch_code: (document.getElementById('issBranch') && document.getElementById('issBranch').value) || undefined,
+      bank_branch: (function(){ var s=document.getElementById('issBranch'); if(!s||!s.value) return undefined; var o=s.options[s.selectedIndex]; return o.getAttribute('data-name')||o.text; })(),
+      vac_code: (document.getElementById('issBranch') && document.getElementById('issBranch').value) || undefined,
       leaf_start: Number(document.getElementById('leafStart').value),
       leaf_end: Number(document.getElementById('leafEnd').value),
       cheque_prefix: document.getElementById('prefix').value.trim() || undefined,
