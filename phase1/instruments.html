@@ -3,41 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DigiFyntek — Instrument management</title>
+  <title>DigiFyntek — Chequebook management</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#f6f7f9;--surface:#fff;--ink:#111827;--ink-2:#4b5563;--ink-3:#9ca3af;--brand:#0e7490;--brand-deep:#164e63;--border:#e5e7eb;--side:250px;--top:60px;--font:Inter,system-ui,sans-serif}
     *{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font);background:var(--bg);color:var(--ink)}
     .app{display:flex;min-height:100vh}.sidebar{width:var(--side);background:var(--brand-deep);color:#ecfeff;position:fixed;inset:0 auto 0 0}
-    .side-brand{height:var(--top);display:flex;align-items:center;padding:0 18px;font-weight:700;gap:10px}
+    .side-brand{height:var(--top);display:flex;align-items:center;padding:0 18px;font-weight:700}
     .nav{padding:14px 10px}.nav a{display:block;padding:8px 11px;border-radius:9px;color:rgba(236,254,255,.7);text-decoration:none;font-size:13px}
     .nav a.active,.nav a:hover{background:var(--brand);color:#fff}
-    .sec-t{font-size:10px;opacity:.4;text-transform:uppercase;padding:0 10px;margin:10px 0 4px}
     .main{margin-left:var(--side);flex:1}.topbar{height:var(--top);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;font-weight:600}
     .content{padding:24px}h1{font-size:22px;margin-bottom:4px}.sub{color:var(--ink-2);font-size:14px;margin-bottom:16px}
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
     .kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}.kpi .l{font-size:11px;color:var(--ink-2)}.kpi .v{font-size:18px;font-weight:700;margin-top:4px}
-    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+    .tab{height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+    .tab.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
     input,select{height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit}
     .btn{height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--border);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px}
-    .btn-p{background:var(--brand);color:#fff;border:none}
+    .btn-p{background:var(--brand);color:#fff;border:none}.btn-d{background:#fee2e2;color:#b91c1c;border-color:#fecaca}
     .card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
     table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}th{background:#f0f2f5;font-size:11px;text-transform:uppercase;color:var(--ink-2)}
     .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
-    .tag-b{background:#e0f2fe;color:#0369a1}.tag-n{background:#f3f4f6;color:#4b5563}.tag-a{background:#fef3c7;color:#b45309}
-    .tag-g{background:#d1fae5;color:#047857}.tag-r{background:#fee2e2;color:#b91c1c}
+    .tag-g{background:#d1fae5;color:#047857}.tag-n{background:#f3f4f6;color:#4b5563}.tag-a{background:#fef3c7;color:#b45309}
+    .tag-r{background:#fee2e2;color:#b91c1c}.tag-b{background:#e0f2fe;color:#0369a1}
     .mono{font-variant-numeric:tabular-nums}
-    .drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:50;display:none}
-    .drawer-bg.open{display:block}
-    .drawer{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:100%;background:#fff;z-index:51;box-shadow:-8px 0 24px rgba(0,0,0,.12);transform:translateX(100%);transition:.2s;display:flex;flex-direction:column}
+    .drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:50;display:none}.drawer-bg.open{display:block}
+    .drawer{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:100%;background:#fff;z-index:51;transform:translateX(100%);transition:.2s;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.1)}
     .drawer.open{transform:translateX(0)}
-    .drawer-h{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-    .drawer-b{padding:20px;overflow-y:auto;flex:1}
-    .drawer-f{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
-    .fg{margin-bottom:12px}label{display:block;font-size:12px;color:var(--ink-2);margin-bottom:4px}
-    .fg input,.fg select,.fg textarea{width:100%}
-    .note{font-size:12px;color:var(--ink-2);background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:12px}
+    .drawer-h{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .drawer-b{padding:20px;overflow:auto;flex:1}.drawer-f{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+    .fg{margin-bottom:12px}label{display:block;font-size:12px;color:var(--ink-2);margin-bottom:4px}.fg input,.fg select,.fg textarea{width:100%}
     @media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.sidebar{display:none}.main{margin-left:0}}
   </style>
 </head>
@@ -45,92 +43,87 @@
 <div class="app">
   <aside class="sidebar"><div class="side-brand">DigiFyntek</div><nav class="nav"></nav></aside>
   <div class="main">
-    <header class="topbar">Instrument management</header>
+    <header class="topbar">Chequebook management</header>
     <div class="content">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start">
         <div>
-          <h1>Instruments</h1>
-          <p class="sub">Loan agreements, share certificates, guarantees, deposit receipts — register and track lifecycle.</p>
+          <h1>Chequebooks</h1>
+          <p class="sub">Issue books, track leaves, stop payment, clear / bounce status.</p>
         </div>
-        <button class="btn btn-p" onclick="openDrawer()">+ Issue instrument</button>
+        <button class="btn btn-p" onclick="openDrawer()">+ Issue chequebook</button>
       </div>
 
       <div class="kpis">
-        <div class="kpi"><div class="l">Total</div><div class="v" id="kTotal">—</div></div>
-        <div class="kpi"><div class="l">Active</div><div class="v" id="kActive">—</div></div>
-        <div class="kpi"><div class="l">Loan agreements</div><div class="v" id="kLA">—</div></div>
-        <div class="kpi"><div class="l">Shares / guarantees / deposits</div><div class="v" id="kOther">—</div></div>
+        <div class="kpi"><div class="l">Books</div><div class="v" id="kBooks">—</div></div>
+        <div class="kpi"><div class="l">Available leaves</div><div class="v" id="kAvail">—</div></div>
+        <div class="kpi"><div class="l">Used / cleared</div><div class="v" id="kUsed">—</div></div>
+        <div class="kpi"><div class="l">Stopped / bounced</div><div class="v" id="kStop">—</div></div>
       </div>
 
-      <div class="filters">
-        <input type="search" id="q" placeholder="Search #, name, CNIC…" onkeydown="if(event.key==='Enter')load()" />
-        <select id="type">
-          <option value="">All types</option>
-          <option value="loan_agreement">Loan agreement</option>
-          <option value="share_certificate">Share certificate</option>
-          <option value="guarantee">Guarantee</option>
-          <option value="deposit_receipt">Deposit receipt</option>
-        </select>
-        <select id="status">
-          <option value="">All status</option>
-          <option value="active">Active</option>
-          <option value="settled">Settled</option>
-          <option value="cancelled">Cancelled</option>
-          <option value="draft">Draft</option>
-        </select>
-        <button class="btn" onclick="load()">Filter</button>
+      <div class="tabs">
+        <button class="tab on" onclick="showTab(this,'books')">Books</button>
+        <button class="tab" onclick="showTab(this,'leaves')">Cheque leaves</button>
       </div>
 
-      <div class="card">
-        <table>
-          <thead>
-            <tr>
-              <th>Instrument #</th>
-              <th>Type</th>
-              <th>Member / party</th>
-              <th>Linked to</th>
-              <th>Amount</th>
-              <th>Issue date</th>
-              <th>Status</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="tb"><tr><td colspan="8">Loading…</td></tr></tbody>
-        </table>
+      <div id="panel-books">
+        <div class="filters">
+          <input id="bq" placeholder="Book #, member, account…" onkeydown="if(event.key==='Enter')loadBooks()" />
+          <select id="bStatus"><option value="">All status</option><option value="active">Active</option><option value="exhausted">Exhausted</option><option value="cancelled">Cancelled</option></select>
+          <button class="btn" onclick="loadBooks()">Filter</button>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Book #</th><th>Member</th><th>Account</th><th>Leaves</th><th>Range</th><th>Issue date</th><th>Status</th><th></th></tr></thead>
+            <tbody id="tbBooks"><tr><td colspan="8">Loading…</td></tr></tbody>
+          </table>
+        </div>
       </div>
-      <p id="legacyNote" class="note" style="margin-top:12px;display:none">
-        Legacy DB mode: instruments are generated from loans, shares, guarantees and deposits. Issue those products in their modules; status follows the underlying account.
-      </p>
+
+      <div id="panel-leaves" hidden>
+        <div class="filters">
+          <input id="lq" placeholder="Cheque #, payee, book…" onkeydown="if(event.key==='Enter')loadLeaves()" />
+          <select id="lStatus">
+            <option value="">All status</option>
+            <option value="available">Available</option>
+            <option value="used">Used</option>
+            <option value="cleared">Cleared</option>
+            <option value="stopped">Stopped</option>
+            <option value="bounced">Bounced</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <input id="lBook" type="number" placeholder="Book ID" style="width:110px" />
+          <button class="btn" onclick="loadLeaves()">Filter</button>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Cheque #</th><th>Book</th><th>Member</th><th>Payee</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="tbLeaves"><tr><td colspan="7">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="drawer-bg" id="bg" onclick="closeDrawer()"></div>
 <aside class="drawer" id="drawer">
-  <div class="drawer-h">
-    <h2 style="font-size:16px">Issue instrument</h2>
-    <button class="btn" onclick="closeDrawer()">Close</button>
-  </div>
+  <div class="drawer-h"><strong>Issue chequebook</strong><button class="btn" onclick="closeDrawer()">Close</button></div>
   <div class="drawer-b">
-    <div class="fg">
-      <label>Type</label>
-      <select id="instType">
-        <option value="loan_agreement">Loan agreement</option>
-        <option value="share_certificate">Share certificate</option>
-        <option value="guarantee">Guarantee</option>
-        <option value="deposit_receipt">Deposit receipt</option>
-      </select>
-    </div>
-    <div class="fg"><label>Member ID</label><input id="instMember" type="text" placeholder="Member / farmer no" /></div>
-    <div class="fg"><label>Linked loan / account / folio</label><input id="instLink" placeholder="Optional reference" /></div>
-    <div class="fg"><label>Issue date</label><input id="instDate" type="date" /></div>
-    <div class="fg"><label>Amount / shares</label><input id="instAmt" type="number" step="0.01" placeholder="0" /></div>
-    <div class="fg"><label>Notes</label><textarea id="instNotes" rows="3" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px"></textarea></div>
+    <div class="fg"><label>Book number</label><input id="bookNo" placeholder="Auto if empty" /></div>
+    <div class="fg"><label>Member ref (farmer/member no)</label><input id="memberRef" /></div>
+    <div class="fg"><label>Member name</label><input id="memberName" /></div>
+    <div class="fg"><label>Account number</label><input id="accountNo" /></div>
+    <div class="fg"><label>VAC code</label><input id="vacCode" placeholder="optional" /></div>
+    <div class="fg"><label>Leaf start</label><input id="leafStart" type="number" value="1" /></div>
+    <div class="fg"><label>Leaf end</label><input id="leafEnd" type="number" value="25" /></div>
+    <div class="fg"><label>Cheque # prefix (optional)</label><input id="prefix" placeholder="e.g. PK" /></div>
+    <div class="fg"><label>Issue date</label><input id="issueDate" type="date" /></div>
+    <div class="fg"><label>Notes</label><textarea id="notes" rows="2" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px"></textarea></div>
     <p id="issueMsg" style="font-size:12px;color:var(--ink-2)"></p>
   </div>
   <div class="drawer-f">
     <button class="btn" onclick="closeDrawer()">Cancel</button>
-    <button class="btn btn-p" onclick="saveInstrument()">Issue &amp; save</button>
+    <button class="btn btn-p" onclick="issueBook()">Issue book</button>
   </div>
 </aside>
 
@@ -138,138 +131,178 @@
 <script src="js/api.js"></script>
 <script src="js/shell.js"></script>
 <script>
-const typeTag = {
-  loan_agreement: 'tag-b',
-  share_certificate: 'tag-n',
-  guarantee: 'tag-a',
-  deposit_receipt: 'tag-n',
+const stTag = {
+  available:'tag-g', active:'tag-g', used:'tag-b', cleared:'tag-n', issued:'tag-a',
+  stopped:'tag-r', bounced:'tag-r', cancelled:'tag-r', exhausted:'tag-a', returned:'tag-n'
 };
-const typeLabel = {
-  loan_agreement: 'Loan agreement',
-  share_certificate: 'Share certificate',
-  guarantee: 'Guarantee',
-  deposit_receipt: 'Deposit receipt',
-};
-const statusTag = {
-  active: 'tag-g', settled: 'tag-n', cancelled: 'tag-r', draft: 'tag-a', written_off: 'tag-r',
-};
+
+function showTab(btn, id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('panel-books').hidden = id !== 'books';
+  document.getElementById('panel-leaves').hidden = id !== 'leaves';
+  if (id === 'leaves') loadLeaves();
+}
 
 function openDrawer() {
   document.getElementById('drawer').classList.add('open');
   document.getElementById('bg').classList.add('open');
-  document.getElementById('instDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('issueDate').value = new Date().toISOString().slice(0,10);
 }
 function closeDrawer() {
   document.getElementById('drawer').classList.remove('open');
   document.getElementById('bg').classList.remove('open');
 }
 
-async function load() {
+async function loadSummary() {
   try {
-    const params = new URLSearchParams();
-    const type = document.getElementById('type').value;
-    const status = document.getElementById('status').value;
-    const q = document.getElementById('q').value.trim();
-    if (type) params.set('type', type);
-    if (status) params.set('status', status);
-    if (q) params.set('q', q);
-    const qs = params.toString();
-    const rows = await DigiFyntekAPI.request('/api/instruments' + (qs ? '?' + qs : ''));
-    const tb = document.getElementById('tb');
-    if (!rows.length) {
-      tb.innerHTML = '<tr><td colspan="8">No instruments</td></tr>';
-    } else {
-      tb.innerHTML = rows.map((r) => {
-        const st = r.status || 'active';
-        const actions =
-          r.source && String(r.source).startsWith('legacy')
-            ? '—'
-            : `<button class="btn" style="height:28px;font-size:11px" onclick="setStatus('${r.id}','settled')">Settle</button>
-               <button class="btn" style="height:28px;font-size:11px" onclick="setStatus('${r.id}','cancelled')">Cancel</button>`;
-        return `<tr>
-          <td class="mono">${r.instrument_no || r.id || ''}</td>
-          <td><span class="tag ${typeTag[r.inst_type] || 'tag-n'}">${typeLabel[r.inst_type] || r.inst_type || ''}</span></td>
-          <td>${r.full_name || '—'}<br><span style="font-size:11px;color:var(--ink-3)">${r.cnic || r.member_id || ''}</span></td>
-          <td class="mono">${r.linked_ref || r.loan_id || r.folio_id || '—'}</td>
-          <td class="mono">${r.amount_or_shares != null ? DigiFyntekAPI.fmtPKR(r.amount_or_shares) : '—'}</td>
-          <td>${r.issue_date ? String(r.issue_date).slice(0, 10) : '—'}</td>
-          <td><span class="tag ${statusTag[st] || 'tag-n'}">${st}</span></td>
-          <td>${actions}</td>
-        </tr>`;
-      }).join('');
-    }
-
-    // KPIs
-    let sum;
-    try {
-      sum = await DigiFyntekAPI.request('/api/instruments/summary');
-    } catch (_) {
-      sum = null;
-    }
-    if (sum && sum.by_type) {
-      document.getElementById('kTotal').textContent = sum.total;
-      document.getElementById('kActive').textContent = sum.active;
-      document.getElementById('kLA').textContent = sum.by_type.loan_agreement || 0;
-      document.getElementById('kOther').textContent =
-        (sum.by_type.share_certificate || 0) +
-        (sum.by_type.guarantee || 0) +
-        (sum.by_type.deposit_receipt || 0);
-      document.getElementById('legacyNote').style.display = 'block';
-    } else {
-      document.getElementById('kTotal').textContent = rows.length;
-      document.getElementById('kActive').textContent = rows.filter((r) => r.status === 'active').length;
-      document.getElementById('kLA').textContent = rows.filter((r) => r.inst_type === 'loan_agreement').length;
-      document.getElementById('kOther').textContent = rows.filter((r) => r.inst_type !== 'loan_agreement').length;
-    }
+    const s = await DigiFyntekAPI.request('/api/instruments/summary');
+    document.getElementById('kBooks').textContent = s.books;
+    document.getElementById('kAvail').textContent = s.available;
+    document.getElementById('kUsed').textContent = (s.used||0) + (s.cleared||0);
+    document.getElementById('kStop').textContent = (s.stopped||0) + (s.bounced||0);
   } catch (e) {
-    document.getElementById('tb').innerHTML =
-      `<tr><td colspan="8" style="color:#e11d48">${e.message}</td></tr>`;
+    console.warn(e);
   }
 }
 
-async function saveInstrument() {
+async function loadBooks() {
+  try {
+    const p = new URLSearchParams();
+    const q = document.getElementById('bq').value.trim();
+    const st = document.getElementById('bStatus').value;
+    if (q) p.set('q', q);
+    if (st) p.set('status', st);
+    const rows = await DigiFyntekAPI.request('/api/instruments/books' + (p.toString() ? '?' + p : ''));
+    const tb = document.getElementById('tbBooks');
+    if (!rows.length) tb.innerHTML = '<tr><td colspan="8">No chequebooks</td></tr>';
+    else tb.innerHTML = rows.map(r =>
+      `<tr>
+        <td class="mono">${r.book_no}</td>
+        <td>${r.member_name||'—'}<br><span style="font-size:11px;color:var(--ink-3)">${r.member_ref||''}</span></td>
+        <td class="mono">${r.account_no||'—'}</td>
+        <td>${r.total_leaves}</td>
+        <td class="mono">${r.leaf_start}–${r.leaf_end}</td>
+        <td>${r.issue_date?String(r.issue_date).slice(0,10):'—'}</td>
+        <td><span class="tag ${stTag[r.status]||'tag-n'}">${r.status}</span></td>
+        <td>
+          <button class="btn" style="height:28px;font-size:11px" onclick="viewLeaves(${r.id})">Leaves</button>
+          ${r.status==='active'?`<button class="btn btn-d" style="height:28px;font-size:11px" onclick="cancelBook(${r.id})">Cancel</button>`:''}
+        </td>
+      </tr>`
+    ).join('');
+  } catch (e) {
+    document.getElementById('tbBooks').innerHTML = `<tr><td colspan="8" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+
+async function loadLeaves() {
+  try {
+    const p = new URLSearchParams();
+    const q = document.getElementById('lq').value.trim();
+    const st = document.getElementById('lStatus').value;
+    const bid = document.getElementById('lBook').value.trim();
+    if (q) p.set('q', q);
+    if (st) p.set('status', st);
+    if (bid) p.set('book_id', bid);
+    const rows = await DigiFyntekAPI.request('/api/instruments/leaves' + (p.toString() ? '?' + p : ''));
+    const tb = document.getElementById('tbLeaves');
+    if (!rows.length) tb.innerHTML = '<tr><td colspan="7">No leaves</td></tr>';
+    else tb.innerHTML = rows.map(r => {
+      const acts = [];
+      if (r.status === 'available' || r.status === 'issued') {
+        acts.push(`<button class="btn" style="height:28px;font-size:11px" onclick="markUsed(${r.id})">Use</button>`);
+        acts.push(`<button class="btn btn-d" style="height:28px;font-size:11px" onclick="stopChq(${r.id})">Stop</button>`);
+      }
+      if (r.status === 'used') {
+        acts.push(`<button class="btn" style="height:28px;font-size:11px" onclick="patchLeaf(${r.id},{status:'cleared'})">Clear</button>`);
+        acts.push(`<button class="btn btn-d" style="height:28px;font-size:11px" onclick="patchLeaf(${r.id},{status:'bounced'})">Bounce</button>`);
+      }
+      return `<tr>
+        <td class="mono">${r.cheque_no}</td>
+        <td class="mono">${r.book_no||''}</td>
+        <td>${r.member_name||r.member_ref||'—'}</td>
+        <td>${r.payee_name||'—'}</td>
+        <td class="mono">${r.amount!=null?DigiFyntekAPI.fmtPKR(r.amount):'—'}</td>
+        <td><span class="tag ${stTag[r.status]||'tag-n'}">${r.status}</span></td>
+        <td>${acts.join(' ')||'—'}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('tbLeaves').innerHTML = `<tr><td colspan="7" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+
+function viewLeaves(bookId) {
+  document.getElementById('lBook').value = bookId;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.tab')[1].classList.add('on');
+  document.getElementById('panel-books').hidden = true;
+  document.getElementById('panel-leaves').hidden = false;
+  loadLeaves();
+}
+
+async function issueBook() {
   const msg = document.getElementById('issueMsg');
-  msg.textContent = 'Saving…';
+  msg.textContent = 'Issuing…';
   try {
     const body = {
-      inst_type: document.getElementById('instType').value,
-      member_id: document.getElementById('instMember').value.trim() || null,
-      loan_id: null,
-      amount_or_shares: Number(document.getElementById('instAmt').value) || null,
-      issue_date: document.getElementById('instDate').value || null,
-      notes: document.getElementById('instNotes').value.trim() || null,
-      status: 'active',
+      book_no: document.getElementById('bookNo').value.trim() || undefined,
+      member_ref: document.getElementById('memberRef').value.trim() || undefined,
+      member_name: document.getElementById('memberName').value.trim() || undefined,
+      account_no: document.getElementById('accountNo').value.trim() || undefined,
+      vac_code: document.getElementById('vacCode').value.trim() || undefined,
+      leaf_start: Number(document.getElementById('leafStart').value),
+      leaf_end: Number(document.getElementById('leafEnd').value),
+      cheque_prefix: document.getElementById('prefix').value.trim() || undefined,
+      issue_date: document.getElementById('issueDate').value || undefined,
+      notes: document.getElementById('notes').value.trim() || undefined,
     };
-    const link = document.getElementById('instLink').value.trim();
-    if (link && body.inst_type === 'loan_agreement') body.loan_id = link;
-    const r = await DigiFyntekAPI.request('/api/instruments', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
-    msg.textContent = 'Issued ' + (r.instrument_no || r.id);
+    const r = await DigiFyntekAPI.request('/api/instruments/books', { method:'POST', body: JSON.stringify(body) });
+    msg.textContent = 'Issued ' + r.book_no + ' (' + r.total_leaves + ' leaves)';
     msg.style.color = '#059669';
     closeDrawer();
-    load();
+    loadSummary();
+    loadBooks();
   } catch (e) {
     msg.textContent = e.message;
     msg.style.color = '#e11d48';
   }
 }
 
-async function setStatus(id, status) {
-  if (!confirm('Set status to ' + status + '?')) return;
+async function patchLeaf(id, body) {
   try {
-    await DigiFyntekAPI.request('/api/instruments/' + id + '/status', {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
-    });
-    load();
-  } catch (e) {
-    alert(e.message);
-  }
+    await DigiFyntekAPI.request('/api/instruments/leaves/' + id, { method:'PATCH', body: JSON.stringify(body) });
+    loadLeaves();
+    loadSummary();
+  } catch (e) { alert(e.message); }
 }
 
-load();
+async function markUsed(id) {
+  const payee = prompt('Payee name');
+  if (payee === null) return;
+  const amount = prompt('Amount (PKR)', '0');
+  if (amount === null) return;
+  await patchLeaf(id, { status: 'used', payee_name: payee, amount: Number(amount) });
+}
+
+async function stopChq(id) {
+  const reason = prompt('Stop reason', 'Stop payment');
+  if (reason === null) return;
+  await patchLeaf(id, { status: 'stopped', stop_reason: reason });
+}
+
+async function cancelBook(id) {
+  if (!confirm('Cancel this chequebook and unused leaves?')) return;
+  try {
+    await DigiFyntekAPI.request('/api/instruments/books/' + id + '/cancel', { method:'POST', body:'{}' });
+    loadBooks();
+    loadSummary();
+  } catch (e) { alert(e.message); }
+}
+
+loadSummary();
+loadBooks();
 </script>
 </body>
 </html>

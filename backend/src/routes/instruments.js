@@ -1,189 +1,120 @@
+/**
+ * Instrument management = Chequebook management
+ */
 const express = require('express');
 const pool = require('../config/db');
 const { auth } = require('../middleware/auth');
 const router = express.Router();
 
-const LEGACY = process.env.DB_MODE === 'legacy' || process.env.LEGACY_SCHEMA === '1';
-
 function orgCode(req) {
   return String(req.user.orgCode || req.user.orgId || '001');
 }
 
-/** Synthetic instruments from legacy loan / share / guarantee / deposit tables */
-async function listLegacyInstruments(orgCode, { type, status, q } = {}) {
-  const out = [];
-
-  // Loan agreements
-  if (!type || type === 'loan_agreement') {
-    const [loans] = await pool.query(
-      `SELECT la.account_no, la.farmer_no, la.loan_disbursementamount, la.loan_disbursementdate,
-              la.account_closed, la.account_balance, la.vac_code, f.farmer_name, f.farmer_cnic_no
-       FROM tbl_loanaccount la
-       LEFT JOIN tbl_farmer f ON f.farmer_no = la.farmer_no AND f.por_orgacode = la.por_orgacode
-       WHERE la.por_orgacode = :org
-       ORDER BY la.loan_disbursementdate DESC LIMIT 300`,
-      { org: orgCode }
-    );
-    for (const r of loans) {
-      const st = r.account_closed ? 'settled' : Number(r.account_balance) > 0 ? 'active' : 'settled';
-      out.push({
-        id: `LA-${r.account_no}`,
-        instrument_no: `LA-${r.account_no}`,
-        inst_type: 'loan_agreement',
-        member_id: r.farmer_no,
-        full_name: r.farmer_name,
-        cnic: r.farmer_cnic_no,
-        linked_ref: r.account_no,
-        amount_or_shares: Number(r.loan_disbursementamount),
-        outstanding: Number(r.account_balance),
-        issue_date: r.loan_disbursementdate,
-        status: st,
-        vac_code: r.vac_code,
-        source: 'legacy_loan',
-      });
-    }
+async function ensureTables() {
+  // soft ensure — ignore if exists / wrong DB
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS cheque_books (
+        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        org_id INT UNSIGNED NULL,
+        por_orgacode VARCHAR(10) NULL,
+        vac_code VARCHAR(10) NULL,
+        book_no VARCHAR(40) NOT NULL,
+        member_ref VARCHAR(64) NULL,
+        account_no VARCHAR(64) NULL,
+        member_name VARCHAR(150) NULL,
+        bank_name VARCHAR(100) NULL DEFAULT 'Society',
+        leaf_start INT UNSIGNED NOT NULL,
+        leaf_end INT UNSIGNED NOT NULL,
+        total_leaves INT UNSIGNED NOT NULL,
+        issue_date DATE NOT NULL,
+        status ENUM('active','exhausted','cancelled','returned') NOT NULL DEFAULT 'active',
+        notes TEXT NULL,
+        created_by VARCHAR(50) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_book (por_orgacode, book_no)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS cheque_leaves (
+        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        book_id INT UNSIGNED NOT NULL,
+        por_orgacode VARCHAR(10) NULL,
+        cheque_no VARCHAR(40) NOT NULL,
+        leaf_seq INT UNSIGNED NOT NULL,
+        status ENUM('available','issued','used','cleared','stopped','bounced','cancelled') NOT NULL DEFAULT 'available',
+        payee_name VARCHAR(150) NULL,
+        amount DECIMAL(18,2) NULL,
+        issue_date DATE NULL,
+        clear_date DATE NULL,
+        stop_date DATE NULL,
+        stop_reason VARCHAR(255) NULL,
+        narration VARCHAR(500) NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uk_cheque (por_orgacode, cheque_no),
+        KEY idx_book (book_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+  } catch (e) {
+    /* table may already exist with FKs */
   }
-
-  // Share certificates
-  if (!type || type === 'share_certificate') {
-    const [shares] = await pool.query(
-      `SELECT s.farmer_no, s.farmer_share_held, s.farmer_share_value, s.farmer_total_share_value,
-              f.farmer_name, f.farmer_cnic_no
-       FROM tbl_farmer_share s
-       LEFT JOIN tbl_farmer f ON f.farmer_no = s.farmer_no AND f.por_orgacode = s.por_orgacode
-       WHERE s.por_orgacode = :org LIMIT 300`,
-      { org: orgCode }
-    );
-    for (const r of shares) {
-      out.push({
-        id: `SC-${r.farmer_no}`,
-        instrument_no: `SC-${r.farmer_no}`,
-        inst_type: 'share_certificate',
-        member_id: r.farmer_no,
-        full_name: r.farmer_name,
-        cnic: r.farmer_cnic_no,
-        linked_ref: `${r.farmer_share_held} shares`,
-        amount_or_shares: Number(r.farmer_total_share_value),
-        issue_date: null,
-        status: 'active',
-        source: 'legacy_share',
-      });
-    }
-  }
-
-  // Guarantees
-  if (!type || type === 'guarantee') {
-    const [gus] = await pool.query(
-      `SELECT g.account_no, g.loan_guarantornic, g.loan_guarantorname, g.phone_no
-       FROM tbl_loanguarantor g WHERE g.por_orgacode = :org LIMIT 300`,
-      { org: orgCode }
-    );
-    for (const r of gus) {
-      out.push({
-        id: `GR-${r.loan_guarantornic}-${r.account_no}`,
-        instrument_no: `GR-${r.loan_guarantornic}`,
-        inst_type: 'guarantee',
-        member_id: null,
-        full_name: r.loan_guarantorname,
-        cnic: r.loan_guarantornic,
-        linked_ref: r.account_no,
-        amount_or_shares: null,
-        issue_date: null,
-        status: 'active',
-        phone: r.phone_no,
-        source: 'legacy_guarantee',
-      });
-    }
-  }
-
-  // Deposit receipts
-  if (!type || type === 'deposit_receipt') {
-    const [deps] = await pool.query(
-      `SELECT d.account_no, d.farmer_no, d.account_balance, d.account_opendate, d.account_closed,
-              f.farmer_name, f.farmer_cnic_no
-       FROM tbl_depositaccount d
-       LEFT JOIN tbl_farmer f ON f.farmer_no = d.farmer_no AND f.por_orgacode = d.por_orgacode
-       WHERE d.por_orgacode = :org LIMIT 300`,
-      { org: orgCode }
-    );
-    for (const r of deps) {
-      out.push({
-        id: `DR-${r.account_no}`,
-        instrument_no: `DR-${r.account_no}`,
-        inst_type: 'deposit_receipt',
-        member_id: r.farmer_no,
-        full_name: r.farmer_name,
-        cnic: r.farmer_cnic_no,
-        linked_ref: r.account_no,
-        amount_or_shares: Number(r.account_balance),
-        issue_date: r.account_opendate,
-        status: r.account_closed ? 'settled' : 'active',
-        source: 'legacy_deposit',
-      });
-    }
-  }
-
-  let filtered = out;
-  if (status) filtered = filtered.filter((x) => x.status === status);
-  if (q) {
-    const qq = String(q).toLowerCase();
-    filtered = filtered.filter(
-      (x) =>
-        (x.instrument_no && x.instrument_no.toLowerCase().includes(qq)) ||
-        (x.full_name && x.full_name.toLowerCase().includes(qq)) ||
-        (x.cnic && String(x.cnic).includes(qq)) ||
-        (x.linked_ref && String(x.linked_ref).toLowerCase().includes(qq))
-    );
-  }
-  return filtered;
 }
+
+router.use(async (_req, _res, next) => {
+  try {
+    await ensureTables();
+  } catch (_) {}
+  next();
+});
 
 router.get('/summary', auth(), async (req, res, next) => {
   try {
-    if (LEGACY) {
-      const rows = await listLegacyInstruments(orgCode(req));
-      const byType = {};
-      let active = 0;
-      for (const r of rows) {
-        byType[r.inst_type] = (byType[r.inst_type] || 0) + 1;
-        if (r.status === 'active') active++;
-      }
-      return res.json({ total: rows.length, active, by_type: byType });
-    }
-    const [rows] = await pool.query(
-      `SELECT inst_type, status, COUNT(*) AS c FROM instruments
-       WHERE org_id = :org GROUP BY inst_type, status`,
-      { org: req.user.orgId }
+    const org = orgCode(req);
+    const [[books]] = await pool.query(
+      `SELECT COUNT(*) AS total,
+              SUM(status='active') AS active_books
+       FROM cheque_books WHERE por_orgacode = :org OR por_orgacode IS NULL`,
+      { org }
     );
-    res.json({ rows });
+    const [[leaves]] = await pool.query(
+      `SELECT
+         SUM(status='available') AS available,
+         SUM(status='used') AS used,
+         SUM(status='cleared') AS cleared,
+         SUM(status='stopped') AS stopped,
+         SUM(status='bounced') AS bounced,
+         COUNT(*) AS total_leaves
+       FROM cheque_leaves WHERE por_orgacode = :org OR por_orgacode IS NULL`,
+      { org }
+    );
+    res.json({
+      books: Number(books.total || 0),
+      active_books: Number(books.active_books || 0),
+      leaves: Number(leaves.total_leaves || 0),
+      available: Number(leaves.available || 0),
+      used: Number(leaves.used || 0),
+      cleared: Number(leaves.cleared || 0),
+      stopped: Number(leaves.stopped || 0),
+      bounced: Number(leaves.bounced || 0),
+    });
   } catch (e) {
     next(e);
   }
 });
 
-router.get('/', auth(), async (req, res, next) => {
+/** List cheque books */
+router.get('/books', auth(), async (req, res, next) => {
   try {
-    if (LEGACY) {
-      const rows = await listLegacyInstruments(orgCode(req), {
-        type: req.query.type,
-        status: req.query.status,
-        q: req.query.q || req.query.search,
-      });
-      return res.json(rows);
-    }
-    let sql = `SELECT i.*, m.full_name, m.cnic FROM instruments i
-               LEFT JOIN members m ON m.id = i.member_id
-               WHERE i.org_id = :orgId`;
-    const params = { orgId: req.user.orgId };
-    if (req.query.type) {
-      sql += ` AND i.inst_type = :type`;
-      params.type = req.query.type;
-    }
+    const org = orgCode(req);
+    let sql = `SELECT * FROM cheque_books WHERE (por_orgacode = :org OR por_orgacode IS NULL)`;
+    const params = { org };
     if (req.query.status) {
-      sql += ` AND i.status = :status`;
+      sql += ` AND status = :status`;
       params.status = req.query.status;
     }
-    sql += ` ORDER BY i.id DESC LIMIT 500`;
+    if (req.query.q) {
+      sql += ` AND (book_no LIKE :q OR member_name LIKE :q OR member_ref LIKE :q OR account_no LIKE :q)`;
+      params.q = `%${req.query.q}%`;
+    }
+    sql += ` ORDER BY id DESC LIMIT 500`;
     const [rows] = await pool.query(sql, params);
     res.json(rows);
   } catch (e) {
@@ -191,83 +122,179 @@ router.get('/', auth(), async (req, res, next) => {
   }
 });
 
-router.get('/:id', auth(), async (req, res, next) => {
+/** Issue a new cheque book + generate leaves */
+router.post('/books', auth(), async (req, res, next) => {
   try {
-    if (LEGACY) {
-      const rows = await listLegacyInstruments(orgCode(req));
-      const one = rows.find((r) => String(r.id) === String(req.params.id) || r.instrument_no === req.params.id);
-      if (!one) return res.status(404).json({ error: 'Not found' });
-      return res.json(one);
-    }
-    const [rows] = await pool.query(
-      `SELECT i.*, m.full_name FROM instruments i
-       LEFT JOIN members m ON m.id = i.member_id WHERE i.id = :id AND i.org_id = :org`,
-      { id: req.params.id, org: req.user.orgId }
-    );
-    if (!rows.length) return res.status(404).json({ error: 'Not found' });
-    res.json(rows[0]);
-  } catch (e) {
-    next(e);
-  }
-});
-
-router.post('/', auth(), async (req, res, next) => {
-  try {
-    if (LEGACY) {
-      return res.status(501).json({
-        error:
-          'Legacy mode: instruments are derived from loans, shares, guarantees and deposits. Issue those products instead.',
-      });
-    }
     const b = req.body || {};
-    const prefixes = {
-      loan_agreement: 'LA',
-      share_certificate: 'SC',
-      guarantee: 'GR',
-      deposit_receipt: 'DR',
-    };
-    const no = b.instrument_no || `${prefixes[b.inst_type] || 'IN'}-${Date.now().toString().slice(-6)}`;
-    const [r] = await pool.query(
-      `INSERT INTO instruments
-        (org_id, instrument_no, inst_type, member_id, loan_id, folio_id, amount_or_shares, issue_date, status, doc_url, notes)
-       VALUES
-        (:org_id, :no, :inst_type, :member_id, :loan_id, :folio_id, :amount, :issue_date, :status, :doc_url, :notes)`,
-      {
-        org_id: req.user.orgId,
-        no,
-        inst_type: b.inst_type,
-        member_id: b.member_id || null,
-        loan_id: b.loan_id || null,
-        folio_id: b.folio_id || null,
-        amount: b.amount_or_shares || null,
-        issue_date: b.issue_date || new Date().toISOString().slice(0, 10),
-        status: b.status || 'active',
-        doc_url: b.doc_url || null,
-        notes: b.notes || null,
+    const start = Number(b.leaf_start);
+    const end = Number(b.leaf_end);
+    if (!start || !end || end < start) {
+      return res.status(400).json({ error: 'leaf_start and leaf_end required (end >= start)' });
+    }
+    const total = end - start + 1;
+    if (total > 200) return res.status(400).json({ error: 'Max 200 leaves per book' });
+
+    const org = orgCode(req);
+    const bookNo = b.book_no || `CB-${Date.now().toString().slice(-8)}`;
+    const issueDate = b.issue_date || new Date().toISOString().slice(0, 10);
+
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [ins] = await conn.query(
+        `INSERT INTO cheque_books
+          (org_id, por_orgacode, vac_code, book_no, member_ref, account_no, member_name, bank_name,
+           leaf_start, leaf_end, total_leaves, issue_date, status, notes, created_by)
+         VALUES
+          (:org_id, :org, :vac, :book, :mref, :acc, :mname, :bank, :ls, :le, :tot, :idt, 'active', :notes, :by)`,
+        {
+          org_id: typeof req.user.orgId === 'number' ? req.user.orgId : null,
+          org,
+          vac: b.vac_code || req.user.vacCode || null,
+          book: bookNo,
+          mref: b.member_ref || b.member_id || null,
+          acc: b.account_no || null,
+          mname: b.member_name || null,
+          bank: b.bank_name || 'Society',
+          ls: start,
+          le: end,
+          tot: total,
+          idt: issueDate,
+          notes: b.notes || null,
+          by: String(req.user.userId || req.user.id || '').slice(0, 50),
+        }
+      );
+      const bookId = ins.insertId;
+      const prefix = b.cheque_prefix || bookNo.replace(/[^A-Za-z0-9]/g, '').slice(0, 6) || 'CHQ';
+
+      for (let n = start; n <= end; n++) {
+        const chequeNo = b.cheque_prefix
+          ? `${b.cheque_prefix}${String(n).padStart(6, '0')}`
+          : `${prefix}-${n}`;
+        await conn.query(
+          `INSERT INTO cheque_leaves (book_id, por_orgacode, cheque_no, leaf_seq, status)
+           VALUES (:bid, :org, :cno, :seq, 'available')`,
+          { bid: bookId, org, cno: chequeNo, seq: n }
+        );
       }
-    );
-    res.status(201).json({ id: r.insertId, instrument_no: no });
+      await conn.commit();
+      res.status(201).json({ id: bookId, book_no: bookNo, total_leaves: total });
+    } catch (e) {
+      await conn.rollback();
+      throw e;
+    } finally {
+      conn.release();
+    }
   } catch (e) {
     next(e);
   }
 });
 
-router.patch('/:id/status', auth(), async (req, res, next) => {
+/** List leaves (optional book_id / status / q) */
+router.get('/leaves', auth(), async (req, res, next) => {
   try {
-    if (LEGACY) {
-      return res.status(501).json({
-        error: 'Legacy mode: change status on the underlying loan/deposit/share record.',
-      });
+    const org = orgCode(req);
+    let sql = `
+      SELECT l.*, b.book_no, b.member_name, b.member_ref, b.account_no
+      FROM cheque_leaves l
+      JOIN cheque_books b ON b.id = l.book_id
+      WHERE (l.por_orgacode = :org OR l.por_orgacode IS NULL)`;
+    const params = { org };
+    if (req.query.book_id) {
+      sql += ` AND l.book_id = :bid`;
+      params.bid = req.query.book_id;
     }
-    const status = req.body && req.body.status;
-    const allowed = ['draft', 'active', 'settled', 'cancelled', 'written_off'];
+    if (req.query.status) {
+      sql += ` AND l.status = :status`;
+      params.status = req.query.status;
+    }
+    if (req.query.q) {
+      sql += ` AND (l.cheque_no LIKE :q OR l.payee_name LIKE :q OR b.book_no LIKE :q)`;
+      params.q = `%${req.query.q}%`;
+    }
+    sql += ` ORDER BY l.cheque_no DESC LIMIT 500`;
+    const [rows] = await pool.query(sql, params);
+    res.json(rows);
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** Update leaf status — use / stop / clear / bounce / cancel */
+router.patch('/leaves/:id', auth(), async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const status = b.status;
+    const allowed = ['available', 'issued', 'used', 'cleared', 'stopped', 'bounced', 'cancelled'];
     if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status' });
-    await pool.query(`UPDATE instruments SET status = :status WHERE id = :id AND org_id = :org`, {
-      status,
-      id: req.params.id,
-      org: req.user.orgId,
-    });
+
+    const fields = { status, id: req.params.id };
+    let extra = '';
+    if (status === 'used' || status === 'issued') {
+      extra += ', payee_name = COALESCE(:payee, payee_name), amount = COALESCE(:amount, amount), issue_date = COALESCE(:issue_date, issue_date), narration = COALESCE(:narration, narration)';
+      fields.payee = b.payee_name || null;
+      fields.amount = b.amount != null ? Number(b.amount) : null;
+      fields.issue_date = b.issue_date || new Date().toISOString().slice(0, 10);
+      fields.narration = b.narration || null;
+    }
+    if (status === 'cleared') {
+      extra += ', clear_date = COALESCE(:clear_date, CURDATE())';
+      fields.clear_date = b.clear_date || null;
+    }
+    if (status === 'stopped') {
+      extra += ', stop_date = CURDATE(), stop_reason = :stop_reason';
+      fields.stop_reason = b.stop_reason || b.reason || 'Stop payment';
+    }
+
+    await pool.query(`UPDATE cheque_leaves SET status = :status${extra} WHERE id = :id`, fields);
+
+    // Exhaust book if no available leaves left
+    const [[leaf]] = await pool.query(`SELECT book_id FROM cheque_leaves WHERE id = :id`, { id: req.params.id });
+    if (leaf) {
+      const [[cnt]] = await pool.query(
+        `SELECT SUM(status='available') AS avail FROM cheque_leaves WHERE book_id = :bid`,
+        { bid: leaf.book_id }
+      );
+      if (Number(cnt.avail || 0) === 0) {
+        await pool.query(`UPDATE cheque_books SET status = 'exhausted' WHERE id = :bid AND status = 'active'`, {
+          bid: leaf.book_id,
+        });
+      }
+    }
+
     res.json({ ok: true, status });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** Cancel whole book */
+router.post('/books/:id/cancel', auth(), async (req, res, next) => {
+  try {
+    const bid = req.params.id;
+    await pool.query(`UPDATE cheque_books SET status = 'cancelled' WHERE id = :id`, { id: bid });
+    await pool.query(
+      `UPDATE cheque_leaves SET status = 'cancelled'
+       WHERE book_id = :id AND status IN ('available','issued')`,
+      { id: bid }
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** Default list = books (backward compatible with old /api/instruments) */
+router.get('/', auth(), async (req, res, next) => {
+  try {
+    req.url = '/books' + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '');
+    // inline books query
+    const org = orgCode(req);
+    const [rows] = await pool.query(
+      `SELECT * FROM cheque_books WHERE (por_orgacode = :org OR por_orgacode IS NULL) ORDER BY id DESC LIMIT 500`,
+      { org }
+    );
+    res.json(rows);
   } catch (e) {
     next(e);
   }

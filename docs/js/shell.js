@@ -17,7 +17,7 @@
       { href: 'murabaha.html', label: 'Murābaḥah' },
       { href: 'islamic-ops.html', label: 'Salam · Ijārah · Qard' },
       { href: 'collateral.html', label: 'Collateral' },
-      { href: 'instruments.html', label: 'Instruments' },
+      { href: 'instruments.html', label: 'Chequebooks' },
     ]},
     { sec: 'Governance', items: [
       { href: 'setup.html', label: 'Institution setup' },
