@@ -1,6 +1,6 @@
 {
   "name": "digifyntek",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "DigiFyntek \u2014 cooperative & fintech platform API",
   "main": "src/server.js",
   "scripts": {

@@ -1,49 +1,47 @@
-# DigiFyntek — Complete system map
+# DigiFyntek system map
 
-## One process, full stack
+## Runtime
 
 ```
-Browser  →  Express (:4000)
-              ├─ /api/*     JSON API (JWT)
-              └─ /*         phase1 UI (static HTML)
-                     ↓
-                   MySQL 8
+Browser (phase1 UI)
+    │  JWT
+    ▼
+Express API (:4000)
+    │
+    ├─ Native schema (digifyntek)     OR
+    └─ Legacy mode (tbl_farmer, tbl_loanaccount, …)
+    │
+    MySQL 8
 ```
 
-## Modules
+## Backend layout
 
-| Module | UI | API |
-|--------|-----|-----|
-| Login / Dashboard | index.html | /api/auth, /api/dashboard |
-| Members + 360 | members, member360 | /api/members |
-| Shares | shares.html | /api/shares |
-| Savings | savings.html | /api/savings |
-| Cards | cards.html | /api/cards |
-| Loans + PAR | loans.html | /api/loans |
-| Murābaḥah | murabaha.html | /api/murabaha |
-| Salam / Ijārah / Qard | islamic-ops.html | /api/islamic |
-| Collateral | collateral.html | /api/collateral |
-| Instruments | instruments.html | /api/instruments |
-| Setup + registration | setup, registration | /api/compliance |
-
-## Run (all-in-one)
-
-```bash
-cd backend && npm install
-cp .env.example .env   # set JWT_SECRET, DB_*
-npm run db:init && npm run db:seed-admin -- 'StrongPass!'
-npm start
-# open http://localhost:4000
+```
+backend/src/
+  server.js
+  routes/     auth, members, loans, core, cbs, mfb, instruments, …
+  legacy/     Digital Kisaan query adapters + posting
+  cbs/        Temenos-style service
+  mfb/        Prudential engine
+  middleware/ auth, validate, rate limit
+  config/     env, db
+sql/
+  01_schema … 07_mfb_prudential
 ```
 
-## Docker
+## Auth
 
-```bash
-export JWT_SECRET=$(openssl rand -hex 32)
-export DB_PASSWORD=$(openssl rand -hex 16)
-docker compose up -d --build
-docker compose exec app sh -c "npm run db:init && npm run db:seed-admin -- 'StrongPass!'"
-# open http://localhost:4000
-```
+`POST /api/auth/login` `{ userId, password }` → JWT  
+Header: `Authorization: Bearer <token>`
 
-Login: **superadmin** / password from seed-admin.
+## Feature flags
+
+| Env | Effect |
+|-----|--------|
+| `DB_MODE=legacy` | Use Digital Kisaan tables |
+| `DB_NAME=digifyntek` | Database name |
+| `LEGACY_SCHEMA=1` | Same as legacy mode |
+
+## Status
+
+End-to-end application: CRM → credit → ledger → CBS → MFB prudential → chequebooks → Islamic → governance.

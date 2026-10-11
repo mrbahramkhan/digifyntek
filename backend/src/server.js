@@ -65,17 +65,29 @@ app.use('/api', apiLimiter);
 app.use('/api/auth/login', loginLimiter);
 
 app.get('/health', async (_req, res) => {
+  let db = 'unknown';
   try {
-    const dbOk = await ping();
-    res.status(dbOk ? 200 : 503).json({
-      ok: dbOk,
-      service: 'digifyntek-api',
-      env: env.nodeEnv,
-      ts: new Date().toISOString(),
-    });
-  } catch {
-    res.status(503).json({ ok: false, error: 'db_unavailable' });
+    const pool = require('./config/db');
+    await pool.query('SELECT 1');
+    db = 'up';
+  } catch (e) {
+    db = 'down';
   }
+  res.json({
+    ok: true,
+    product: 'DigiFyntek',
+    version: '1.2.0',
+    db,
+    modules: [
+      'auth', 'members', 'loans', 'shares', 'savings', 'vacs',
+      'core-banking', 'cbs', 'mfb-prudential', 'chequebooks',
+      'murabaha', 'islamic', 'collateral', 'cards', 'compliance',
+    ],
+    modes: {
+      legacy: process.env.DB_MODE === 'legacy' || process.env.LEGACY_SCHEMA === '1',
+      db_name: process.env.DB_NAME || 'digifyntek',
+    },
+  });
 });
 
 app.get('/ready', async (_req, res) => {
