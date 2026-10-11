@@ -15,7 +15,7 @@ Customers → Accounts → Lending → Operations → Risk → Admin
 | **Customers** | Members, 360, Cards | Who is the member |
 | **Accounts** | Savings, Shares, CIF open | What they hold |
 | **Lending** | Loans, Collateral, Islamic modes | Credit lifecycle |
-| **Operations** | GL, Cheque books, Transfers | Daily banking ops |
+| **Operations** | GL, Cheque books, Transfers, **End of day** | Daily banking ops |
 | **Risk** | Asset quality & capital, law, licensing | Prudential & legal |
 | **Admin** | Institution, Shariah catalogue | Configuration |
 
@@ -40,6 +40,6 @@ Customers → Accounts → Lending → Operations → Risk → Admin
 | `/api/members` | Customers |
 | `/api/savings` `/api/shares` `/api/cbs` | Accounts |
 | `/api/loans` `/api/collateral` `/api/murabaha` `/api/islamic` | Lending |
-| `/api/core` `/api/instruments` | Operations |
+| `/api/core` `/api/instruments` `/api/eod` | Operations |
 | `/api/mfb` `/api/compliance` | Risk |
 | `/api/vacs` `/api/auth` | Admin / access |

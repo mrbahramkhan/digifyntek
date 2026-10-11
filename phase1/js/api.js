@@ -242,7 +242,12 @@
     api.mfbReclassify = function () { return request('/api/mfb/reclassify', { method: 'POST', body: '{}' }); };
     api.mfbPack = function () { return request('/api/mfb/regulatory-pack'); };
     api.mfbImportLegacy = function () { return request('/api/mfb/import-legacy', { method: 'POST', body: '{}' }); };
+    
+    api.eodStatus = function () { return request('/api/eod/status'); };
+    api.eodRun = function (b) { return request('/api/eod/run', { method: 'POST', body: JSON.stringify(b || {}) }); };
+    api.eodSetDate = function (d) { return request('/api/eod/business-date', { method: 'PUT', body: JSON.stringify({ business_date: d }) }); };
     global.DigiFyntekAPI = api;
+
 
 
 

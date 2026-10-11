@@ -39,6 +39,7 @@
       items: [
         { href: 'core-banking.html', label: 'General ledger' },
         { href: 'instruments.html', label: 'Cheque books' },
+        { href: 'eod.html', label: 'End of day' },
         { href: 'cbs.html#txn', label: 'Transfers' },
       ],
     },
