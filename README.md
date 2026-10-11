@@ -1,121 +1,53 @@
 # DigiFyntek
 
-**End-to-end cooperative & fintech platform** — members, shares, loans, core banking, chequebooks, Islamic modes, CBS, and MFB prudential toolkit.
+**One system** to run a cooperative society or bank-style institution end to end.
+
+```
+Customers → Accounts → Lending → Operations → Risk → Admin
+```
 
 | | |
 |--|--|
 | **Product** | DigiFyntek |
-| **Stack** | Node.js · Express · MySQL 8 · static UI |
-| **Demo UI** | https://mrbahramkhan.github.io/digifyntek/ |
+| **Stack** | Node.js · Express · MySQL 8 |
+| **UI demo** | https://mrbahramkhan.github.io/digifyntek/ |
 
----
+## What it runs
 
-## Modules (end-to-end)
+| Domain | Capability |
+|--------|------------|
+| Customers | Member register, 360 view, membership cards |
+| Accounts | Deposits, share capital, CIF / account open, transfers |
+| Lending | Loans & PAR, collateral, Murābaḥah and other Islamic modes |
+| Operations | General ledger, day-end, accrual, cheque books |
+| Risk | Classification, provisions, MCR/CAR, cooperative law checklist |
+| Admin | Institution & branches, product catalogue |
 
-| Area | Features |
-|------|----------|
-| **CRM** | Members, Member 360, cards, shares, savings |
-| **Credit** | Loans & PAR, collateral |
-| **Core Banking** | COA, GL, posting, day-end, interest accrual |
-| **CBS** | CIF, accounts, transfers, products, integrations registry |
-| **MFB Prudential** | DPD classification, provisions, MCR, CAR 15%, regulatory pack |
-| **Chequebooks** | Request → approve → issue · leaves · stop payment |
-| **Islamic** | Murābaḥah, Salam, Ijārah, Qard Ḥasan |
-| **Governance** | Setup, registration checklist, cooperative law, SBP controls |
-| **Legacy** | Digital Kisaan DB mode (`DB_MODE=legacy`) |
-
----
-
-## Quick start (local)
+## Start
 
 ```bash
 ./start.sh
+# http://localhost:4000  ·  superadmin / ForgeAdmin123!
 ```
 
-Or step-by-step:
-
 ```bash
-cd backend
-cp .env.example .env   # edit DB_* and JWT_SECRET
-npm install
-npm run db:init
-npm run db:seed-admin -- 'YourStrongPass!'
-npm start
+cd backend && npm install && npm run db:init
+npm run db:seed-admin -- 'YourPass!' && npm start
 ```
 
-- App: **http://localhost:4000**
-- Login: `superadmin` / seed password
-- Health: **http://localhost:4000/health**
+Health: `GET /health`
 
-### Docker Compose
+## Legacy Digital Kisaan DB
 
-```bash
-docker compose up -d
-```
-
-### Legacy Digital Kisaan database
-
-```bash
-# Import dump as digifyntek
-sed 's/`digitalkisaan`/`digifyntek`/g' DigitalKissan-old_backuo.sql | mysql -u root -p
-
-# backend/.env
+```env
 DB_NAME=digifyntek
 DB_MODE=legacy
 ```
 
----
-
-## API map
-
-| Prefix | Purpose |
-|--------|---------|
-| `/api/auth` | Login, me |
-| `/api/members` | CRM / farmers |
-| `/api/loans` | Loans & portfolio |
-| `/api/core` | Ledger, posting, day-end, accrual |
-| `/api/cbs` | Temenos-style CBS |
-| `/api/mfb` | MFB prudential |
-| `/api/instruments` | Chequebooks |
-| `/api/murabaha` · `/api/islamic` | Islamic modes |
-| `/api/shares` · `/api/savings` | Capital & deposits |
-| `/health` | Status + module list |
-
----
-
-## UI pages
-
-Served from `phase1/` (and `docs/` for GitHub Pages):
-
-`app.html` · `members.html` · `loans.html` · `core-banking.html` · `cbs.html` · `mfb.html` · `instruments.html` · `murabaha.html` · `islamic-ops.html` · …
-
-Marketing site: `index.html`
-
----
-
-## Production
-
-See [PRODUCTION.md](PRODUCTION.md) and [deploy/](deploy/) (nginx + HTTPS sample).
-
-```bash
-NODE_ENV=production JWT_SECRET=<32+ chars> DB_PASSWORD=<secret> npm start
-```
-
----
-
 ## Docs
 
-| File | Content |
-|------|---------|
-| [SYSTEM.md](SYSTEM.md) | Architecture |
-| [integration/LEGACY_DB_MAP.md](integration/LEGACY_DB_MAP.md) | Digital Kisaan tables |
-| [integration/CORE_BANKING.md](integration/CORE_BANKING.md) | Posting / day-end |
-| [integration/CBS_TEMENOS_SBP.md](integration/CBS_TEMENOS_SBP.md) | CBS + SBP checklist |
-| [integration/MFB_PRUDENTIAL.md](integration/MFB_PRUDENTIAL.md) | MFB toolkit |
-| [PAGES.md](PAGES.md) | GitHub Pages |
+- [SYSTEM.md](SYSTEM.md) — domain architecture  
+- [PRODUCTION.md](PRODUCTION.md) — deploy  
+- [integration/](integration/) — legacy map, CBS, MFB toolkit  
 
----
-
-## Version
-
-**1.2.0** — full cooperative fintech stack + MFB prudential + CBS + core banking + chequebooks.
+**Version 1.3.0** — unified bank/society information architecture.
