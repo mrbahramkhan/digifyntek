@@ -94,10 +94,18 @@ async function loadStatus() {
     document.getElementById('kUnp').textContent = s.unposted_transactions == null ? 'n/a' : s.unposted_transactions;
     document.getElementById('bizDate').value = bd !== '—' ? bd : new Date().toISOString().slice(0, 10);
 
-    document.getElementById('checklist').innerHTML = (s.checklist || []).map(function (c) {
-      return '<li><span class="dot"></span><div><strong>' + c.code + '</strong> — ' + c.label +
-        (c.required ? ' <span style="color:#b91c1c">*</span>' : '') + '</div></li>';
+    var gates = s.gates || [];
+    document.getElementById('checklist').innerHTML = (gates.length ? gates : (s.checklist || [])).map(function (c) {
+      var ok = c.ok;
+      var label = c.label || c.detail || '';
+      return '<li><span class="dot ' + (ok === true ? 'ok' : ok === false ? 'bad' : '') + '"></span><div><strong>' + c.code + '</strong> — ' +
+        label + (c.required ? ' <span style="color:#b91c1c">*</span>' : '') +
+        (c.detail && c.label ? '<div style="color:#64748b;font-size:12px">' + c.detail + '</div>' : '') +
+        '</div></li>';
     }).join('');
+    if (s.prior_success_run) {
+      document.getElementById('kUnp').textContent = 'closed#' + s.prior_success_run.id;
+    }
 
     const runs = s.recent_runs || [];
     document.getElementById('tbRuns').innerHTML = runs.length ? runs.map(function (r) {
@@ -138,8 +146,8 @@ async function runEod() {
       skip_accrual: document.getElementById('skipAccrual').checked,
       allow_unposted: document.getElementById('allowUnposted').checked,
     });
-    msg.textContent = (r.ok ? 'EOD completed: ' : 'EOD finished with issues: ') + r.status +
-      ' · closed ' + r.business_date_closed + ' · next ' + r.next_business_date;
+    msg.textContent = (r.idempotent ? 'Idempotent (already closed): ' : (r.ok ? 'EOD completed: ' : 'EOD blocked/failed: ')) + r.status +
+      ' · closed ' + r.business_date_closed + ' · next ' + r.next_business_date + (r.execution_id ? ' · ' + r.execution_id : '');
     msg.style.color = r.ok ? '#059669' : '#b45309';
     pre.hidden = false;
     pre.textContent = JSON.stringify(r.steps, null, 2);
