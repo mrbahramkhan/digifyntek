@@ -23,6 +23,7 @@
       sec: 'Accounts',
       items: [
         { href: 'accounts.html', label: 'Accounts (CASA)' },
+        { href: 'term-deposits.html', label: 'Term deposits' },
         { href: 'casa.html', label: 'Cash deposit / withdraw' },
         { href: 'savings.html', label: 'Deposit accounts (legacy)' },
         { href: 'shares.html', label: 'Share capital' },

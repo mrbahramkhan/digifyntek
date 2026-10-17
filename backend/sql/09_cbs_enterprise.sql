@@ -414,3 +414,54 @@ CREATE TABLE IF NOT EXISTS cbs_kyc_events (
   detail_json JSON NULL,
   KEY idx_case (case_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Term deposits
+CREATE TABLE IF NOT EXISTS cbs_term_deposits (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  td_ref VARCHAR(40) NOT NULL,
+  customer_id BIGINT UNSIGNED NOT NULL,
+  funding_account_id BIGINT UNSIGNED NULL,
+  product_code VARCHAR(24) NOT NULL DEFAULT 'TD-PKR',
+  branch_code VARCHAR(16) NULL,
+  principal DECIMAL(18,2) NOT NULL,
+  outstanding_principal DECIMAL(18,2) NOT NULL,
+  currency CHAR(3) NOT NULL DEFAULT 'PKR',
+  rate_pct DECIMAL(8,4) NOT NULL DEFAULT 0,
+  tenor_days INT UNSIGNED NOT NULL,
+  value_date DATE NOT NULL,
+  maturity_date DATE NOT NULL,
+  rollover_instruction ENUM('NONE','PRINCIPAL','PRINCIPAL_INTEREST') NOT NULL DEFAULT 'NONE',
+  status ENUM('active','matured','encashed','cancelled') NOT NULL DEFAULT 'active',
+  is_islamic TINYINT(1) NOT NULL DEFAULT 0,
+  withholding_tax_pct DECIMAL(8,4) NOT NULL DEFAULT 0,
+  interest_accrued DECIMAL(18,2) NOT NULL DEFAULT 0,
+  interest_paid DECIMAL(18,2) NOT NULL DEFAULT 0,
+  wht_deducted DECIMAL(18,2) NOT NULL DEFAULT 0,
+  placement_journal_id BIGINT UNSIGNED NULL,
+  maturity_journal_id BIGINT UNSIGNED NULL,
+  narrative VARCHAR(255) NULL,
+  created_by VARCHAR(50) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_td (td_ref),
+  KEY idx_cust (customer_id),
+  KEY idx_mat (maturity_date),
+  KEY idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_td_events (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  td_id BIGINT UNSIGNED NOT NULL,
+  event_type ENUM('PLACE','ACCRUE','PAYOUT','PREMATURE','MATURE','CANCEL') NOT NULL,
+  amount DECIMAL(18,2) NULL,
+  journal_id BIGINT UNSIGNED NULL,
+  note VARCHAR(255) NULL,
+  actor VARCHAR(50) NULL,
+  event_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_td (td_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO cbs_products (product_code, product_name, product_family, is_islamic, gl_liability, gl_expense)
+VALUES
+('TD-PKR', 'Term Deposit PKR', 'TERM_DEPOSIT', 0, '2000', '5000'),
+('TD-ISL', 'Islamic Term Investment', 'TERM_DEPOSIT', 1, '2000', '5000');

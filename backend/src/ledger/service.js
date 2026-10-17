@@ -673,10 +673,182 @@ async function generateSchedule({ contractId, installments, firstDueDate, charge
   return { contract_id: contractId, installments: n, schedule: rows };
 }
 
+
+function addDaysIso(iso, days) {
+  const d = new Date(String(iso).slice(0, 10) + 'T12:00:00');
+  d.setDate(d.getDate() + Number(days));
+  return d.toISOString().slice(0, 10);
+}
+
+/** Simple interest for tenor: principal * rate% * days/365 */
+function tdInterest(principal, ratePct, days) {
+  const p = money(principal);
+  const r = Number(ratePct) || 0;
+  const n = Number(days) || 0;
+  return money((p * r * n) / (100 * 365));
+}
+
+/**
+ * Place TD: Dr Customer deposit (or cash) / Cr TD liability (use 2000 control; product may refine)
+ * funding from account reduces CASA; TD tracked in cbs_term_deposits
+ */
+async function placeTermDeposit({
+  customerId, fundingAccountId, principal, ratePct, tenorDays, valueDate,
+  branchCode, productCode, rolloverInstruction, isIslamic, withholdingTaxPct,
+  narrative, createdBy, idempotencyKey, cashGl = '1000', depositGl = '2000',
+}) {
+  const amt = money(principal);
+  if (amt <= 0) { const e = new Error('Principal must be positive'); e.status = 400; throw e; }
+  if (!customerId) { const e = new Error('customer_id required'); e.status = 400; throw e; }
+  const tenor = Number(tenorDays) || 0;
+  if (tenor < 1) { const e = new Error('tenor_days must be >= 1'); e.status = 400; throw e; }
+  const vdate = valueDate || new Date().toISOString().slice(0, 10);
+  const mdate = addDaysIso(vdate, tenor);
+  const tdRef = ref('TD');
+
+  const lines = [];
+  if (fundingAccountId) {
+    lines.push({
+      gl_code: depositGl, account_id: fundingAccountId, debit: amt, credit: 0,
+      narrative: 'TD funding from account',
+    });
+  } else {
+    lines.push({ gl_code: cashGl, debit: amt, credit: 0, narrative: 'TD funding cash' });
+  }
+  lines.push({
+    gl_code: depositGl, debit: 0, credit: amt, narrative: `TD liability ${tdRef}`,
+  });
+
+  const journal = await postJournal({
+    businessDate: vdate,
+    branchCode,
+    sourceModule: 'TD_PLACE',
+    sourceRef: tdRef,
+    narrative: narrative || `Term deposit ${tdRef}`,
+    postedBy: createdBy,
+    idempotencyKey: idempotencyKey ? `TD-${idempotencyKey}` : undefined,
+    lines,
+  });
+
+  const [ins] = await pool.query(
+    `INSERT INTO cbs_term_deposits
+      (td_ref, customer_id, funding_account_id, product_code, branch_code, principal,
+       outstanding_principal, rate_pct, tenor_days, value_date, maturity_date,
+       rollover_instruction, status, is_islamic, withholding_tax_pct,
+       placement_journal_id, narrative, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?)`,
+    [
+      tdRef, customerId, fundingAccountId || null, productCode || 'TD-PKR', branchCode || '001',
+      amt, amt, Number(ratePct) || 0, tenor, vdate, mdate,
+      rolloverInstruction || 'NONE', isIslamic ? 1 : 0, Number(withholdingTaxPct) || 0,
+      journal.id, narrative || null, createdBy || null,
+    ]
+  );
+  await pool.query(
+    `INSERT INTO cbs_td_events (td_id, event_type, amount, journal_id, note, actor)
+     VALUES (?, 'PLACE', ?, ?, ?, ?)`,
+    [ins.insertId, amt, journal.id, 'Placement', createdBy || null]
+  );
+  return { id: ins.insertId, td_ref: tdRef, principal: amt, maturity_date: mdate, journal };
+}
+
+/**
+ * Premature encashment or maturity payout.
+ * Pays principal (+ interest if mature or allowInterestOnPremature).
+ * Dr TD liability / Cr Cash or credit account
+ */
+async function settleTermDeposit({
+  tdId, mode, creditAccountId, businessDate, narrative, createdBy, idempotencyKey,
+  allowInterestOnPremature = false, depositGl = '2000', cashGl = '1000', expenseGl = '5000',
+}) {
+  // mode: 'MATURE' | 'PREMATURE'
+  const [[td]] = await pool.query(`SELECT * FROM cbs_term_deposits WHERE id = ?`, [tdId]);
+  if (!td) { const e = new Error('TD not found'); e.status = 404; throw e; }
+  if (td.status !== 'active') { const e = new Error(`TD status is ${td.status}`); e.status = 400; throw e; }
+
+  const bdate = businessDate || new Date().toISOString().slice(0, 10);
+  const principal = money(td.outstanding_principal);
+  let interest = 0;
+  if (mode === 'MATURE') {
+    interest = tdInterest(td.principal, td.rate_pct, td.tenor_days);
+  } else if (mode === 'PREMATURE' && allowInterestOnPremature) {
+    const start = new Date(String(td.value_date).slice(0, 10) + 'T12:00:00');
+    const end = new Date(bdate + 'T12:00:00');
+    const days = Math.max(0, Math.floor((end - start) / 86400000));
+    interest = tdInterest(td.principal, td.rate_pct, days);
+  }
+  interest = money(interest);
+  const whtPct = Number(td.withholding_tax_pct) || 0;
+  const wht = money((interest * whtPct) / 100);
+  const netInterest = money(interest - wht);
+  const payout = money(principal + netInterest);
+
+  const lines = [
+    { gl_code: depositGl, debit: principal, credit: 0, narrative: 'TD principal release' },
+  ];
+  if (interest > 0) {
+    lines.push({ gl_code: expenseGl, debit: interest, credit: 0, narrative: 'TD interest/profit expense' });
+  }
+  if (wht > 0) {
+    lines.push({ gl_code: depositGl, debit: 0, credit: wht, narrative: 'WHT on TD interest (liability)' });
+  }
+  if (creditAccountId) {
+    lines.push({
+      gl_code: depositGl, account_id: creditAccountId, debit: 0, credit: payout,
+      narrative: 'TD payout to account',
+    });
+  } else {
+    lines.push({ gl_code: cashGl, debit: 0, credit: payout, narrative: 'TD payout cash' });
+  }
+
+  // Balance check: principal + interest = payout + wht
+  const journal = await postJournal({
+    businessDate: bdate,
+    branchCode: td.branch_code,
+    sourceModule: mode === 'MATURE' ? 'TD_MATURE' : 'TD_PREMATURE',
+    sourceRef: td.td_ref,
+    narrative: narrative || `${mode} ${td.td_ref}`,
+    postedBy: createdBy,
+    idempotencyKey: idempotencyKey ? `TDX-${idempotencyKey}` : undefined,
+    lines,
+  });
+
+  const newStatus = mode === 'MATURE' ? 'matured' : 'encashed';
+  await pool.query(
+    `UPDATE cbs_term_deposits SET
+      status = ?, outstanding_principal = 0,
+      interest_accrued = ?, interest_paid = ?, wht_deducted = ?,
+      maturity_journal_id = ?
+     WHERE id = ?`,
+    [newStatus, interest, netInterest, wht, journal.id, tdId]
+  );
+  await pool.query(
+    `INSERT INTO cbs_td_events (td_id, event_type, amount, journal_id, note, actor)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [tdId, mode === 'MATURE' ? 'MATURE' : 'PREMATURE', payout, journal.id, narrative || mode, createdBy || null]
+  );
+
+  return {
+    id: tdId,
+    td_ref: td.td_ref,
+    status: newStatus,
+    principal,
+    interest,
+    withholding_tax: wht,
+    net_interest: netInterest,
+    payout,
+    journal,
+  };
+}
+
 module.exports = {
   disburseLoan,
   repayLoan,
   generateSchedule,
+  placeTermDeposit,
+  settleTermDeposit,
+  tdInterest,
+  addDaysIso,
 
   postJournal,
   reverseJournal,
