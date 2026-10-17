@@ -46,6 +46,7 @@
         { href: 'core-banking.html', label: 'General ledger (legacy)' },
         { href: 'instruments.html', label: 'Cheque books' },
         { href: 'eod.html', label: 'End of day' },
+        { href: 'approvals.html', label: 'Maker-checker queue' },
         { href: 'cbs.html#txn', label: 'Transfers' },
       ],
     },

@@ -281,3 +281,26 @@ CREATE TABLE IF NOT EXISTS cbs_repayment_schedules (
   UNIQUE KEY uq_inst (contract_id, installment_no),
   KEY idx_due (due_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Maker-checker approval queue
+CREATE TABLE IF NOT EXISTS cbs_approval_requests (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  request_ref VARCHAR(40) NOT NULL,
+  request_type VARCHAR(40) NOT NULL,
+  payload_json JSON NOT NULL,
+  amount DECIMAL(18,2) NULL,
+  currency CHAR(3) NOT NULL DEFAULT 'PKR',
+  status ENUM('PENDING','APPROVED','REJECTED','CANCELLED','EXPIRED') NOT NULL DEFAULT 'PENDING',
+  maker_id VARCHAR(50) NOT NULL,
+  maker_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  checker_id VARCHAR(50) NULL,
+  checker_at DATETIME NULL,
+  checker_note VARCHAR(500) NULL,
+  result_json JSON NULL,
+  branch_code VARCHAR(16) NULL,
+  business_date DATE NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_areq (request_ref),
+  KEY idx_status (status),
+  KEY idx_type (request_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
