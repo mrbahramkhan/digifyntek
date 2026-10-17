@@ -495,8 +495,188 @@ async function disburseLoan({
   };
 }
 
+
+async function repayLoan({
+  contractId, amount, businessDate, fromAccountId, narrative, createdBy, idempotencyKey,
+  loanGl = '1100', cashGl = '1000', depositGl = '2000',
+}) {
+  const amt = money(amount);
+  if (amt <= 0) { const e = new Error('Amount must be positive'); e.status = 400; throw e; }
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [[c]] = await conn.query(
+      `SELECT * FROM cbs_financing_contracts WHERE id = ? FOR UPDATE`,
+      [contractId]
+    );
+    if (!c) { const e = new Error('Contract not found'); e.status = 404; throw e; }
+    if (c.status !== 'active') { const e = new Error(`Contract status is ${c.status}`); e.status = 400; throw e; }
+
+    const os = money(c.outstanding);
+    if (amt > os) {
+      const e = new Error(`Amount ${amt} exceeds outstanding ${os}`);
+      e.status = 400;
+      throw e;
+    }
+
+    const principalComponent = amt; // Phase 3: full amount to principal; charge split later
+    const outstandingAfter = money(os - principalComponent);
+
+    await conn.commit();
+    conn.release();
+
+    // Dr Cash or deposit / Cr Loan asset (reduce asset)
+    const lines = [];
+    if (fromAccountId) {
+      lines.push({
+        gl_code: depositGl,
+        account_id: fromAccountId,
+        debit: amt,
+        credit: 0,
+        narrative: 'Repayment from account',
+      });
+    } else {
+      lines.push({ gl_code: cashGl, debit: amt, credit: 0, narrative: 'Cash repayment' });
+    }
+    lines.push({
+      gl_code: loanGl,
+      debit: 0,
+      credit: amt,
+      narrative: 'Loan principal recovery',
+    });
+
+    const journal = await postJournal({
+      businessDate,
+      branchCode: c.branch_code,
+      sourceModule: 'LOAN_REPAY',
+      sourceRef: c.contract_no,
+      narrative: narrative || `Repayment ${c.contract_no}`,
+      postedBy: createdBy,
+      idempotencyKey: idempotencyKey ? `RP-${idempotencyKey}` : undefined,
+      lines,
+    });
+
+    const newStatus = outstandingAfter <= 0 ? 'closed' : 'active';
+    await pool.query(
+      `UPDATE cbs_financing_contracts SET outstanding = ?, status = ? WHERE id = ?`,
+      [outstandingAfter, newStatus, contractId]
+    );
+
+    const repayRef = ref('RPY');
+    const [ins] = await pool.query(
+      `INSERT INTO cbs_financing_repayments
+        (contract_id, repayment_ref, business_date, amount, principal_component, charge_component,
+         outstanding_after, journal_id, from_account_id, narrative, created_by)
+       VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)`,
+      [
+        contractId, repayRef,
+        businessDate || new Date().toISOString().slice(0, 10),
+        amt, principalComponent, outstandingAfter,
+        journal.id, fromAccountId || null, narrative || null, createdBy || null,
+      ]
+    );
+
+    // Apply to schedule FIFO
+    let remaining = principalComponent;
+    const [sched] = await pool.query(
+      `SELECT * FROM cbs_repayment_schedules
+       WHERE contract_id = ? AND status IN ('pending','partial','overdue')
+       ORDER BY installment_no FOR UPDATE`,
+      [contractId]
+    ).catch(() => [[]]);
+
+    // without FOR UPDATE on second query if table empty
+    const [sched2] = await pool.query(
+      `SELECT * FROM cbs_repayment_schedules
+       WHERE contract_id = ? AND status IN ('pending','partial','overdue')
+       ORDER BY installment_no`,
+      [contractId]
+    );
+
+    for (const row of sched2) {
+      if (remaining <= 0) break;
+      const dueLeft = money(Number(row.total_due) - Number(row.principal_paid) - Number(row.charge_paid));
+      const apply = Math.min(remaining, dueLeft);
+      const newPaid = money(Number(row.principal_paid) + apply);
+      const fully = newPaid >= money(Number(row.total_due));
+      await pool.query(
+        `UPDATE cbs_repayment_schedules SET principal_paid = ?, status = ? WHERE id = ?`,
+        [newPaid, fully ? 'paid' : 'partial', row.id]
+      );
+      remaining = money(remaining - apply);
+    }
+
+    return {
+      id: ins.insertId,
+      repayment_ref: repayRef,
+      amount: amt,
+      outstanding_after: outstandingAfter,
+      contract_status: newStatus,
+      journal,
+    };
+  } catch (err) {
+    try { await conn.rollback(); } catch (_) {}
+    try { conn.release(); } catch (_) {}
+    throw err;
+  }
+}
+
+/**
+ * Equal principal installments (simple schedule — not full amortization engine)
+ */
+async function generateSchedule({ contractId, installments, firstDueDate, chargePerInstallment = 0 }) {
+  const n = Number(installments) || 0;
+  if (n < 1 || n > 360) {
+    const e = new Error('installments must be 1–360');
+    e.status = 400;
+    throw e;
+  }
+  const [[c]] = await pool.query(`SELECT * FROM cbs_financing_contracts WHERE id = ?`, [contractId]);
+  if (!c) { const e = new Error('Contract not found'); e.status = 404; throw e; }
+
+  const [[ex]] = await pool.query(
+    `SELECT COUNT(*) AS n FROM cbs_repayment_schedules WHERE contract_id = ?`,
+    [contractId]
+  );
+  if (ex.n > 0) {
+    const e = new Error('Schedule already exists for this contract');
+    e.status = 400;
+    throw e;
+  }
+
+  const principal = money(c.outstanding > 0 ? c.outstanding : c.principal);
+  const base = money(Math.floor((principal / n) * 100) / 100);
+  let allocated = 0;
+  const start = firstDueDate || new Date().toISOString().slice(0, 10);
+  const charge = money(chargePerInstallment);
+
+  for (let i = 1; i <= n; i++) {
+    let pDue = i === n ? money(principal - allocated) : base;
+    allocated = money(allocated + pDue);
+    const d = new Date(start + 'T12:00:00');
+    d.setMonth(d.getMonth() + (i - 1));
+    const due = d.toISOString().slice(0, 10);
+    const total = money(pDue + charge);
+    await pool.query(
+      `INSERT INTO cbs_repayment_schedules
+        (contract_id, installment_no, due_date, principal_due, charge_due, total_due, status)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
+      [contractId, i, due, pDue, charge, total]
+    );
+  }
+
+  const [rows] = await pool.query(
+    `SELECT * FROM cbs_repayment_schedules WHERE contract_id = ? ORDER BY installment_no`,
+    [contractId]
+  );
+  return { contract_id: contractId, installments: n, schedule: rows };
+}
+
 module.exports = {
   disburseLoan,
+  repayLoan,
+  generateSchedule,
 
   postJournal,
   reverseJournal,

@@ -248,3 +248,36 @@ CREATE TABLE IF NOT EXISTS cbs_financing_contracts (
   UNIQUE KEY uq_contract (contract_no),
   KEY idx_cust (customer_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_financing_repayments (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  contract_id BIGINT UNSIGNED NOT NULL,
+  repayment_ref VARCHAR(40) NOT NULL,
+  business_date DATE NOT NULL,
+  amount DECIMAL(18,2) NOT NULL,
+  principal_component DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+  charge_component DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+  outstanding_after DECIMAL(18,2) NOT NULL,
+  journal_id BIGINT UNSIGNED NULL,
+  from_account_id BIGINT UNSIGNED NULL,
+  narrative VARCHAR(255) NULL,
+  created_by VARCHAR(50) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_repay_ref (repayment_ref),
+  KEY idx_contract (contract_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_repayment_schedules (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  contract_id BIGINT UNSIGNED NOT NULL,
+  installment_no INT UNSIGNED NOT NULL,
+  due_date DATE NOT NULL,
+  principal_due DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+  charge_due DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+  total_due DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+  principal_paid DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+  charge_paid DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+  status ENUM('pending','partial','paid','overdue') NOT NULL DEFAULT 'pending',
+  UNIQUE KEY uq_inst (contract_id, installment_no),
+  KEY idx_due (due_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
