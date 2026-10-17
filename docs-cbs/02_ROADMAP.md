@@ -19,3 +19,16 @@
 3. APIs — `/api/v1/cif`, `/api/v1/accounts`, `/api/v1/ledger`, `/api/v1/transfers`  
 4. Screens — CIF, Accounts, Journal, Transfer (operational forms)  
 5. Update nav + SYSTEM docs  
+
+
+## Completed modules log
+
+| Date | Module | Notes |
+|------|--------|-------|
+| 2026-10 | CIF | Create/search/edit, KYC/risk fields, audit |
+| 2026-10 | Accounts open | Product-linked CASA account |
+| 2026-10 | Ledger core | Balanced post, reverse, trial balance |
+| 2026-10 | Internal FT | Idempotent transfer |
+| 2026-10 | **CASA cash ops** | Deposit / withdrawal via double-entry |
+
+**Next module:** Loan disbursement with GL posting (credit vertical slice)

@@ -22,6 +22,7 @@
       sec: 'Accounts',
       items: [
         { href: 'accounts.html', label: 'Accounts (CASA)' },
+        { href: 'casa.html', label: 'Cash deposit / withdraw' },
         { href: 'savings.html', label: 'Deposit accounts (legacy)' },
         { href: 'shares.html', label: 'Share capital' },
         { href: 'cbs.html', label: 'Open account / CIF' },
@@ -30,7 +31,8 @@
     {
       sec: 'Lending',
       items: [
-        { href: 'loans.html', label: 'Loan portfolio' },
+        { href: 'financing.html', label: 'Disburse financing' },
+        { href: 'loans.html', label: 'Loan portfolio (legacy)' },
         { href: 'collateral.html', label: 'Collateral' },
         { href: 'murabaha.html', label: 'Murābaḥah' },
         { href: 'islamic-ops.html', label: 'Other Islamic modes' },

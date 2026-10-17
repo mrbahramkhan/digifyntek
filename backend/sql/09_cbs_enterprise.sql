@@ -226,3 +226,25 @@ VALUES
  'Business date advance only after mandatory checks or authorized exception', 'in_progress', 'Operations'),
 ('MFB asset classification (if applicable)', 'https://www.sbp.org.pk', 'MFB PRs (verify current)', 'credit',
  'DPD-based classification and provisioning per applicable PR', 'in_progress', 'Credit Risk');
+
+-- Financing contracts (Phase 3 start — disbursement vertical)
+CREATE TABLE IF NOT EXISTS cbs_financing_contracts (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  contract_no VARCHAR(40) NOT NULL,
+  customer_id BIGINT UNSIGNED NOT NULL,
+  product_code VARCHAR(24) NOT NULL,
+  branch_code VARCHAR(16) NULL,
+  principal DECIMAL(18,2) NOT NULL,
+  outstanding DECIMAL(18,2) NOT NULL,
+  currency CHAR(3) NOT NULL DEFAULT 'PKR',
+  is_islamic TINYINT(1) NOT NULL DEFAULT 0,
+  status ENUM('pending','active','closed','written_off') NOT NULL DEFAULT 'pending',
+  disbursed_at DATE NULL,
+  maturity_date DATE NULL,
+  disbursement_journal_id BIGINT UNSIGNED NULL,
+  narrative VARCHAR(255) NULL,
+  created_by VARCHAR(50) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_contract (contract_no),
+  KEY idx_cust (customer_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

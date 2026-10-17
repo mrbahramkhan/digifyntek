@@ -1,7 +1,8 @@
 const express = require('express');
 const { auth } = require('../middleware/auth');
 const pool = require('../config/db');
-const { ref } = require('../ledger/service');
+const ledger = require('../ledger/service');
+const { ref } = ledger;
 const router = express.Router();
 
 router.get('/', auth(), async (req, res, next) => {
@@ -65,4 +66,50 @@ router.get('/:id/statement', auth(), async (req, res, next) => {
   }
 });
 
+
+router.post('/:id/deposit', auth(), async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const result = await ledger.cashDeposit({
+      accountId: Number(req.params.id),
+      amount: b.amount,
+      businessDate: b.business_date,
+      narrative: b.narrative,
+      createdBy: req.user?.userId || req.user?.id,
+      idempotencyKey: b.idempotency_key || req.headers['idempotency-key'],
+    });
+    const [[acct]] = await pool.query(`SELECT * FROM cbs_accounts WHERE id = ?`, [req.params.id]);
+    res.status(201).json({ ...result, account: acct });
+  } catch (e) { next(e); }
+});
+
+router.post('/:id/withdraw', auth(), async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const result = await ledger.cashWithdrawal({
+      accountId: Number(req.params.id),
+      amount: b.amount,
+      businessDate: b.business_date,
+      narrative: b.narrative,
+      createdBy: req.user?.userId || req.user?.id,
+      idempotencyKey: b.idempotency_key || req.headers['idempotency-key'],
+    });
+    const [[acct]] = await pool.query(`SELECT * FROM cbs_accounts WHERE id = ?`, [req.params.id]);
+    res.status(201).json({ ...result, account: acct });
+  } catch (e) { next(e); }
+});
+
+router.get('/:id', auth(), async (req, res, next) => {
+  try {
+    const [[acct]] = await pool.query(
+      `SELECT a.*, c.full_name, c.cnic FROM cbs_accounts a
+       JOIN cbs_customers c ON c.id = a.customer_id WHERE a.id = ?`,
+      [req.params.id]
+    );
+    if (!acct) return res.status(404).json({ error: 'Account not found' });
+    res.json(acct);
+  } catch (e) { next(e); }
+});
+
 module.exports = router;
+

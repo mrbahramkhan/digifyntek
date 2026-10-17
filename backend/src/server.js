@@ -28,6 +28,7 @@ const eodRoutes = require('./routes/eod');
 const cifRoutes = require('./routes/cif');
 const accountsRoutes = require('./routes/accounts');
 const ledgerRoutes = require('./routes/ledger');
+const financingRoutes = require('./routes/financing');
 
 const app = express();
 
@@ -127,6 +128,8 @@ app.use('/api/v1/ledger', ledgerRoutes);
 app.use('/api/cif', cifRoutes);
 app.use('/api/accounts', accountsRoutes);
 app.use('/api/ledger', ledgerRoutes);
+app.use('/api/v1/financing', financingRoutes);
+app.use('/api/financing', financingRoutes);
 
 // Serve full UI (phase1) from same process — one deploy = full system
 const fs = require('fs');

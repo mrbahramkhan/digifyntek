@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — CASA Cash</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>Cash deposit / withdrawal</h1>
+      <span class="meta">CASA · double-entry · PKR</span>
+    </header>
+    <div class="workspace">
+      <div class="split">
+        <div class="panel">
+          <div class="panel-h">
+            <span>Accounts</span>
+            <div class="spacer"></div>
+            <button type="button" class="btn btn-sm" id="btnReload">Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>ID</th><th>Account</th><th>Customer</th><th>Balance</th><th>Status</th></tr></thead>
+              <tbody id="tb"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">Transaction</div>
+          <div class="panel-b">
+            <div class="form-grid">
+              <div class="field full">
+                <label>Account ID <span class="req">*</span></label>
+                <input class="inp" id="f_aid" placeholder="Select from list or type ID" />
+              </div>
+              <div class="field">
+                <label>Type</label>
+                <select class="inp" id="f_type">
+                  <option value="deposit">Cash deposit</option>
+                  <option value="withdraw">Cash withdrawal</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Amount (PKR) <span class="req">*</span></label>
+                <input class="inp" type="number" step="0.01" min="0.01" id="f_amt" />
+              </div>
+              <div class="field">
+                <label>Business date</label>
+                <input class="inp" type="date" id="f_date" />
+              </div>
+              <div class="field full">
+                <label>Narrative</label>
+                <input class="inp" id="f_narr" />
+              </div>
+              <div class="field full">
+                <label>Idempotency key</label>
+                <input class="inp" id="f_idem" placeholder="optional unique key" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-p" id="btnGo">Post transaction</button>
+              <button type="button" class="btn" id="btnStmt">View statement</button>
+            </div>
+            <div id="msg" class="hint"></div>
+            <pre id="stmt" style="display:none;margin-top:12px;background:#0f172a;color:#e2e8f0;padding:10px;border-radius:8px;font-size:11px;max-height:240px;overflow:auto"></pre>
+          </div>
+        </div>
+      </div>
+      <p class="hint" style="margin-top:10px">
+        Accounting: Deposit = Dr Cash (1000) / Cr Deposits (2000). Withdrawal = reverse.
+        Insufficient funds blocked server-side. Posted journals are not deleted — use ledger reverse if needed.
+      </p>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+  document.getElementById('f_date').value = new Date().toISOString().slice(0, 10);
+  let rows = [];
+
+  async function load() {
+    try {
+      rows = await DigiFyntekAPI.request('/api/v1/accounts?limit=200');
+      document.getElementById('tb').innerHTML = rows.length
+        ? rows.map(function (r) {
+            return (
+              '<tr data-id="' + r.id + '" style="cursor:pointer">' +
+              '<td class="num">' + r.id + '</td>' +
+              '<td class="num">' + r.account_no + '</td>' +
+              '<td>' + (r.full_name || r.customer_id) + '</td>' +
+              '<td class="num">' + Number(r.ledger_balance).toLocaleString() + '</td>' +
+              '<td>' + r.status + '</td></tr>'
+            );
+          }).join('')
+        : '<tr><td colspan="5" class="empty">No accounts — open via Accounts module first</td></tr>';
+    } catch (e) {
+      document.getElementById('tb').innerHTML =
+        '<tr><td colspan="5" class="empty">' + e.message + '</td></tr>';
+    }
+  }
+
+  document.getElementById('tb').onclick = function (e) {
+    const tr = e.target.closest('tr[data-id]');
+    if (tr) document.getElementById('f_aid').value = tr.getAttribute('data-id');
+  };
+
+  document.getElementById('btnReload').onclick = load;
+
+  document.getElementById('btnGo').onclick = async function () {
+    const msg = document.getElementById('msg');
+    const id = document.getElementById('f_aid').value.trim();
+    const type = document.getElementById('f_type').value;
+    const amount = Number(document.getElementById('f_amt').value);
+    if (!id || !amount) {
+      msg.textContent = 'Account ID and amount required';
+      msg.className = 'err';
+      return;
+    }
+    msg.textContent = 'Posting…';
+    msg.className = 'hint';
+    const path =
+      type === 'deposit'
+        ? '/api/v1/accounts/' + id + '/deposit'
+        : '/api/v1/accounts/' + id + '/withdraw';
+    try {
+      const r = await DigiFyntekAPI.request(path, {
+        method: 'POST',
+        body: JSON.stringify({
+          amount: amount,
+          business_date: document.getElementById('f_date').value,
+          narrative: document.getElementById('f_narr').value,
+          idempotency_key: document.getElementById('f_idem').value || undefined,
+        }),
+      });
+      msg.textContent =
+        'OK · ' +
+        r.type +
+        ' · journal ' +
+        (r.journal && r.journal.journal_ref) +
+        ' · balance ' +
+        (r.account && r.account.ledger_balance);
+      msg.className = 'ok';
+      load();
+    } catch (err) {
+      msg.textContent = err.message || 'Failed';
+      msg.className = 'err';
+    }
+  };
+
+  document.getElementById('btnStmt').onclick = async function () {
+    const id = document.getElementById('f_aid').value.trim();
+    if (!id) return alert('Select account');
+    try {
+      const s = await DigiFyntekAPI.request('/api/v1/accounts/' + id + '/statement');
+      const el = document.getElementById('stmt');
+      el.style.display = 'block';
+      el.textContent = JSON.stringify(s, null, 2);
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  load();
+})();
+</script>
+</body>
+</html>

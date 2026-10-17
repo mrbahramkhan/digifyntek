@@ -375,12 +375,137 @@ async function internalTransfer({
   };
 }
 
+/**
+ * CASA cash deposit: Dr Cash 1000 / Cr Customer deposit 2000 (+account)
+ */
+async function cashDeposit({ accountId, amount, businessDate, narrative, createdBy, idempotencyKey, cashGl = '1000', depositGl = '2000' }) {
+  const amt = money(amount);
+  if (amt <= 0) {
+    const e = new Error('Amount must be positive');
+    e.status = 400;
+    throw e;
+  }
+  const [[acct]] = await pool.query(`SELECT * FROM cbs_accounts WHERE id = ?`, [accountId]);
+  if (!acct) {
+    const e = new Error('Account not found');
+    e.status = 404;
+    throw e;
+  }
+  if (acct.status !== 'active') {
+    const e = new Error(`Account status is ${acct.status}`);
+    e.status = 400;
+    throw e;
+  }
+  const journal = await postJournal({
+    businessDate,
+    sourceModule: 'CASA_DEPOSIT',
+    sourceRef: acct.account_no,
+    narrative: narrative || `Cash deposit ${acct.account_no}`,
+    postedBy: createdBy,
+    idempotencyKey: idempotencyKey ? `DEP-${idempotencyKey}` : undefined,
+    lines: [
+      { gl_code: cashGl, debit: amt, credit: 0, narrative: 'Cash in' },
+      { gl_code: depositGl, account_id: accountId, debit: 0, credit: amt, narrative: 'Customer deposit' },
+    ],
+  });
+  return { type: 'deposit', account_id: accountId, amount: amt, journal };
+}
+
+/**
+ * CASA cash withdrawal: Dr Customer deposit 2000 / Cr Cash 1000
+ */
+async function cashWithdrawal({ accountId, amount, businessDate, narrative, createdBy, idempotencyKey, cashGl = '1000', depositGl = '2000' }) {
+  const amt = money(amount);
+  if (amt <= 0) {
+    const e = new Error('Amount must be positive');
+    e.status = 400;
+    throw e;
+  }
+  const journal = await postJournal({
+    businessDate,
+    sourceModule: 'CASA_WITHDRAWAL',
+    sourceRef: String(accountId),
+    narrative: narrative || `Cash withdrawal`,
+    postedBy: createdBy,
+    idempotencyKey: idempotencyKey ? `WDR-${idempotencyKey}` : undefined,
+    lines: [
+      { gl_code: depositGl, account_id: accountId, debit: amt, credit: 0, narrative: 'Customer withdrawal' },
+      { gl_code: cashGl, debit: 0, credit: amt, narrative: 'Cash out' },
+    ],
+  });
+  return { type: 'withdrawal', account_id: accountId, amount: amt, journal };
+}
+
+async function disburseLoan({
+  customerId, productCode, principal, branchCode, businessDate,
+  creditAccountId, narrative, createdBy, idempotencyKey,
+  loanGl = '1100', cashGl = '1000', depositGl = '2000', isIslamic = false,
+}) {
+  const amt = money(principal);
+  if (amt <= 0) { const e = new Error('Principal must be positive'); e.status = 400; throw e; }
+  if (!customerId) { const e = new Error('customerId required'); e.status = 400; throw e; }
+
+  const contractNo = ref('LN');
+  // Dr Loan asset / Cr Cash (or credit to customer deposit if creditAccountId)
+  const lines = [
+    { gl_code: loanGl, debit: amt, credit: 0, narrative: 'Loan disbursement' },
+  ];
+  if (creditAccountId) {
+    lines.push({
+      gl_code: depositGl,
+      account_id: creditAccountId,
+      debit: 0,
+      credit: amt,
+      narrative: 'Disbursement to account',
+    });
+  } else {
+    lines.push({ gl_code: cashGl, debit: 0, credit: amt, narrative: 'Cash disbursement' });
+  }
+
+  const journal = await postJournal({
+    businessDate,
+    branchCode,
+    sourceModule: 'LOAN_DISBURSE',
+    sourceRef: contractNo,
+    narrative: narrative || `Disburse ${contractNo}`,
+    postedBy: createdBy,
+    idempotencyKey: idempotencyKey ? `LN-${idempotencyKey}` : undefined,
+    lines,
+  });
+
+  const [ins] = await pool.query(
+    `INSERT INTO cbs_financing_contracts
+      (contract_no, customer_id, product_code, branch_code, principal, outstanding,
+       is_islamic, status, disbursed_at, disbursement_journal_id, narrative, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)`,
+    [
+      contractNo, customerId, productCode || 'LON-AGRI', branchCode || '001',
+      amt, amt, isIslamic ? 1 : 0,
+      businessDate || new Date().toISOString().slice(0, 10),
+      journal.id, narrative || null, createdBy || null,
+    ]
+  );
+
+  return {
+    id: ins.insertId,
+    contract_no: contractNo,
+    principal: amt,
+    status: 'active',
+    journal,
+  };
+}
+
 module.exports = {
+  disburseLoan,
+
   postJournal,
   reverseJournal,
   trialBalance,
   internalTransfer,
+  cashDeposit,
+  cashWithdrawal,
   money,
   ref,
   audit,
 };
+
