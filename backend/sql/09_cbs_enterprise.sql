@@ -347,3 +347,70 @@ CREATE TABLE IF NOT EXISTS cbs_payment_attempts (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   KEY idx_pay (payment_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- KYC cases & screening (compliance)
+CREATE TABLE IF NOT EXISTS cbs_kyc_cases (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  case_ref VARCHAR(40) NOT NULL,
+  customer_id BIGINT UNSIGNED NOT NULL,
+  case_type ENUM('ONBOARDING','PERIODIC_REVIEW','EDD','REMEDIATION') NOT NULL DEFAULT 'ONBOARDING',
+  status ENUM('open','pending_docs','in_review','approved','rejected','closed') NOT NULL DEFAULT 'open',
+  risk_rating ENUM('low','medium','high') NOT NULL DEFAULT 'low',
+  kyc_outcome ENUM('pending','verified','rejected','unavailable','manual_review') NOT NULL DEFAULT 'pending',
+  source_of_funds VARCHAR(160) NULL,
+  source_of_wealth VARCHAR(160) NULL,
+  purpose_of_account VARCHAR(160) NULL,
+  assigned_to VARCHAR(50) NULL,
+  decision_note TEXT NULL,
+  decided_by VARCHAR(50) NULL,
+  decided_at DATETIME NULL,
+  next_review_date DATE NULL,
+  created_by VARCHAR(50) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_kyc_ref (case_ref),
+  KEY idx_cust (customer_id),
+  KEY idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_kyc_documents (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  case_id BIGINT UNSIGNED NOT NULL,
+  doc_type VARCHAR(40) NOT NULL,
+  doc_ref VARCHAR(80) NULL,
+  file_name VARCHAR(160) NULL,
+  verification_status ENUM('pending','accepted','rejected') NOT NULL DEFAULT 'pending',
+  notes VARCHAR(255) NULL,
+  uploaded_by VARCHAR(50) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_case (case_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_screening_cases (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  screen_ref VARCHAR(40) NOT NULL,
+  customer_id BIGINT UNSIGNED NOT NULL,
+  kyc_case_id BIGINT UNSIGNED NULL,
+  screen_type ENUM('SANCTIONS','PEP','ADVERSE_MEDIA','OTHER') NOT NULL DEFAULT 'SANCTIONS',
+  provider VARCHAR(80) NOT NULL DEFAULT 'MANUAL',
+  status ENUM('pending','clear','match','unavailable','manual_review') NOT NULL DEFAULT 'pending',
+  match_score DECIMAL(5,2) NULL,
+  result_summary VARCHAR(500) NULL,
+  evidence_note TEXT NULL,
+  screened_by VARCHAR(50) NULL,
+  screened_at DATETIME NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_screen (screen_ref),
+  KEY idx_cust (customer_id),
+  KEY idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_kyc_events (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  case_id BIGINT UNSIGNED NOT NULL,
+  event_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actor VARCHAR(50) NULL,
+  action VARCHAR(60) NOT NULL,
+  detail_json JSON NULL,
+  KEY idx_case (case_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

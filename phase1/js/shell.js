@@ -13,6 +13,7 @@
       sec: 'Customers',
       items: [
         { href: 'cif.html', label: 'CIF / Customers' },
+        { href: 'kyc.html', label: 'KYC cases' },
         { href: 'members.html', label: 'Member register (legacy)' },
         { href: 'member360.html', label: 'Member 360' },
         { href: 'cards.html', label: 'Membership cards' },
