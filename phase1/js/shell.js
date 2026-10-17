@@ -47,6 +47,7 @@
         { href: 'instruments.html', label: 'Cheque books' },
         { href: 'eod.html', label: 'End of day' },
         { href: 'approvals.html', label: 'Maker-checker queue' },
+        { href: 'payments.html', label: 'Payments hub (sim)' },
         { href: 'cbs.html#txn', label: 'Transfers' },
       ],
     },

@@ -304,3 +304,46 @@ CREATE TABLE IF NOT EXISTS cbs_approval_requests (
   KEY idx_status (status),
   KEY idx_type (request_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Payments hub (adapters + simulators)
+CREATE TABLE IF NOT EXISTS cbs_payment_instructions (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  payment_ref VARCHAR(40) NOT NULL,
+  channel ENUM('INTERNAL','RAAST','PRISM','ONELINK','OTHER') NOT NULL DEFAULT 'RAAST',
+  direction ENUM('OUT','IN') NOT NULL DEFAULT 'OUT',
+  amount DECIMAL(18,2) NOT NULL,
+  currency CHAR(3) NOT NULL DEFAULT 'PKR',
+  debtor_account_id BIGINT UNSIGNED NULL,
+  debtor_iban VARCHAR(34) NULL,
+  creditor_iban VARCHAR(34) NULL,
+  creditor_name VARCHAR(160) NULL,
+  raast_id VARCHAR(80) NULL,
+  narrative VARCHAR(255) NULL,
+  -- external vs internal status kept separate
+  external_status ENUM('SIMULATED','QUEUED','ACCEPTED','REJECTED','SETTLED','FAILED','UNKNOWN') NOT NULL DEFAULT 'SIMULATED',
+  posting_status ENUM('NONE','PENDING','POSTED','REVERSED','FAILED') NOT NULL DEFAULT 'NONE',
+  settlement_status ENUM('NONE','PENDING','SETTLED','FAILED') NOT NULL DEFAULT 'NONE',
+  journal_id BIGINT UNSIGNED NULL,
+  idempotency_key VARCHAR(64) NULL,
+  simulator TINYINT(1) NOT NULL DEFAULT 1,
+  request_json JSON NULL,
+  response_json JSON NULL,
+  created_by VARCHAR(50) NULL,
+  business_date DATE NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_payref (payment_ref),
+  UNIQUE KEY uq_pay_idem (idempotency_key),
+  KEY idx_ext (external_status),
+  KEY idx_ch (channel)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_payment_attempts (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  payment_id BIGINT UNSIGNED NOT NULL,
+  attempt_no INT UNSIGNED NOT NULL DEFAULT 1,
+  outcome VARCHAR(40) NOT NULL,
+  detail_json JSON NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_pay (payment_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

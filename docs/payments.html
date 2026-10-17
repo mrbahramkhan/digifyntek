@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Payments Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>Payments hub</h1>
+      <span class="meta">Raast channel · SIMULATOR only</span>
+    </header>
+    <div class="workspace">
+      <div class="panel" style="margin-bottom:12px;border-color:#fbbf24;background:#fffbeb">
+        <div class="panel-b" style="padding:10px 12px;font-size:12px;color:#92400e">
+          <strong>Not live Raast.</strong> All external statuses are <code>SIMULATED</code>.
+          Official settlement requires bank-authorized participation and SBP/Raast specs.
+          <span id="chMeta"></span>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="panel">
+          <div class="panel-h">Payment instructions</div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>Ref</th><th>Channel</th><th>Amount</th>
+                  <th>External</th><th>Posting</th><th>Settlement</th>
+                </tr>
+              </thead>
+              <tbody id="tb"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">Raast outbound (sim)</div>
+          <div class="panel-b">
+            <form id="frm">
+              <div class="form-grid">
+                <div class="field"><label>Amount PKR *</label><input class="inp" type="number" step="0.01" id="f_amt" required /></div>
+                <div class="field"><label>Debtor account ID</label><input class="inp" id="f_debtor" placeholder="CASA id for ledger debit" /></div>
+                <div class="field full"><label>Creditor IBAN</label><input class="inp" id="f_iban" placeholder="PK.. or use REJECT in IBAN to force sim reject" /></div>
+                <div class="field"><label>Raast ID (alias)</label><input class="inp" id="f_rid" /></div>
+                <div class="field"><label>Creditor name</label><input class="inp" id="f_name" /></div>
+                <div class="field full"><label>Narrative</label><input class="inp" id="f_narr" /></div>
+                <div class="field full">
+                  <label style="display:flex;align-items:center;gap:8px;font-weight:500">
+                    <input type="checkbox" id="f_post" checked /> Post internal ledger when sim SETTLED
+                  </label>
+                </div>
+              </div>
+              <div class="form-actions"><button type="submit" class="btn btn-p">Send (simulate)</button></div>
+              <div id="msg" class="hint"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <pre id="detail" style="display:none;margin-top:12px;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;overflow:auto;max-height:260px"></pre>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+  function tag(s) {
+    var m = {
+      SETTLED: 'tag-g', ACCEPTED: 'tag-a', REJECTED: 'tag-r', FAILED: 'tag-r',
+      SIMULATED: 'tag-n', POSTED: 'tag-g', PENDING: 'tag-a', NONE: 'tag-n', QUEUED: 'tag-a'
+    };
+    return '<span class="tag ' + (m[s] || 'tag-n') + '">' + (s || '—') + '</span>';
+  }
+
+  async function load() {
+    try {
+      var rows = await DigiFyntekAPI.request('/api/v1/payments');
+      tb.innerHTML = rows.length
+        ? rows.map(function (r) {
+            return (
+              '<tr data-id="' + r.id + '" style="cursor:pointer">' +
+              '<td class="num">' + r.payment_ref + '</td>' +
+              '<td>' + r.channel + (r.simulator ? ' · sim' : '') + '</td>' +
+              '<td class="num">' + Number(r.amount).toLocaleString() + '</td>' +
+              '<td>' + tag(r.external_status) + '</td>' +
+              '<td>' + tag(r.posting_status) + '</td>' +
+              '<td>' + tag(r.settlement_status) + '</td></tr>'
+            );
+          }).join('')
+        : '<tr><td colspan="6" class="empty">No payments yet</td></tr>';
+    } catch (e) {
+      tb.innerHTML = '<tr><td colspan="6" class="empty">' + e.message + '</td></tr>';
+    }
+  }
+
+  tb.onclick = async function (e) {
+    var tr = e.target.closest('tr[data-id]');
+    if (!tr) return;
+    try {
+      var d = await DigiFyntekAPI.request('/api/v1/payments/' + tr.getAttribute('data-id'));
+      detail.style.display = 'block';
+      detail.textContent = JSON.stringify(d, null, 2);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  frm.onsubmit = async function (e) {
+    e.preventDefault();
+    msg.textContent = 'Simulating…';
+    msg.className = 'hint';
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/payments/raast/outbound', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount: Number(f_amt.value),
+          debtor_account_id: f_debtor.value ? Number(f_debtor.value) : null,
+          creditor_iban: f_iban.value || null,
+          raast_id: f_rid.value || null,
+          creditor_name: f_name.value || null,
+          narrative: f_narr.value || null,
+          post_ledger: f_post.checked,
+        }),
+      });
+      msg.textContent =
+        r.payment_ref +
+        ' · external ' +
+        r.external_status +
+        ' · posting ' +
+        r.posting_status +
+        (r.warning ? ' · ' + r.warning : '');
+      msg.className = r.external_status === 'REJECTED' ? 'err' : 'ok';
+      load();
+    } catch (err) {
+      msg.textContent = err.message;
+      msg.className = 'err';
+    }
+  };
+
+  DigiFyntekAPI.request('/api/v1/payments/meta/channels')
+    .then(function (m) {
+      chMeta.textContent =
+        ' Channels: ' +
+        (m.channels || [])
+          .map(function (c) {
+            return c.code + '=' + c.mode;
+          })
+          .join(', ');
+    })
+    .catch(function () {});
+
+  load();
+})();
+</script>
+</body>
+</html>

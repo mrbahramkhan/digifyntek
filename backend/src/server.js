@@ -30,6 +30,7 @@ const accountsRoutes = require('./routes/accounts');
 const ledgerRoutes = require('./routes/ledger');
 const financingRoutes = require('./routes/financing');
 const approvalsRoutes = require('./routes/approvals');
+const paymentsRoutes = require('./routes/payments');
 
 const app = express();
 
@@ -133,6 +134,8 @@ app.use('/api/v1/financing', financingRoutes);
 app.use('/api/financing', financingRoutes);
 app.use('/api/v1/approvals', approvalsRoutes);
 app.use('/api/approvals', approvalsRoutes);
+app.use('/api/v1/payments', paymentsRoutes);
+app.use('/api/payments', paymentsRoutes);
 
 // Serve full UI (phase1) from same process — one deploy = full system
 const fs = require('fs');
