@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Accounts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar"><h1>Accounts (CASA)</h1><span class="meta">Phase 2 · open account</span></header>
+    <div class="workspace">
+      <div class="split">
+        <div class="panel">
+          <div class="panel-h">Account list</div>
+          <div class="table-wrap"><table class="data"><thead><tr>
+            <th>Account</th><th>Customer</th><th>Product</th><th>Ledger bal</th><th>Status</th>
+          </tr></thead><tbody id="tb"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">Open account</div>
+          <div class="panel-b">
+            <form id="frm">
+              <div class="form-grid">
+                <div class="field"><label>Customer ID <span class="req">*</span></label><input class="inp" id="f_cust" required /></div>
+                <div class="field"><label>Product</label><select class="inp" id="f_prod"><option value="SAV-PKR">SAV-PKR Savings</option><option value="CUR-PKR">CUR-PKR Current</option></select></div>
+                <div class="field"><label>Branch</label><input class="inp" id="f_br" value="001" /></div>
+                <div class="field"><label>Account no (optional)</label><input class="inp" id="f_ano" /></div>
+              </div>
+              <div class="form-actions"><button type="submit" class="btn btn-p">Open account</button></div>
+              <div id="msg" class="hint"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script><script src="js/api.js"></script><script src="js/shell.js"></script>
+<script>
+async function load(){
+  try{
+    const rows=await DigiFyntekAPI.request('/api/v1/accounts?limit=200');
+    document.getElementById('tb').innerHTML=rows.length?rows.map(r=>
+      '<tr><td class="num">'+r.account_no+'</td><td>'+(r.full_name||r.customer_id)+'</td><td>'+r.product_code+'</td><td class="num">'+Number(r.ledger_balance).toLocaleString()+'</td><td>'+r.status+'</td></tr>'
+    ).join(''):'<tr><td colspan="5" class="empty">No accounts — open one after creating CIF</td></tr>';
+  }catch(e){document.getElementById('tb').innerHTML='<tr><td colspan="5" class="empty">'+e.message+'</td></tr>';}
+}
+document.getElementById('frm').onsubmit=async e=>{
+  e.preventDefault();const msg=document.getElementById('msg');msg.textContent='…';
+  try{
+    await DigiFyntekAPI.request('/api/v1/accounts',{method:'POST',body:JSON.stringify({
+      customer_id:Number(f_cust.value),product_code:f_prod.value,branch_code:f_br.value,account_no:f_ano.value||undefined
+    })});
+    msg.textContent='Account opened';msg.className='ok';load();
+  }catch(err){msg.textContent=err.message;msg.className='err';}
+};
+load();
+</script>
+</body>
+</html>

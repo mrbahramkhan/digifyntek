@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — CIF / Customers</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar"><h1>CIF / Customers</h1><span class="meta">Phase 1 · SBP KYC fields</span><div class="spacer"></div>
+      <button type="button" class="btn btn-p" id="btnNew">+ New customer</button></header>
+    <div class="workspace">
+      <div class="split">
+        <div class="panel">
+          <div class="panel-h"><span>Customer master</span><div class="spacer"></div>
+            <input class="inp" id="q" placeholder="Search name / CNIC / phone" style="width:220px;height:28px" /></div>
+          <div class="table-wrap"><table class="data"><thead><tr>
+            <th>CIF No</th><th>Name</th><th>CNIC</th><th>Risk</th><th>KYC</th><th>Status</th>
+          </tr></thead><tbody id="tb"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody></table></div>
+        </div>
+        <div class="panel">
+          <div class="panel-h"><span id="formTitle">Customer form</span></div>
+          <div class="panel-b">
+            <form id="frm">
+              <input type="hidden" id="f_id" />
+              <div class="form-sec">Identity (CDD)</div>
+              <div class="form-grid">
+                <div class="field full"><label>Full name <span class="req">*</span></label><input class="inp" id="f_name" required /></div>
+                <div class="field"><label>CNIC</label><input class="inp" id="f_cnic" placeholder="xxxxx-xxxxxxx-x" /></div>
+                <div class="field"><label>Mobile</label><input class="inp" id="f_phone" /></div>
+                <div class="field"><label>Father / husband</label><input class="inp" id="f_father" /></div>
+                <div class="field"><label>DOB</label><input class="inp" type="date" id="f_dob" /></div>
+                <div class="field"><label>Gender</label><select class="inp" id="f_gender"><option value="M">Male</option><option value="F">Female</option><option value="O">Other</option></select></div>
+                <div class="field"><label>Type</label><select class="inp" id="f_type"><option value="individual">Individual</option><option value="corporate">Corporate</option></select></div>
+              </div>
+              <div class="form-sec">Risk & compliance</div>
+              <div class="form-grid">
+                <div class="field"><label>Risk rating</label><select class="inp" id="f_risk"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+                <div class="field"><label>KYC status</label><select class="inp" id="f_kyc">
+                  <option value="pending">Pending</option><option value="verified">Verified</option>
+                  <option value="rejected">Rejected</option><option value="unavailable">Unavailable</option>
+                  <option value="manual_review">Manual review</option></select></div>
+                <div class="field"><label>PEP</label><select class="inp" id="f_pep"><option value="0">No</option><option value="1">Yes</option></select></div>
+                <div class="field"><label>Status</label><select class="inp" id="f_status">
+                  <option value="active">Active</option><option value="pending">Pending</option>
+                  <option value="restricted">Restricted</option><option value="dormant">Dormant</option>
+                  <option value="closed">Closed</option></select></div>
+                <div class="field"><label>Source of funds</label><input class="inp" id="f_sof" /></div>
+                <div class="field"><label>Occupation</label><input class="inp" id="f_occ" /></div>
+                <div class="field"><label>Branch</label><input class="inp" id="f_branch" value="001" /></div>
+                <div class="field"><label>City</label><input class="inp" id="f_city" /></div>
+                <div class="field full"><label>Address</label><textarea class="inp" id="f_addr" rows="2"></textarea></div>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn" id="btnClear">Clear</button>
+                <button type="submit" class="btn btn-p">Save customer</button>
+              </div>
+              <div id="msg" class="hint"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script><script src="js/api.js"></script><script src="js/shell.js"></script>
+<script>
+(function(){
+  let rows=[], selected=null;
+  function tag(s,map){const c=map[s]||'tag-n';return '<span class="tag '+c+'">'+(s||'—')+'</span>';}
+  function render(){
+    const q=(document.getElementById('q').value||'').toLowerCase();
+    const list=!q?rows:rows.filter(r=>[r.customer_no,r.full_name,r.cnic,r.phone].join(' ').toLowerCase().includes(q));
+    document.getElementById('tb').innerHTML=list.length?list.map(r=>{
+      const id=r.id;const sel=id===selected?' sel':'';
+      return '<tr class="'+sel+'" data-id="'+id+'"><td class="num">'+r.customer_no+'</td><td>'+r.full_name+'</td><td class="muted">'+(r.cnic||'—')+'</td><td>'+tag(r.risk_rating,{low:'tag-g',medium:'tag-a',high:'tag-r'})+'</td><td>'+tag(r.kyc_status,{verified:'tag-g',pending:'tag-a',rejected:'tag-r',manual_review:'tag-a'})+'</td><td>'+tag(r.status,{active:'tag-g',restricted:'tag-r',closed:'tag-n'})+'</td></tr>';
+    }).join(''):'<tr><td colspan="6" class="empty">No customers</td></tr>';
+  }
+  function fill(r){
+    selected=r?r.id:null;
+    document.getElementById('formTitle').textContent=r?'Edit customer':'New customer';
+    document.getElementById('f_id').value=r?r.id:'';
+    document.getElementById('f_name').value=r?r.full_name:'';
+    document.getElementById('f_cnic').value=r?r.cnic||'':'';
+    document.getElementById('f_phone').value=r?r.phone||'':'';
+    document.getElementById('f_father').value=r?r.father_or_husband||'':'';
+    document.getElementById('f_dob').value=r&&r.dob?String(r.dob).slice(0,10):'';
+    document.getElementById('f_gender').value=r?r.gender||'M':'M';
+    document.getElementById('f_type').value=r?r.customer_type||'individual':'individual';
+    document.getElementById('f_risk').value=r?r.risk_rating||'low':'low';
+    document.getElementById('f_kyc').value=r?r.kyc_status||'pending':'pending';
+    document.getElementById('f_pep').value=r&&r.is_pep?'1':'0';
+    document.getElementById('f_status').value=r?r.status||'active':'active';
+    document.getElementById('f_sof').value=r?r.source_of_funds||'':'';
+    document.getElementById('f_occ').value=r?r.occupation||'':'';
+    document.getElementById('f_branch').value=r?r.branch_code||'001':'001';
+    document.getElementById('f_city').value=r?r.city||'':'';
+    document.getElementById('f_addr').value=r?r.address||'':'';
+    document.getElementById('msg').textContent='';
+    render();
+  }
+  async function load(){
+    try{rows=await DigiFyntekAPI.request('/api/v1/cif?limit=300');render();}
+    catch(e){document.getElementById('tb').innerHTML='<tr><td colspan="6" class="empty">'+e.message+'</td></tr>';}
+  }
+  document.getElementById('tb').onclick=e=>{const tr=e.target.closest('tr[data-id]');if(!tr)return;fill(rows.find(x=>String(x.id)===tr.dataset.id));};
+  document.getElementById('q').oninput=render;
+  document.getElementById('btnNew').onclick=()=>fill(null);
+  document.getElementById('btnClear').onclick=()=>fill(null);
+  document.getElementById('frm').onsubmit=async e=>{
+    e.preventDefault();
+    const body={
+      full_name:f_name.value.trim(),cnic:f_cnic.value.trim(),phone:f_phone.value.trim(),
+      father_or_husband:f_father.value.trim(),dob:f_dob.value||null,gender:f_gender.value,
+      customer_type:f_type.value,risk_rating:f_risk.value,kyc_status:f_kyc.value,
+      is_pep:f_pep.value==='1',status:f_status.value,source_of_funds:f_sof.value.trim(),
+      occupation:f_occ.value.trim(),branch_code:f_branch.value.trim(),city:f_city.value.trim(),
+      address:f_addr.value.trim()
+    };
+    const msg=document.getElementById('msg');msg.textContent='Saving…';
+    try{
+      const id=f_id.value;
+      if(id) await DigiFyntekAPI.request('/api/v1/cif/'+id,{method:'PUT',body:JSON.stringify(body)});
+      else await DigiFyntekAPI.request('/api/v1/cif',{method:'POST',body:JSON.stringify(body)});
+      msg.textContent='Saved';msg.className='ok';await load();
+    }catch(err){msg.textContent=err.message;msg.className='err';}
+  };
+  load();
+})();
+</script>
+</body>
+</html>

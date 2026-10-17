@@ -25,6 +25,9 @@ const coreBankingRoutes = require('./routes/corebanking');
 const cbsRoutes = require('./routes/cbs');
 const mfbRoutes = require('./routes/mfb');
 const eodRoutes = require('./routes/eod');
+const cifRoutes = require('./routes/cif');
+const accountsRoutes = require('./routes/accounts');
+const ledgerRoutes = require('./routes/ledger');
 
 const app = express();
 
@@ -82,7 +85,7 @@ app.get('/health', async (_req, res) => {
     modules: [
       'auth', 'members', 'loans', 'shares', 'savings', 'vacs',
       'core-banking', 'cbs', 'mfb-prudential', 'chequebooks',
-      'murabaha', 'islamic', 'collateral', 'cards', 'compliance', 'eod',
+      'murabaha', 'islamic', 'collateral', 'cards', 'compliance', 'eod', 'cif', 'accounts', 'ledger',
     ],
     modes: {
       legacy: process.env.DB_MODE === 'legacy' || process.env.LEGACY_SCHEMA === '1',
@@ -117,6 +120,13 @@ app.use('/api/core', coreBankingRoutes);
 app.use('/api/cbs', cbsRoutes);
 app.use('/api/mfb', mfbRoutes);
 app.use('/api/eod', eodRoutes);
+app.use('/api/v1/cif', cifRoutes);
+app.use('/api/v1/accounts', accountsRoutes);
+app.use('/api/v1/ledger', ledgerRoutes);
+// aliases
+app.use('/api/cif', cifRoutes);
+app.use('/api/accounts', accountsRoutes);
+app.use('/api/ledger', ledgerRoutes);
 
 // Serve full UI (phase1) from same process — one deploy = full system
 const fs = require('fs');

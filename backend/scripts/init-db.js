@@ -59,7 +59,7 @@ async function main() {
     password: process.env.DB_PASSWORD || '',
     multipleStatements: true,
   });
-  for (const file of ['01_schema.sql', '02_seed.sql', '03_murabaha.sql', '04_islamic_modes.sql', '05_chequebooks.sql', '06_cbs_core.sql', '07_mfb_prudential.sql', '08_eod.sql']) {
+  for (const file of ['01_schema.sql', '02_seed.sql', '03_murabaha.sql', '04_islamic_modes.sql', '05_chequebooks.sql', '06_cbs_core.sql', '07_mfb_prudential.sql', '08_eod.sql', '09_cbs_enterprise.sql']) {
     await applyFile(conn, file);
   }
   await conn.end();

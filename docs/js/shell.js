@@ -12,7 +12,8 @@
     {
       sec: 'Customers',
       items: [
-        { href: 'members.html', label: 'Member register' },
+        { href: 'cif.html', label: 'CIF / Customers' },
+        { href: 'members.html', label: 'Member register (legacy)' },
         { href: 'member360.html', label: 'Member 360' },
         { href: 'cards.html', label: 'Membership cards' },
       ],
@@ -20,7 +21,8 @@
     {
       sec: 'Accounts',
       items: [
-        { href: 'savings.html', label: 'Deposit accounts' },
+        { href: 'accounts.html', label: 'Accounts (CASA)' },
+        { href: 'savings.html', label: 'Deposit accounts (legacy)' },
         { href: 'shares.html', label: 'Share capital' },
         { href: 'cbs.html', label: 'Open account / CIF' },
       ],
@@ -37,7 +39,9 @@
     {
       sec: 'Operations',
       items: [
-        { href: 'core-banking.html', label: 'General ledger' },
+        { href: 'ledger.html', label: 'Journal & trial balance' },
+        { href: 'transfer.html', label: 'Internal transfer' },
+        { href: 'core-banking.html', label: 'General ledger (legacy)' },
         { href: 'instruments.html', label: 'Cheque books' },
         { href: 'eod.html', label: 'End of day' },
         { href: 'cbs.html#txn', label: 'Transfers' },

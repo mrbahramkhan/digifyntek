@@ -44,6 +44,18 @@ DB_NAME=digifyntek
 DB_MODE=legacy
 ```
 
+## Pakistan CBS (enterprise roadmap)
+
+Requirements & architecture: [`docs-cbs/`](docs-cbs/)
+
+| Phase | Status |
+|-------|--------|
+| P1 CIF + audit + schema | **Started** (`09_cbs_enterprise.sql`, `/api/v1/cif`) |
+| P2 Ledger + accounts + FT | **Started** (`/api/v1/ledger`, balanced post/reverse) |
+| P3–P7 | Roadmap in `docs-cbs/02_ROADMAP.md` |
+
+Screens: `cif.html` · `accounts.html` · `ledger.html` · `transfer.html`
+
 ## Docs
 
 - [SYSTEM.md](SYSTEM.md) — domain architecture  
