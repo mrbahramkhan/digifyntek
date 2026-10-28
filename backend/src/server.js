@@ -8,22 +8,10 @@ const logger = require('./services/logger');
 const { ping } = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
+const products = require('./config/products');
+
 const authRoutes = require('./routes/auth');
-// EXTRA/legacy (disabled): const memberRoutes = require('./routes/members');
-// EXTRA/legacy (disabled): const loanRoutes = require('./routes/loans');
-// EXTRA/legacy (disabled): const collateralRoutes = require('./routes/collateral');
 const instrumentRoutes = require('./routes/instruments');
-// EXTRA/legacy (disabled): const cardRoutes = require('./routes/cards');
-// EXTRA/legacy (disabled): const complianceRoutes = require('./routes/compliance');
-// EXTRA/legacy (disabled): const dashboardRoutes = require('./routes/dashboard');
-// EXTRA/legacy (disabled): const murabahaRoutes = require('./routes/murabaha');
-// EXTRA/legacy (disabled): const islamicRoutes = require('./routes/islamic');
-// EXTRA/legacy (disabled): const sharesRoutes = require('./routes/shares');
-// EXTRA/legacy (disabled): const savingsRoutes = require('./routes/savings');
-// EXTRA/legacy (disabled): const vacsRoutes = require('./routes/vacs');
-// EXTRA/legacy (disabled): const coreBankingRoutes = require('./routes/corebanking');
-// EXTRA/legacy (disabled): const cbsRoutes = require('./routes/cbs');
-// EXTRA/legacy (disabled): const mfbRoutes = require('./routes/mfb');
 const eodRoutes = require('./routes/eod');
 const cifRoutes = require('./routes/cif');
 const accountsRoutes = require('./routes/accounts');
@@ -38,6 +26,35 @@ const clearingRoutes = require('./routes/clearing');
 const reconRoutes = require('./routes/recon');
 const rbacRoutes = require('./routes/rbac');
 const openapiRoutes = require('./routes/openapi');
+
+// --- Pack: Digital Kisaan (cooperative) ---
+let memberRoutes, sharesRoutes, savingsRoutes, vacsRoutes, cardRoutes, complianceRoutes, dashboardRoutes;
+if (products.kisaan) {
+  memberRoutes = require('./routes/members');
+  sharesRoutes = require('./routes/shares');
+  savingsRoutes = require('./routes/savings');
+  vacsRoutes = require('./routes/vacs');
+  cardRoutes = require('./routes/cards');
+  complianceRoutes = require('./routes/compliance');
+  dashboardRoutes = require('./routes/dashboard');
+}
+
+// --- Pack: Islamic finance ---
+let murabahaRoutes, islamicRoutes;
+if (products.islamic) {
+  murabahaRoutes = require('./routes/murabaha');
+  islamicRoutes = require('./routes/islamic');
+}
+
+// --- Pack: FMFB / microfinance ---
+let mfbRoutes, loanRoutes, collateralRoutes, coreBankingRoutes, cbsRoutes;
+if (products.fmfb) {
+  mfbRoutes = require('./routes/mfb');
+  loanRoutes = require('./routes/loans');
+  collateralRoutes = require('./routes/collateral');
+  coreBankingRoutes = require('./routes/corebanking');
+  cbsRoutes = require('./routes/cbs');
+}
 
 const app = express();
 
@@ -98,14 +115,14 @@ app.get('/health', async (_req, res) => {
     product: 'DigiFyntek',
     version: '1.2.0',
     db,
-    modules: [
-      // Core CBS (active)
-      'auth', 'cif', 'kyc', 'accounts', 'ledger', 'financing', 'term-deposits',
-      'approvals', 'payments-sim', 'teller', 'clearing', 'recon', 'eod', 'rbac',
-      'instruments', 'openapi',
-      // EXTRA/legacy disabled in this build: members, loans, shares, savings, vacs,
-      // core-banking, cbs, mfb, murabaha, islamic, collateral, cards, compliance, dashboard
-    ],
+    modules: {
+      packs: products.packs,
+      core: products.core,
+      kisaan: products.kisaan,
+      islamic: products.islamic,
+      fmfb: products.fmfb,
+    },
+    product_labels: products.label,
     modes: {
       legacy: process.env.DB_MODE === 'legacy' || process.env.LEGACY_SCHEMA === '1',
       db_name: process.env.DB_NAME || 'digifyntek',
@@ -123,26 +140,13 @@ app.get('/ready', async (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-// EXTRA/legacy (disabled): app.use('/api/members', memberRoutes);
-// EXTRA/legacy (disabled): app.use('/api/loans', loanRoutes);
-// EXTRA/legacy (disabled): app.use('/api/collateral', collateralRoutes);
+
+// ===== CORE — Fintech CBS =====
 app.use('/api/instruments', instrumentRoutes);
-// EXTRA/legacy (disabled): app.use('/api/cards', cardRoutes);
-// EXTRA/legacy (disabled): app.use('/api/compliance', complianceRoutes);
-// EXTRA/legacy (disabled): app.use('/api/dashboard', dashboardRoutes);
-// EXTRA/legacy (disabled): app.use('/api/murabaha', murabahaRoutes);
-// EXTRA/legacy (disabled): app.use('/api/islamic', islamicRoutes);
-// EXTRA/legacy (disabled): app.use('/api/shares', sharesRoutes);
-// EXTRA/legacy (disabled): app.use('/api/savings', savingsRoutes);
-// EXTRA/legacy (disabled): app.use('/api/vacs', vacsRoutes);
-// EXTRA/legacy (disabled): app.use('/api/core', coreBankingRoutes);
-// EXTRA/legacy (disabled): app.use('/api/cbs', cbsRoutes);
-// EXTRA/legacy (disabled): app.use('/api/mfb', mfbRoutes);
 app.use('/api/eod', eodRoutes);
 app.use('/api/v1/cif', cifRoutes);
 app.use('/api/v1/accounts', accountsRoutes);
 app.use('/api/v1/ledger', ledgerRoutes);
-// aliases
 app.use('/api/cif', cifRoutes);
 app.use('/api/accounts', accountsRoutes);
 app.use('/api/ledger', ledgerRoutes);
@@ -164,7 +168,37 @@ app.use('/api/v1/recon', reconRoutes);
 app.use('/api/recon', reconRoutes);
 app.use('/api/v1/rbac', rbacRoutes);
 app.use('/api/rbac', rbacRoutes);
+
+// ===== KISAAN — Digital Kisaan / Cooperative =====
+if (products.kisaan) {
+  app.use('/api/members', memberRoutes);
+  app.use('/api/shares', sharesRoutes);
+  app.use('/api/savings', savingsRoutes);
+  app.use('/api/vacs', vacsRoutes);
+  app.use('/api/cards', cardRoutes);
+  app.use('/api/compliance', complianceRoutes);
+  app.use('/api/dashboard', dashboardRoutes);
+}
+
+// ===== ISLAMIC =====
+if (products.islamic) {
+  app.use('/api/murabaha', murabahaRoutes);
+  app.use('/api/islamic', islamicRoutes);
+}
+
+// ===== FMFB — Microfinance bank =====
+if (products.fmfb) {
+  app.use('/api/mfb', mfbRoutes);
+  app.use('/api/loans', loanRoutes);
+  app.use('/api/collateral', collateralRoutes);
+  app.use('/api/core', coreBankingRoutes);
+  app.use('/api/cbs', cbsRoutes);
+}
+
 app.use('/api', openapiRoutes);
+app.get('/api/products', (_req, res) => {
+  res.json({ packs: products.packs, flags: { core: products.core, kisaan: products.kisaan, islamic: products.islamic, fmfb: products.fmfb }, labels: products.label });
+});
 
 // Serve full UI (phase1) from same process — one deploy = full system
 const fs = require('fs');

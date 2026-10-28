@@ -6,83 +6,143 @@
     else document.documentElement.removeAttribute('data-theme');
   })();
 
-/** DigiFyntek — unified application shell (one bank / society system) */
+/** DigiFyntek — multi-product shell (CBS + Kisaan + Islamic + FMFB packs) */
 (function (g) {
   /**
    * Information architecture
    * 1 Home · 2 Customers · 3 Accounts · 4 Lending · 5 Operations · 6 Risk · 7 Admin
    */
-  const NAV = [
+  /**
+   * Product packs (major modules):
+   *   core   — Fintech CBS
+   *   kisaan — Digital Kisaan / Cooperative
+   *   islamic — Islamic finance
+   *   fmfb   — FMFB / Microfinance bank
+   * Toggle: localStorage DIGIFYNTEK_PACKS = "core,kisaan,islamic,fmfb"
+   * Or server /api/products
+   */
+  function loadPacks() {
+    try {
+      var raw = localStorage.getItem('DIGIFYNTEK_PACKS');
+      if (raw) {
+        return raw.split(',').map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean);
+      }
+    } catch (e) {}
+    return ['core', 'kisaan', 'islamic', 'fmfb'];
+  }
+
+  var PACKS = loadPacks();
+  function hasPack(id) { return PACKS.indexOf(id) >= 0; }
+
+  var NAV = [
     {
       sec: 'Home',
-      items: [{ href: 'app.html', label: 'Dashboard', icon: '◈' }],
-    },
-    {
-      sec: 'Customers',
       items: [
-        { href: 'cif.html', label: 'CIF / Customers' },
-        { href: 'kyc.html', label: 'KYC cases' },
-        // EXTRA: { href: 'members.html', label: 'Member register (legacy)' },
-        // EXTRA: { href: 'member360.html', label: 'Member 360' },
-        // EXTRA: { href: 'cards.html', label: 'Membership cards' },
-      ],
-    },
-    {
-      sec: 'Accounts',
-      items: [
-        { href: 'accounts.html', label: 'Accounts (CASA)' },
-        { href: 'term-deposits.html', label: 'Term deposits' },
-        { href: 'casa.html', label: 'Cash deposit / withdraw' },
-        { href: 'teller.html', label: 'Teller / cash drawer' },
-        // EXTRA: { href: 'savings.html', label: 'Deposit accounts (legacy)' },
-        // EXTRA: { href: 'shares.html', label: 'Share capital' },
-        // EXTRA: { href: 'cbs.html', label: 'Open account / CIF' }, // use cif.html + accounts.html
-      ],
-    },
-    {
-      sec: 'Lending',
-      items: [
-        { href: 'financing.html', label: 'Disburse financing' },
-        // EXTRA: { href: 'loans.html', label: 'Loan portfolio (legacy)' },
-        // EXTRA: { href: 'collateral.html', label: 'Collateral' },
-        // EXTRA (enable when Islamic product pack live): { href: 'murabaha.html', label: 'Murābaḥah' },
-        // EXTRA: { href: 'islamic-ops.html', label: 'Other Islamic modes' },
-      ],
-    },
-    {
-      sec: 'Operations',
-      items: [
-        { href: 'ledger.html', label: 'Journal & trial balance' },
-        { href: 'transfer.html', label: 'Internal transfer' },
-        // EXTRA: { href: 'core-banking.html', label: 'General ledger (legacy)' },
-        { href: 'instruments.html', label: 'Cheque books' },
-        { href: 'clearing.html', label: 'Cheque clearing' },
-        { href: 'recon.html', label: 'Reconciliation' },
-        { href: 'eod.html', label: 'End of day' },
-        { href: 'approvals.html', label: 'Maker-checker queue' },
-        { href: 'payments.html', label: 'Payments hub (sim)' },
-        // EXTRA: { href: 'cbs.html#txn', label: 'Transfers' }, // use transfer.html
-      ],
-    },
-    {
-      sec: 'Risk & compliance',
-      items: [
-        // EXTRA (MFB pack): { href: 'mfb.html', label: 'Asset quality & capital' },
-        // EXTRA: { href: 'compliance.html', label: 'Cooperative law' },
-        // EXTRA: { href: 'registration.html', label: 'Licensing checklist' },
-        // EXTRA: { href: 'islamic.html', label: 'Shariah catalogue' },
-      ],
-    },
-    {
-      sec: 'Administration',
-      items: [
-        { href: 'rbac.html', label: 'Roles & permissions' },
-        { href: 'api-catalog.html', label: 'API catalog' },
-        { href: 'checklist.html', label: 'Production checklist' },
-        { href: 'setup.html', label: 'Institution & branches' },
+        { href: 'app.html', label: 'Dashboard' },
+        { href: 'app.html#packs', label: 'Product modules' },
       ],
     },
   ];
+
+  // —— CORE: Fintech CBS ——
+  if (hasPack('core')) {
+    NAV.push(
+      {
+        sec: 'CBS · Customers',
+        pack: 'core',
+        items: [
+          { href: 'cif.html', label: 'CIF / Customers' },
+          { href: 'kyc.html', label: 'KYC cases' },
+        ],
+      },
+      {
+        sec: 'CBS · Accounts',
+        pack: 'core',
+        items: [
+          { href: 'accounts.html', label: 'CASA accounts' },
+          { href: 'term-deposits.html', label: 'Term deposits' },
+          { href: 'casa.html', label: 'Cash deposit / withdraw' },
+          { href: 'teller.html', label: 'Teller / cash drawer' },
+        ],
+      },
+      {
+        sec: 'CBS · Lending',
+        pack: 'core',
+        items: [
+          { href: 'financing.html', label: 'Disburse financing' },
+        ],
+      },
+      {
+        sec: 'CBS · Operations',
+        pack: 'core',
+        items: [
+          { href: 'ledger.html', label: 'Journal & trial balance' },
+          { href: 'transfer.html', label: 'Internal transfer' },
+          { href: 'instruments.html', label: 'Cheque books' },
+          { href: 'clearing.html', label: 'Cheque clearing' },
+          { href: 'recon.html', label: 'Reconciliation' },
+          { href: 'eod.html', label: 'End of day' },
+          { href: 'approvals.html', label: 'Maker-checker queue' },
+          { href: 'payments.html', label: 'Payments hub (sim)' },
+        ],
+      }
+    );
+  }
+
+  // —— KISAAN: Digital Kisaan / Cooperative ——
+  if (hasPack('kisaan')) {
+    NAV.push({
+      sec: 'Kisaan · Cooperative',
+      pack: 'kisaan',
+      items: [
+        { href: 'members.html', label: 'Member register' },
+        { href: 'member360.html', label: 'Member 360' },
+        { href: 'cards.html', label: 'Membership cards' },
+        { href: 'shares.html', label: 'Share capital' },
+        { href: 'savings.html', label: 'Member deposits' },
+        { href: 'setup.html', label: 'Branches / VAC' },
+        { href: 'compliance.html', label: 'Cooperative law' },
+        { href: 'registration.html', label: 'Licensing checklist' },
+      ],
+    });
+  }
+
+  // —— ISLAMIC ——
+  if (hasPack('islamic')) {
+    NAV.push({
+      sec: 'Islamic finance',
+      pack: 'islamic',
+      items: [
+        { href: 'murabaha.html', label: 'Murābaḥah' },
+        { href: 'islamic-ops.html', label: 'Other Islamic modes' },
+        { href: 'islamic.html', label: 'Shariah catalogue' },
+      ],
+    });
+  }
+
+  // —— FMFB ——
+  if (hasPack('fmfb')) {
+    NAV.push({
+      sec: 'FMFB · Microfinance',
+      pack: 'fmfb',
+      items: [
+        { href: 'mfb.html', label: 'Asset quality & capital' },
+        { href: 'loans.html', label: 'Loan portfolio' },
+        { href: 'collateral.html', label: 'Collateral' },
+        { href: 'core-banking.html', label: 'GL / core tools' },
+      ],
+    });
+  }
+
+  NAV.push({
+    sec: 'Administration',
+    items: [
+      { href: 'rbac.html', label: 'Roles & permissions' },
+      { href: 'api-catalog.html', label: 'API catalog' },
+      { href: 'checklist.html', label: 'Production checklist' },
+      { href: 'setup.html', label: 'Institution setup' },
+    ],
+  });
 
   function pageName() {
     const p = (location.pathname.split('/').pop() || 'index.html').split('?')[0];

@@ -192,5 +192,54 @@
 })();
 </script>
 
+
+  <div id="packPanel" class="panel" style="margin-top:14px">
+    <div class="panel-h">Product modules (major packs)</div>
+    <div class="panel-b">
+      <p class="hint" style="margin-bottom:10px">Har pack alag major module hai. Toggle local; server env <code>PRODUCT_PACKS</code> API routes control karta hai.</p>
+      <div id="packToggles" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+      <p class="hint" style="margin-top:10px">API: <code>GET /api/products</code></p>
+    </div>
+  </div>
+<script>
+(function(){
+  var defs = [
+    { id:'core', title:'Fintech CBS', desc:'CIF, CASA, ledger, financing, TD, teller, EOD, RBAC' },
+    { id:'kisaan', title:'Digital Kisaan', desc:'Members, shares, savings, cards, cooperative compliance' },
+    { id:'islamic', title:'Islamic Finance', desc:'Murabaha, other modes, Shariah catalogue' },
+    { id:'fmfb', title:'FMFB / Microfinance', desc:'Prudential, portfolio, collateral, GL tools' }
+  ];
+  function packs(){
+    try {
+      var r = localStorage.getItem('DIGIFYNTEK_PACKS');
+      if (r) return r.split(',').map(function(s){return s.trim()}).filter(Boolean);
+    } catch(e){}
+    return ['core','kisaan','islamic','fmfb'];
+  }
+  function save(list){
+    localStorage.setItem('DIGIFYNTEK_PACKS', list.join(','));
+  }
+  var box = document.getElementById('packToggles');
+  if (!box) return;
+  var cur = packs();
+  defs.forEach(function(d){
+    var on = cur.indexOf(d.id) >= 0;
+    var el = document.createElement('label');
+    el.style.cssText = 'display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:200px;flex:1;background:var(--panel);cursor:pointer';
+    el.innerHTML = '<input type="checkbox" data-pack="'+d.id+'" '+(on?'checked':'')+' style="margin-top:3px"/>' +
+      '<span><strong>'+d.title+'</strong><br/><span class="hint">'+d.desc+'</span></span>';
+    box.appendChild(el);
+  });
+  box.addEventListener('change', function(e){
+    var t = e.target;
+    if (!t || !t.getAttribute('data-pack')) return;
+    var list = [];
+    box.querySelectorAll('input[data-pack]').forEach(function(i){ if (i.checked) list.push(i.getAttribute('data-pack')); });
+    if (list.indexOf('core') < 0) list.unshift('core');
+    save(list);
+  });
+})();
+</script>
+
 </body>
 </html>
