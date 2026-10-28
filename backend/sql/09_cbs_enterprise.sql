@@ -465,3 +465,69 @@ INSERT IGNORE INTO cbs_products (product_code, product_name, product_family, is_
 VALUES
 ('TD-PKR', 'Term Deposit PKR', 'TERM_DEPOSIT', 0, '2000', '5000'),
 ('TD-ISL', 'Islamic Term Investment', 'TERM_DEPOSIT', 1, '2000', '5000');
+
+-- Teller / cash drawer / vault
+CREATE TABLE IF NOT EXISTS cbs_tellers (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  teller_code VARCHAR(20) NOT NULL,
+  user_id VARCHAR(50) NOT NULL,
+  branch_code VARCHAR(16) NOT NULL DEFAULT '001',
+  full_name VARCHAR(120) NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_teller (teller_code),
+  KEY idx_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_cash_drawers (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  drawer_code VARCHAR(24) NOT NULL,
+  branch_code VARCHAR(16) NOT NULL DEFAULT '001',
+  teller_id BIGINT UNSIGNED NULL,
+  business_date DATE NOT NULL,
+  status ENUM('closed','open','balancing') NOT NULL DEFAULT 'closed',
+  opening_balance DECIMAL(18,2) NOT NULL DEFAULT 0,
+  cash_in DECIMAL(18,2) NOT NULL DEFAULT 0,
+  cash_out DECIMAL(18,2) NOT NULL DEFAULT 0,
+  expected_balance DECIMAL(18,2) NOT NULL DEFAULT 0,
+  counted_balance DECIMAL(18,2) NULL,
+  variance DECIMAL(18,2) NULL,
+  opened_at DATETIME NULL,
+  closed_at DATETIME NULL,
+  opened_by VARCHAR(50) NULL,
+  closed_by VARCHAR(50) NULL,
+  UNIQUE KEY uq_drawer_day (drawer_code, business_date),
+  KEY idx_teller (teller_id),
+  KEY idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_vault (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  branch_code VARCHAR(16) NOT NULL,
+  balance DECIMAL(18,2) NOT NULL DEFAULT 0,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_branch_vault (branch_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_cash_txns (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  txn_ref VARCHAR(40) NOT NULL,
+  txn_type ENUM('OPEN','CLOSE','CASH_IN','CASH_OUT','VAULT_TO_TELLER','TELLER_TO_VAULT','CUSTOMER_DEP','CUSTOMER_WDR','VARIANCE') NOT NULL,
+  drawer_id BIGINT UNSIGNED NULL,
+  branch_code VARCHAR(16) NULL,
+  amount DECIMAL(18,2) NOT NULL DEFAULT 0,
+  denom_json JSON NULL,
+  account_id BIGINT UNSIGNED NULL,
+  journal_id BIGINT UNSIGNED NULL,
+  narrative VARCHAR(255) NULL,
+  actor VARCHAR(50) NULL,
+  business_date DATE NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_cash_ref (txn_ref),
+  KEY idx_drawer (drawer_id),
+  KEY idx_type (txn_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO cbs_vault (branch_code, balance) VALUES ('001', 500000.00);
+INSERT IGNORE INTO cbs_tellers (teller_code, user_id, branch_code, full_name)
+VALUES ('T001', 'superadmin', '001', 'Default Teller');

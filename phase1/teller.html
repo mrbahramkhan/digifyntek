@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Teller / Cash</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>Teller / cash drawer</h1>
+      <span class="meta">Vault · float · customer cash · close</span>
+      <div class="spacer"></div>
+      <button type="button" class="btn" id="btnReload">Refresh</button>
+    </header>
+    <div class="workspace">
+      <div class="kpis">
+        <div class="kpi"><div class="l">Vault (001)</div><div class="v" id="kVault">—</div></div>
+        <div class="kpi"><div class="l">Open drawers</div><div class="v" id="kOpen">—</div></div>
+        <div class="kpi"><div class="l">Selected drawer</div><div class="v" id="kSel">—</div></div>
+        <div class="kpi"><div class="l">Expected cash</div><div class="v" id="kExp">—</div></div>
+      </div>
+
+      <div class="split">
+        <div class="panel">
+          <div class="panel-h">Drawers</div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr><th>ID</th><th>Code</th><th>Teller</th><th>Date</th><th>Expected</th><th>Status</th></tr>
+              </thead>
+              <tbody id="tb"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">Operations</div>
+          <div class="panel-b">
+            <div class="form-sec" style="margin-top:0">Open drawer</div>
+            <div class="form-grid">
+              <div class="field"><label>Teller ID</label><select class="inp" id="o_teller"></select></div>
+              <div class="field"><label>Opening float</label><input class="inp" type="number" step="0.01" id="o_float" value="50000" /></div>
+              <div class="field"><label>Business date</label><input class="inp" type="date" id="o_date" /></div>
+              <div class="field"><label>Branch</label><input class="inp" id="o_br" value="001" /></div>
+            </div>
+            <div class="form-actions"><button type="button" class="btn btn-p" id="btnOpen">Open drawer</button></div>
+
+            <div class="form-sec">Selected drawer ops</div>
+            <div class="form-grid">
+              <div class="field"><label>Drawer ID</label><input class="inp" id="d_id" /></div>
+              <div class="field"><label>Amount</label><input class="inp" type="number" step="0.01" id="d_amt" /></div>
+              <div class="field"><label>Account ID</label><input class="inp" id="d_acct" placeholder="for customer dep/wdr" /></div>
+              <div class="field"><label>Counted (close)</label><input class="inp" type="number" step="0.01" id="d_count" /></div>
+            </div>
+            <div class="form-actions" style="flex-wrap:wrap">
+              <button type="button" class="btn" id="btnVin">Vault → drawer</button>
+              <button type="button" class="btn" id="btnVout">Drawer → vault</button>
+              <button type="button" class="btn btn-p" id="btnDep">Customer deposit</button>
+              <button type="button" class="btn" id="btnWdr">Customer withdraw</button>
+              <button type="button" class="btn btn-d" id="btnClose">Close drawer</button>
+            </div>
+            <div id="msg" class="hint"></div>
+          </div>
+        </div>
+      </div>
+      <pre id="detail" style="display:none;margin-top:12px;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;max-height:260px;overflow:auto"></pre>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+  o_date.value = new Date().toISOString().slice(0, 10);
+  function fmt(n) { return Number(n || 0).toLocaleString('en-PK', { maximumFractionDigits: 0 }); }
+  function flash(ok, t) { msg.textContent = t; msg.className = ok ? 'ok' : 'err'; }
+  function tag(s) {
+    var m = { open: 'tag-g', closed: 'tag-n', balancing: 'tag-a' };
+    return '<span class="tag ' + (m[s] || 'tag-n') + '">' + s + '</span>';
+  }
+
+  async function loadVault() {
+    try {
+      var v = await DigiFyntekAPI.request('/api/v1/teller/vault?branch_code=001');
+      kVault.textContent = fmt(v.balance);
+    } catch (e) { kVault.textContent = '—'; }
+  }
+
+  async function loadTellers() {
+    try {
+      var rows = await DigiFyntekAPI.request('/api/v1/teller/tellers');
+      o_teller.innerHTML = rows.map(function (t) {
+        return '<option value="' + t.id + '">' + t.teller_code + ' — ' + (t.full_name || t.user_id) + '</option>';
+      }).join('') || '<option value="">No tellers</option>';
+    } catch (e) {
+      o_teller.innerHTML = '<option value="">' + e.message + '</option>';
+    }
+  }
+
+  async function loadDrawers() {
+    try {
+      var rows = await DigiFyntekAPI.request('/api/v1/teller/drawers');
+      var open = rows.filter(function (r) { return r.status === 'open'; }).length;
+      kOpen.textContent = open;
+      tb.innerHTML = rows.length
+        ? rows.map(function (r) {
+            return (
+              '<tr data-id="' + r.id + '" style="cursor:pointer">' +
+              '<td class="num">' + r.id + '</td>' +
+              '<td class="num">' + r.drawer_code + '</td>' +
+              '<td>' + (r.teller_name || r.teller_code || r.teller_id) + '</td>' +
+              '<td>' + String(r.business_date).slice(0, 10) + '</td>' +
+              '<td class="num">' + fmt(r.expected_balance) + '</td>' +
+              '<td>' + tag(r.status) + '</td></tr>'
+            );
+          }).join('')
+        : '<tr><td colspan="6" class="empty">No drawers</td></tr>';
+    } catch (e) {
+      tb.innerHTML = '<tr><td colspan="6" class="empty">' + e.message + '</td></tr>';
+    }
+  }
+
+  async function selectDrawer(id) {
+    d_id.value = id;
+    kSel.textContent = id;
+    try {
+      var d = await DigiFyntekAPI.request('/api/v1/teller/drawers/' + id);
+      kExp.textContent = fmt(d.expected_balance);
+      detail.style.display = 'block';
+      detail.textContent = JSON.stringify(d, null, 2);
+    } catch (e) {
+      flash(false, e.message);
+    }
+  }
+
+  tb.onclick = function (e) {
+    var tr = e.target.closest('tr[data-id]');
+    if (tr) selectDrawer(tr.getAttribute('data-id'));
+  };
+
+  btnOpen.onclick = async function () {
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/teller/drawers/open', {
+        method: 'POST',
+        body: JSON.stringify({
+          teller_id: Number(o_teller.value),
+          opening_balance: Number(o_float.value),
+          business_date: o_date.value,
+          branch_code: o_br.value,
+        }),
+      });
+      flash(true, 'Opened ' + r.drawer_code);
+      loadVault(); loadDrawers(); selectDrawer(r.id);
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnVin.onclick = async function () {
+    if (!d_id.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/teller/drawers/' + d_id.value + '/vault-in', {
+        method: 'POST', body: JSON.stringify({ amount: Number(d_amt.value) }),
+      });
+      flash(true, 'Vault → drawer'); loadVault(); loadDrawers(); selectDrawer(d_id.value);
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnVout.onclick = async function () {
+    if (!d_id.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/teller/drawers/' + d_id.value + '/vault-out', {
+        method: 'POST', body: JSON.stringify({ amount: Number(d_amt.value) }),
+      });
+      flash(true, 'Drawer → vault'); loadVault(); loadDrawers(); selectDrawer(d_id.value);
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnDep.onclick = async function () {
+    if (!d_id.value || !d_acct.value) return flash(false, 'Drawer + account required');
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/teller/drawers/' + d_id.value + '/deposit', {
+        method: 'POST',
+        body: JSON.stringify({ account_id: Number(d_acct.value), amount: Number(d_amt.value) }),
+      });
+      flash(true, 'Customer deposit posted'); loadVault(); loadDrawers(); selectDrawer(d_id.value);
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnWdr.onclick = async function () {
+    if (!d_id.value || !d_acct.value) return flash(false, 'Drawer + account required');
+    try {
+      await DigiFyntekAPI.request('/api/v1/teller/drawers/' + d_id.value + '/withdraw', {
+        method: 'POST',
+        body: JSON.stringify({ account_id: Number(d_acct.value), amount: Number(d_amt.value) }),
+      });
+      flash(true, 'Customer withdrawal posted'); loadVault(); loadDrawers(); selectDrawer(d_id.value);
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnClose.onclick = async function () {
+    if (!d_id.value) return;
+    if (!confirm('Close drawer? Counted cash returns to vault.')) return;
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/teller/drawers/' + d_id.value + '/close', {
+        method: 'POST',
+        body: JSON.stringify({ counted_balance: Number(d_count.value) }),
+      });
+      flash(true, 'Closed · variance ' + r.variance);
+      loadVault(); loadDrawers(); selectDrawer(d_id.value);
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnReload.onclick = function () { loadVault(); loadDrawers(); };
+  loadTellers(); loadVault(); loadDrawers();
+})();
+</script>
+</body>
+</html>

@@ -25,6 +25,7 @@
         { href: 'accounts.html', label: 'Accounts (CASA)' },
         { href: 'term-deposits.html', label: 'Term deposits' },
         { href: 'casa.html', label: 'Cash deposit / withdraw' },
+        { href: 'teller.html', label: 'Teller / cash drawer' },
         { href: 'savings.html', label: 'Deposit accounts (legacy)' },
         { href: 'shares.html', label: 'Share capital' },
         { href: 'cbs.html', label: 'Open account / CIF' },
