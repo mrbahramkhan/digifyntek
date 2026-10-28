@@ -575,3 +575,54 @@ CREATE TABLE IF NOT EXISTS cbs_clearing_items (
   KEY idx_cheque (cheque_no),
   KEY idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Reconciliation engine (skeleton)
+CREATE TABLE IF NOT EXISTS cbs_recon_statements (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  statement_ref VARCHAR(40) NOT NULL,
+  source_type ENUM('NOSTRO','CLEARING','GL','VAULT','EXTERNAL_FILE','OTHER') NOT NULL DEFAULT 'GL',
+  source_name VARCHAR(120) NOT NULL,
+  currency CHAR(3) NOT NULL DEFAULT 'PKR',
+  statement_date DATE NOT NULL,
+  opening_balance DECIMAL(18,2) NOT NULL DEFAULT 0,
+  closing_balance DECIMAL(18,2) NOT NULL DEFAULT 0,
+  status ENUM('open','matching','matched','closed') NOT NULL DEFAULT 'open',
+  notes VARCHAR(500) NULL,
+  created_by VARCHAR(50) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_stmt (statement_ref),
+  KEY idx_src_date (source_type, statement_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_recon_lines (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  statement_id BIGINT UNSIGNED NOT NULL,
+  line_ref VARCHAR(40) NOT NULL,
+  value_date DATE NULL,
+  amount DECIMAL(18,2) NOT NULL,
+  dr_cr ENUM('DR','CR') NOT NULL,
+  external_ref VARCHAR(80) NULL,
+  narrative VARCHAR(255) NULL,
+  match_status ENUM('unmatched','matched','excluded','disputed') NOT NULL DEFAULT 'unmatched',
+  matched_journal_id BIGINT UNSIGNED NULL,
+  matched_at DATETIME NULL,
+  matched_by VARCHAR(50) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_line (line_ref),
+  KEY idx_stmt (statement_id),
+  KEY idx_match (match_status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_recon_matches (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  statement_id BIGINT UNSIGNED NOT NULL,
+  line_id BIGINT UNSIGNED NOT NULL,
+  journal_id BIGINT UNSIGNED NOT NULL,
+  match_type ENUM('AUTO','MANUAL') NOT NULL DEFAULT 'MANUAL',
+  amount DECIMAL(18,2) NOT NULL,
+  created_by VARCHAR(50) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_stmt (statement_id),
+  KEY idx_line (line_id),
+  KEY idx_jnl (journal_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

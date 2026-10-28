@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Reconciliation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>Reconciliation</h1>
+      <span class="meta">Statement lines ↔ journals · auto / manual match</span>
+    </header>
+    <div class="workspace">
+      <div class="split">
+        <div class="panel">
+          <div class="panel-h">Statements</div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr><th>Ref</th><th>Source</th><th>Date</th><th>Status</th></tr>
+              </thead>
+              <tbody id="tb"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">Workflow</div>
+          <div class="panel-b">
+            <div class="form-sec" style="margin-top:0">New statement</div>
+            <div class="form-grid">
+              <div class="field"><label>Source type</label>
+                <select class="inp" id="s_type">
+                  <option>GL</option><option>NOSTRO</option><option>CLEARING</option>
+                  <option>VAULT</option><option>EXTERNAL_FILE</option><option>OTHER</option>
+                </select>
+              </div>
+              <div class="field"><label>Source name *</label><input class="inp" id="s_name" value="Branch cash GL" /></div>
+              <div class="field"><label>Statement date</label><input class="inp" type="date" id="s_date" /></div>
+              <div class="field"><label>Closing bal</label><input class="inp" type="number" step="0.01" id="s_close" value="0" /></div>
+            </div>
+            <div class="form-actions"><button type="button" class="btn btn-p" id="btnStmt">Create</button></div>
+
+            <div class="form-sec">Add line</div>
+            <div class="form-grid">
+              <div class="field"><label>Statement ID</label><input class="inp" id="l_stmt" /></div>
+              <div class="field"><label>Amount *</label><input class="inp" type="number" step="0.01" id="l_amt" /></div>
+              <div class="field"><label>DR/CR</label>
+                <select class="inp" id="l_dc"><option>DR</option><option>CR</option></select>
+              </div>
+              <div class="field"><label>External ref</label><input class="inp" id="l_ref" /></div>
+              <div class="field full"><label>Narrative</label><input class="inp" id="l_narr" /></div>
+            </div>
+            <div class="form-actions"><button type="button" class="btn" id="btnLine">Add line</button></div>
+
+            <div class="form-sec">Match</div>
+            <div class="form-grid">
+              <div class="field"><label>Line ID</label><input class="inp" id="m_line" /></div>
+              <div class="field"><label>Journal ID</label><input class="inp" id="m_jnl" /></div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-p" id="btnMatch">Manual match</button>
+              <button type="button" class="btn" id="btnAuto">Auto-match statement</button>
+              <button type="button" class="btn" id="btnExcl">Exclude line</button>
+              <button type="button" class="btn" id="btnClose">Close statement</button>
+            </div>
+            <div id="msg" class="hint"></div>
+          </div>
+        </div>
+      </div>
+      <pre id="detail" style="display:none;margin-top:12px;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;max-height:280px;overflow:auto"></pre>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+  s_date.value = new Date().toISOString().slice(0, 10);
+  function tag(s) {
+    var m = { open: 'tag-a', matching: 'tag-a', matched: 'tag-g', closed: 'tag-n', unmatched: 'tag-a' };
+    return '<span class="tag ' + (m[s] || 'tag-n') + '">' + s + '</span>';
+  }
+  function flash(ok, t) { msg.textContent = t; msg.className = ok ? 'ok' : 'err'; }
+
+  async function load() {
+    try {
+      var rows = await DigiFyntekAPI.request('/api/v1/recon/statements');
+      tb.innerHTML = rows.length
+        ? rows.map(function (r) {
+            return (
+              '<tr data-id="' + r.id + '" style="cursor:pointer">' +
+              '<td class="num">' + r.statement_ref + '</td>' +
+              '<td>' + r.source_name + '</td>' +
+              '<td>' + String(r.statement_date).slice(0, 10) + '</td>' +
+              '<td>' + tag(r.status) + '</td></tr>'
+            );
+          }).join('')
+        : '<tr><td colspan="4" class="empty">No statements</td></tr>';
+    } catch (e) {
+      tb.innerHTML = '<tr><td colspan="4" class="empty">' + e.message + '</td></tr>';
+    }
+  }
+
+  async function selectStmt(id) {
+    l_stmt.value = id;
+    try {
+      var d = await DigiFyntekAPI.request('/api/v1/recon/statements/' + id);
+      detail.style.display = 'block';
+      detail.textContent = JSON.stringify(d, null, 2);
+      if (d.lines && d.lines[0]) m_line.value = d.lines[0].id;
+    } catch (e) { flash(false, e.message); }
+  }
+
+  tb.onclick = function (e) {
+    var tr = e.target.closest('tr[data-id]');
+    if (tr) selectStmt(tr.getAttribute('data-id'));
+  };
+
+  btnStmt.onclick = async function () {
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/recon/statements', {
+        method: 'POST',
+        body: JSON.stringify({
+          source_type: s_type.value,
+          source_name: s_name.value,
+          statement_date: s_date.value,
+          closing_balance: Number(s_close.value) || 0,
+        }),
+      });
+      flash(true, 'Created ' + r.statement_ref);
+      load(); selectStmt(r.id);
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnLine.onclick = async function () {
+    if (!l_stmt.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/recon/statements/' + l_stmt.value + '/lines', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount: Number(l_amt.value),
+          dr_cr: l_dc.value,
+          external_ref: l_ref.value || null,
+          narrative: l_narr.value,
+        }),
+      });
+      flash(true, 'Line added'); selectStmt(l_stmt.value); load();
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnMatch.onclick = async function () {
+    try {
+      await DigiFyntekAPI.request('/api/v1/recon/match', {
+        method: 'POST',
+        body: JSON.stringify({ line_id: Number(m_line.value), journal_id: Number(m_jnl.value) }),
+      });
+      flash(true, 'Matched'); selectStmt(l_stmt.value);
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnAuto.onclick = async function () {
+    if (!l_stmt.value) return;
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/recon/statements/' + l_stmt.value + '/auto-match', {
+        method: 'POST', body: '{}',
+      });
+      flash(true, 'Auto-matched ' + r.matched + ' line(s)');
+      selectStmt(l_stmt.value); load();
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnExcl.onclick = async function () {
+    if (!m_line.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/recon/lines/' + m_line.value + '/exclude', {
+        method: 'POST', body: '{}',
+      });
+      flash(true, 'Excluded'); selectStmt(l_stmt.value);
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnClose.onclick = async function () {
+    if (!l_stmt.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/recon/statements/' + l_stmt.value + '/close', {
+        method: 'POST', body: '{}',
+      });
+      flash(true, 'Statement closed'); load(); selectStmt(l_stmt.value);
+    } catch (e) { flash(false, e.message); }
+  };
+
+  load();
+})();
+</script>
+</body>
+</html>

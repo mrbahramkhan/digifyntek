@@ -49,6 +49,7 @@
         { href: 'core-banking.html', label: 'General ledger (legacy)' },
         { href: 'instruments.html', label: 'Cheque books' },
         { href: 'clearing.html', label: 'Cheque clearing' },
+        { href: 'recon.html', label: 'Reconciliation' },
         { href: 'eod.html', label: 'End of day' },
         { href: 'approvals.html', label: 'Maker-checker queue' },
         { href: 'payments.html', label: 'Payments hub (sim)' },
