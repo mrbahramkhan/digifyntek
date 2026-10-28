@@ -37,6 +37,7 @@ const tellerRoutes = require('./routes/teller');
 const clearingRoutes = require('./routes/clearing');
 const reconRoutes = require('./routes/recon');
 const rbacRoutes = require('./routes/rbac');
+const openapiRoutes = require('./routes/openapi');
 
 const app = express();
 
@@ -154,6 +155,7 @@ app.use('/api/v1/recon', reconRoutes);
 app.use('/api/recon', reconRoutes);
 app.use('/api/v1/rbac', rbacRoutes);
 app.use('/api/rbac', rbacRoutes);
+app.use('/api', openapiRoutes);
 
 // Serve full UI (phase1) from same process — one deploy = full system
 const fs = require('fs');

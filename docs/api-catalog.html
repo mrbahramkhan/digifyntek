@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — API Catalog</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>API catalog</h1>
+      <span class="meta">OpenAPI 3 snapshot · v1 CBS surface</span>
+      <div class="spacer"></div>
+      <a class="btn" href="openapi.yaml" download>Download openapi.yaml</a>
+    </header>
+    <div class="workspace">
+      <div class="panel" style="margin-bottom:12px;border-color:#67e8f9;background:#ecfeff">
+        <div class="panel-b" style="padding:10px 12px;font-size:12px;color:#0e7490">
+          Spec file: <code>openapi.yaml</code> · Live (when API up): <code>/api/openapi.yaml</code> · Catalog JSON: <code>/api/catalog</code>
+          <br />Auth: <code>POST /api/auth/login</code> → <code>Authorization: Bearer &lt;token&gt;</code>
+        </div>
+      </div>
+      <div id="groups"></div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+  var fallback = {
+    groups: [
+      { name: 'Foundation', endpoints: [
+        { method: 'POST', path: '/api/auth/login', note: 'JWT' },
+        { method: 'GET', path: '/api/v1/rbac/me' },
+        { method: 'GET', path: '/api/openapi.yaml', note: 'OpenAPI YAML' }
+      ]},
+      { name: 'Customers', endpoints: [
+        { method: 'GET/POST', path: '/api/v1/cif' },
+        { method: 'GET/POST', path: '/api/v1/kyc' },
+        { method: 'POST', path: '/api/v1/kyc/:id/decide', perm: 'kyc.decide' }
+      ]},
+      { name: 'Accounts & ledger', endpoints: [
+        { method: 'POST', path: '/api/v1/accounts/:id/deposit' },
+        { method: 'POST', path: '/api/v1/ledger/journals', perm: 'ledger.post' },
+        { method: 'GET', path: '/api/v1/ledger/trial-balance' }
+      ]},
+      { name: 'Lending & TD', endpoints: [
+        { method: 'POST', path: '/api/v1/financing/disburse', perm: 'loan.disburse' },
+        { method: 'POST', path: '/api/v1/financing/:id/repay', perm: 'loan.repay' },
+        { method: 'POST', path: '/api/v1/term-deposits', perm: 'td.write' }
+      ]},
+      { name: 'Controls & ops', endpoints: [
+        { method: 'POST', path: '/api/v1/approvals/:id/approve', perm: 'approval.decide' },
+        { method: 'POST', path: '/api/eod/run', perm: 'eod.run' },
+        { method: 'POST', path: '/api/v1/teller/drawers/open', perm: 'teller.ops' },
+        { method: 'POST', path: '/api/v1/payments/raast/outbound', perm: 'payments.post', note: 'SIMULATOR' },
+        { method: 'POST', path: '/api/v1/clearing/batches' },
+        { method: 'POST', path: '/api/v1/recon/statements' }
+      ]}
+    ]
+  };
+
+  function render(data) {
+    groups.innerHTML = (data.groups || []).map(function (g) {
+      return (
+        '<div class="panel" style="margin-bottom:12px"><div class="panel-h">' + g.name + '</div>' +
+        '<div class="table-wrap"><table class="data"><thead><tr><th>Method</th><th>Path</th><th>Permission</th><th>Note</th></tr></thead><tbody>' +
+        (g.endpoints || []).map(function (e) {
+          return (
+            '<tr><td class="num">' + e.method + '</td><td><code>' + e.path + '</code></td>' +
+            '<td class="muted">' + (e.perm || '—') + '</td><td class="muted">' + (e.note || '') + '</td></tr>'
+          );
+        }).join('') +
+        '</tbody></table></div></div>'
+      );
+    }).join('');
+  }
+
+  DigiFyntekAPI.request('/api/catalog')
+    .then(render)
+    .catch(function () { render(fallback); });
+})();
+</script>
+</body>
+</html>
