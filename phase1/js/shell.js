@@ -70,6 +70,7 @@
       items: [
         { href: 'rbac.html', label: 'Roles & permissions' },
         { href: 'api-catalog.html', label: 'API catalog' },
+        { href: 'checklist.html', label: 'Production checklist' },
         { href: 'setup.html', label: 'Institution & branches' },
       ],
     },

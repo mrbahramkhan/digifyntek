@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Production checklist</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>Phase review / production checklist</h1>
+      <span class="meta">Honest readiness — not a certification claim</span>
+    </header>
+    <div class="workspace">
+      <div class="kpis">
+        <div class="kpi"><div class="l">Foundation</div><div class="v" style="font-size:16px">UAT-ready</div></div>
+        <div class="kpi"><div class="l">Live payments</div><div class="v" style="font-size:16px">No</div></div>
+        <div class="kpi"><div class="l">SBP certified</div><div class="v" style="font-size:16px">No</div></div>
+        <div class="kpi"><div class="l">Ledger rules</div><div class="v" style="font-size:16px">Yes</div></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:12px">
+        <div class="panel-h">Module status</div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Area</th><th>Status</th><th>Note</th></tr></thead>
+            <tbody>
+              <tr><td>CIF / KYC / CASA / Ledger</td><td><span class="tag tag-g">OK</span></td><td>Core vertical</td></tr>
+              <tr><td>Financing / TD / Maker-checker</td><td><span class="tag tag-g">OK</span></td><td>GL-backed</td></tr>
+              <tr><td>EOD / Teller / Clearing</td><td><span class="tag tag-g">OK</span></td><td>Gates + variance</td></tr>
+              <tr><td>Recon / RBAC / OpenAPI</td><td><span class="tag tag-g">OK</span></td><td>Skeleton + matrix</td></tr>
+              <tr><td>Raast payments</td><td><span class="tag tag-a">SIM</span></td><td>Not live network</td></tr>
+              <tr><td>Islamic / MFB reports</td><td><span class="tag tag-a">Partial</span></td><td>Extend for product depth</td></tr>
+              <tr><td>MFA / DR drill / CI</td><td><span class="tag tag-r">Gap</span></td><td>Ops + engineering</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:12px">
+        <div class="panel-h">Go-live gates (ops)</div>
+        <div class="panel-b" style="font-size:13px;line-height:1.7">
+          <ul style="margin:0;padding-left:18px">
+            <li>MySQL backups + schema <code>09_cbs_enterprise.sql</code> applied</li>
+            <li>Strong JWT secret; not all users superadmin</li>
+            <li>HTTPS reverse proxy; DB not public</li>
+            <li><code>npm run test:unit</code> and integrity tests on target DB</li>
+            <li>Two users for maker-checker</li>
+            <li>Smoke: CIF → account → deposit → trial balance</li>
+            <li>UAT sign-off on cash, loan, EOD, drawer close</li>
+            <li>Backup restore tested once</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h">Documents</div>
+        <div class="panel-b" style="font-size:13px">
+          Full write-up: repo <code>docs-cbs/15_PRODUCTION_CHECKLIST.md</code><br />
+          Architecture: <code>docs-cbs/01_ARCHITECTURE.md</code> · Roadmap: <code>docs-cbs/02_ROADMAP.md</code><br />
+          API: <a href="api-catalog.html">API catalog</a> · <a href="openapi.yaml">openapi.yaml</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+</body>
+</html>
