@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — End of Day</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f4f6f8;--ink:#0f172a;--ink-2:#475569;--brand:#0e7490;--brand-deep:#0c4a5e;--border:#e2e8f0;--side:260px;--top:56px;--font:Inter,system-ui,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font);background:var(--bg);color:var(--ink)}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--side);background:var(--brand-deep);color:#ecfeff;position:fixed;inset:0 auto 0 0;overflow-y:auto}
+    .side-brand{height:var(--top);display:flex;align-items:center;padding:0 16px;font-weight:700}
+    .nav{padding:10px 8px 32px}.main{margin-left:var(--side);flex:1}
+    .topbar{height:var(--top);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;font-weight:600}
+    .content{padding:24px 28px;max-width:960px}
+    h1{font-size:22px;margin-bottom:4px}.sub{color:var(--ink-2);font-size:14px;margin-bottom:18px}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+    .kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}.kpi .l{font-size:11px;color:var(--ink-2);text-transform:uppercase;font-weight:600}.kpi .v{font-size:18px;font-weight:700;margin-top:6px}
+    .card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+    .card h3{font-size:14px;margin-bottom:12px}
+    ul.check{list-style:none}.check li{padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;gap:10px;align-items:flex-start}
+    .check li:last-child{border-bottom:none}
+    .dot{width:8px;height:8px;border-radius:50%;margin-top:5px;background:#94a3b8;flex-shrink:0}
+    .dot.ok{background:#059669}.dot.bad{background:#e11d48}
+    .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+    input,select{height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit}
+    .btn{height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--border);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px}
+    .btn-p{background:var(--brand);color:#fff;border:none}.btn-d{background:#fff;color:#b91c1c;border-color:#fecaca}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+    .tag-g{background:#d1fae5;color:#047857}.tag-a{background:#fef3c7;color:#b45309}.tag-r{background:#fee2e2;color:#b91c1c}.tag-n{background:#f1f5f9;color:#475569}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}th{font-size:11px;text-transform:uppercase;color:var(--ink-2)}
+    #msg{font-size:13px;margin-top:10px;color:var(--ink-2)}
+    pre{background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;overflow:auto;max-height:240px;margin-top:10px}
+    @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.kpis{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand">DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">End of day</header>
+    <div class="content">
+      <h1>End of day (EOD)</h1>
+      <p class="sub">Close the business date: cut-off → pending check → accrual → ledger step → open next day.</p>
+
+      <div class="kpis">
+        <div class="kpi"><div class="l">Business date</div><div class="v" id="kDate">—</div></div>
+        <div class="kpi"><div class="l">Day status</div><div class="v" id="kStatus">—</div></div>
+        <div class="kpi"><div class="l">Unposted txns</div><div class="v" id="kUnp">—</div></div>
+      </div>
+
+      <div class="card">
+        <h3>Checklist</h3>
+        <ul class="check" id="checklist"><li>Loading…</li></ul>
+        <div class="tools">
+          <label style="font-size:12px;color:var(--ink-2)">Business date</label>
+          <input type="date" id="bizDate" />
+          <button class="btn" type="button" onclick="setDate()">Set date</button>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px">
+            <input type="checkbox" id="skipAccrual" /> Skip accrual
+          </label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px">
+            <input type="checkbox" id="allowUnposted" /> Allow unposted
+          </label>
+          <button class="btn btn-p" type="button" onclick="runEod()">Run end of day</button>
+        </div>
+        <div id="msg"></div>
+        <pre id="stepOut" hidden></pre>
+      </div>
+
+      <div class="card">
+        <h3>Recent EOD runs</h3>
+        <table>
+          <thead><tr><th>Run</th><th>Business date</th><th>Status</th><th>Next day</th><th>By</th></tr></thead>
+          <tbody id="tbRuns"><tr><td colspan="5">—</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+const stMap = { open: 'tag-g', closing: 'tag-a', closed: 'tag-n', success: 'tag-g', partial: 'tag-a', failed: 'tag-r' };
+
+async function loadStatus() {
+  try {
+    const s = await DigiFyntekAPI.eodStatus();
+    const bd = s.business_date ? String(s.business_date).slice(0, 10) : '—';
+    document.getElementById('kDate').textContent = bd;
+    document.getElementById('kStatus').innerHTML = '<span class="tag ' + (stMap[s.status] || 'tag-n') + '">' + s.status + '</span>';
+    document.getElementById('kUnp').textContent = s.unposted_transactions == null ? 'n/a' : s.unposted_transactions;
+    document.getElementById('bizDate').value = bd !== '—' ? bd : new Date().toISOString().slice(0, 10);
+
+    var gates = s.gates || [];
+    document.getElementById('checklist').innerHTML = (gates.length ? gates : (s.checklist || [])).map(function (c) {
+      var ok = c.ok;
+      var label = c.label || c.detail || '';
+      return '<li><span class="dot ' + (ok === true ? 'ok' : ok === false ? 'bad' : '') + '"></span><div><strong>' + c.code + '</strong> — ' +
+        label + (c.required ? ' <span style="color:#b91c1c">*</span>' : '') +
+        (c.detail && c.label ? '<div style="color:#64748b;font-size:12px">' + c.detail + '</div>' : '') +
+        '</div></li>';
+    }).join('');
+    if (s.prior_success_run) {
+      document.getElementById('kUnp').textContent = 'closed#' + s.prior_success_run.id;
+    }
+
+    const runs = s.recent_runs || [];
+    document.getElementById('tbRuns').innerHTML = runs.length ? runs.map(function (r) {
+      return '<tr><td>' + (r.run_at ? String(r.run_at).replace('T', ' ').slice(0, 19) : '—') + '</td>' +
+        '<td>' + String(r.business_date).slice(0, 10) + '</td>' +
+        '<td><span class="tag ' + (stMap[r.status] || 'tag-n') + '">' + r.status + '</span></td>' +
+        '<td>' + (r.next_business_date ? String(r.next_business_date).slice(0, 10) : '—') + '</td>' +
+        '<td>' + (r.run_by || '—') + '</td></tr>';
+    }).join('') : '<tr><td colspan="5">No runs yet</td></tr>';
+  } catch (e) {
+    document.getElementById('msg').textContent = e.message;
+    document.getElementById('msg').style.color = '#e11d48';
+  }
+}
+
+async function setDate() {
+  const d = document.getElementById('bizDate').value;
+  if (!d) return alert('Pick a date');
+  try {
+    await DigiFyntekAPI.eodSetDate(d);
+    document.getElementById('msg').textContent = 'Business date set to ' + d;
+    document.getElementById('msg').style.color = '#059669';
+    loadStatus();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+async function runEod() {
+  if (!confirm('Run End of Day for the selected business date? This will close the day and open the next date.')) return;
+  const msg = document.getElementById('msg');
+  const pre = document.getElementById('stepOut');
+  msg.textContent = 'Running EOD…';
+  msg.style.color = '#475569';
+  try {
+    const r = await DigiFyntekAPI.eodRun({
+      business_date: document.getElementById('bizDate').value,
+      skip_accrual: document.getElementById('skipAccrual').checked,
+      allow_unposted: document.getElementById('allowUnposted').checked,
+    });
+    msg.textContent = (r.idempotent ? 'Idempotent (already closed): ' : (r.ok ? 'EOD completed: ' : 'EOD blocked/failed: ')) + r.status +
+      ' · closed ' + r.business_date_closed + ' · next ' + r.next_business_date + (r.execution_id ? ' · ' + r.execution_id : '');
+    msg.style.color = r.ok ? '#059669' : '#b45309';
+    pre.hidden = false;
+    pre.textContent = JSON.stringify(r.steps, null, 2);
+    loadStatus();
+  } catch (e) {
+    msg.textContent = e.message;
+    msg.style.color = '#e11d48';
+    if (e.steps) {
+      pre.hidden = false;
+      pre.textContent = JSON.stringify(e.steps, null, 2);
+    }
+  }
+}
+
+loadStatus();
+</script>
+</body>
+</html>

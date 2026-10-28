@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Chequebook management</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f6f7f9;--surface:#fff;--ink:#111827;--ink-2:#4b5563;--ink-3:#9ca3af;--brand:#0e7490;--brand-deep:#164e63;--border:#e5e7eb;--side:250px;--top:60px;--font:Inter,system-ui,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font);background:var(--bg);color:var(--ink)}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--side);background:var(--brand-deep);color:#ecfeff;position:fixed;inset:0 auto 0 0}
+    .side-brand{height:var(--top);display:flex;align-items:center;padding:0 18px;font-weight:700}
+    .nav{padding:14px 10px}.nav a{display:block;padding:8px 11px;border-radius:9px;color:rgba(236,254,255,.7);text-decoration:none;font-size:13px}
+    .nav a.active,.nav a:hover{background:var(--brand);color:#fff}
+    .main{margin-left:var(--side);flex:1}.topbar{height:var(--top);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;font-weight:600}
+    .content{padding:24px}h1{font-size:22px;margin-bottom:4px}.sub{color:var(--ink-2);font-size:14px;margin-bottom:16px}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+    .kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}.kpi .l{font-size:11px;color:var(--ink-2)}.kpi .v{font-size:18px;font-weight:700;margin-top:4px}
+    .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+    .tab{height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+    .tab.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    input,select{height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit}
+    .btn{height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--border);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px}
+    .btn-p{background:var(--brand);color:#fff;border:none}.btn-d{background:#fee2e2;color:#b91c1c;border-color:#fecaca}
+    .card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}th{background:#f0f2f5;font-size:11px;text-transform:uppercase;color:var(--ink-2)}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+    .tag-g{background:#d1fae5;color:#047857}.tag-n{background:#f3f4f6;color:#4b5563}.tag-a{background:#fef3c7;color:#b45309}
+    .tag-r{background:#fee2e2;color:#b91c1c}.tag-b{background:#e0f2fe;color:#0369a1}
+    .mono{font-variant-numeric:tabular-nums}
+    .drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:50;display:none}.drawer-bg.open{display:block}
+    .drawer{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:100%;background:#fff;z-index:51;transform:translateX(100%);transition:.2s;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.1)}
+    .drawer.open{transform:translateX(0)}
+    .drawer-h{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .drawer-b{padding:20px;overflow:auto;flex:1}.drawer-f{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+    .fg{margin-bottom:12px}label{display:block;font-size:12px;color:var(--ink-2);margin-bottom:4px}.fg input,.fg select,.fg textarea{width:100%}
+    @media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.sidebar{display:none}.main{margin-left:0}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand">DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">Chequebook management</header>
+    <div class="content">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start">
+        <div>
+          <h1>Chequebooks</h1>
+          <p class="sub">Issue books by bank branch, track leaves, stop payment, clear / bounce status.</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" onclick="openReqDrawer()">+ New request</button>
+          <button class="btn btn-p" onclick="openDrawer()">+ Issue chequebook</button>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><div class="l">Books</div><div class="v" id="kBooks">—</div></div>
+        <div class="kpi"><div class="l">Available leaves</div><div class="v" id="kAvail">—</div></div>
+        <div class="kpi"><div class="l">Used / cleared</div><div class="v" id="kUsed">—</div></div>
+        <div class="kpi"><div class="l">Stopped / bounced</div><div class="v" id="kStop">—</div></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab on" onclick="showTab(this,'books')">Books</button>
+        <button class="tab" onclick="showTab(this,'requests')">Requests</button>
+        <button class="tab" onclick="showTab(this,'leaves')">Cheque leaves</button>
+        <button class="tab" onclick="showTab(this,'issues')">Book issues</button>
+        <button class="tab" onclick="showTab(this,'stops')">Stop payment</button>
+      </div>
+
+      <div id="panel-books">
+        <div class="filters">
+          <input id="bq" placeholder="Book #, member, account…" onkeydown="if(event.key==='Enter')loadBooks()" />
+          <select id="bStatus"><option value="">All status</option><option value="active">Active</option><option value="exhausted">Exhausted</option><option value="cancelled">Cancelled</option></select>
+          <button class="btn" onclick="loadBooks()">Filter</button>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Book #</th><th>Member</th><th>Account</th><th>Leaves</th><th>Range</th><th>Issue date</th><th>Status</th><th></th></tr></thead>
+            <tbody id="tbBooks"><tr><td colspan="8">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+
+      
+      <div id="panel-requests" hidden>
+        <div class="filters">
+          <input id="rq" placeholder="Request #, member, account…" onkeydown="if(event.key==='Enter')loadRequests()" />
+          <select id="rStatus">
+            <option value="">All status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="issued">Issued</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button class="btn" onclick="loadRequests()">Filter</button>
+        </div>
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Request #</th>
+                <th>Date</th>
+                <th>Member ref</th>
+                <th>Member name</th>
+                <th>Branch</th>
+                <th>Account</th>
+                <th>Leaves</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tbReq"><tr><td colspan="9">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="panel-issues" hidden>
+        <p class="sub">History of cheque books issued to members/accounts.</p>
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Issue date</th>
+                <th>Book #</th>
+                <th>Member</th>
+                <th>Account</th>
+                <th>Leaves</th>
+                <th>Available</th>
+                <th>Used</th>
+                <th>Stopped</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbIssues"><tr><td colspan="9">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="panel-stops" hidden>
+        <div class="card" style="padding:16px;margin-bottom:14px">
+          <h3 style="font-size:15px;margin-bottom:10px">New stop payment</h3>
+          <div class="filters" style="align-items:flex-end">
+            <div>
+              <label style="display:block;font-size:11px;color:var(--ink-2);margin-bottom:4px">Mode</label>
+              <select id="stopMode" onchange="toggleStopMode()">
+                <option value="single">Single cheque</option>
+                <option value="range">Leaf range (in book)</option>
+                <option value="book">Entire book</option>
+              </select>
+            </div>
+            <div id="stopSingle">
+              <label style="display:block;font-size:11px;color:var(--ink-2);margin-bottom:4px">Cheque number</label>
+              <input id="stopChequeNo" placeholder="Cheque #" />
+            </div>
+            <div id="stopRange" hidden>
+              <label style="display:block;font-size:11px;color:var(--ink-2);margin-bottom:4px">Book ID</label>
+              <input id="stopBookId" type="number" placeholder="Book ID" style="width:100px" />
+              <input id="stopLeafFrom" type="number" placeholder="From leaf" style="width:100px" />
+              <input id="stopLeafTo" type="number" placeholder="To leaf" style="width:100px" />
+            </div>
+            <div id="stopBookOnly" hidden>
+              <label style="display:block;font-size:11px;color:var(--ink-2);margin-bottom:4px">Book ID</label>
+              <input id="stopBookOnlyId" type="number" placeholder="Book ID" style="width:120px" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--ink-2);margin-bottom:4px">Reason code</label>
+              <select id="stopCode">
+                <option value="SP">SP — Stop payment</option>
+                <option value="LOST">LOST — Lost / stolen</option>
+                <option value="DAMAGED">DAMAGED — Damaged</option>
+                <option value="FRAUD">FRAUD — Suspected fraud</option>
+                <option value="MEMBER">MEMBER — Member request</option>
+                <option value="OTHER">OTHER</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--ink-2);margin-bottom:4px">Reason detail</label>
+              <input id="stopReason" placeholder="Details" style="min-width:180px" />
+            </div>
+            <button class="btn btn-d" onclick="submitStop()">Stop payment</button>
+          </div>
+          <p id="stopMsg" style="font-size:13px;margin-top:10px;color:var(--ink-2)"></p>
+        </div>
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Stop date</th>
+                <th>Cheque #</th>
+                <th>Book</th>
+                <th>Member</th>
+                <th>Amount</th>
+                <th>Reason</th>
+              </tr>
+            </thead>
+            <tbody id="tbStops"><tr><td colspan="6">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="panel-leaves" hidden>
+        <div class="filters">
+          <input id="lq" placeholder="Cheque #, payee, book…" onkeydown="if(event.key==='Enter')loadLeaves()" />
+          <select id="lStatus">
+            <option value="">All status</option>
+            <option value="available">Available</option>
+            <option value="used">Used</option>
+            <option value="cleared">Cleared</option>
+            <option value="stopped">Stopped</option>
+            <option value="bounced">Bounced</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <input id="lBook" type="number" placeholder="Book ID" style="width:110px" />
+          <button class="btn" onclick="loadLeaves()">Filter</button>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Cheque #</th><th>Book</th><th>Member</th><th>Payee</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="tbLeaves"><tr><td colspan="9">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="drawer-bg" id="bg" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-h"><strong>Issue chequebook</strong><button class="btn" onclick="closeDrawer()">Close</button></div>
+  <div class="drawer-b">
+    <div class="fg"><label>Book number</label><input id="bookNo" placeholder="Auto if empty" /></div>
+    <div class="fg"><label>Member ref (farmer/member no)</label><input id="memberRef" /></div>
+    <div class="fg"><label>Member name</label><input id="memberName" /></div>
+    <div class="fg"><label>Account number</label><input id="accountNo" /></div>
+    <div class="fg">
+      <label>Branch * <span style="color:#9ca3af;font-weight:400">(code — name)</span></label>
+      <select id="issBranch"><option value="">Select branch…</option></select>
+    </div>
+    
+    <div class="fg"><label>Leaf start</label><input id="leafStart" type="number" value="1" /></div>
+    <div class="fg"><label>Leaf end</label><input id="leafEnd" type="number" value="25" /></div>
+    <div class="fg"><label>Cheque # prefix (optional)</label><input id="prefix" placeholder="e.g. PK" /></div>
+    <div class="fg"><label>Issue date</label><input id="issueDate" type="date" /></div>
+    <div class="fg"><label>Notes</label><textarea id="notes" rows="2" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px"></textarea></div>
+    <p id="issueMsg" style="font-size:12px;color:var(--ink-2)"></p>
+  </div>
+  <div class="drawer-f">
+    <button class="btn" onclick="closeDrawer()">Cancel</button>
+    <button class="btn btn-p" onclick="issueBook()">Issue book</button>
+  </div>
+</aside>
+
+
+<div class="drawer-bg" id="reqBg" onclick="closeReqDrawer()"></div>
+<aside class="drawer" id="reqDrawer">
+  <div class="drawer-h"><strong>Cheque book request</strong><button class="btn" onclick="closeReqDrawer()">Close</button></div>
+  <div class="drawer-b">
+    <div class="fg">
+      <label>Member ref * <span style="color:#9ca3af;font-weight:400">(farmer / member number)</span></label>
+      <input id="reqMemberRef" placeholder="e.g. 000123" required />
+    </div>
+    <div class="fg"><label>Member name</label><input id="reqMemberName" placeholder="Full name" /></div>
+    <div class="fg"><label>Account number</label><input id="reqAccount" placeholder="Linked A/C" /></div>
+    <div class="fg">
+      <label>Branch * <span style="color:#9ca3af;font-weight:400">(code — name)</span></label>
+      <select id="reqBranch"><option value="">Select branch…</option></select>
+    </div>
+    <div class="fg"><label>Leaves requested</label><input id="reqLeaves" type="number" value="25" min="1" max="200" /></div>
+    <div class="fg"><label>Request date</label><input id="reqDate" type="date" /></div>
+    <div class="fg"><label>Reason</label><input id="reqReason" placeholder="e.g. New account / exhausted book" /></div>
+    <p id="reqMsg" style="font-size:12px;color:var(--ink-2)"></p>
+  </div>
+  <div class="drawer-f">
+    <button class="btn" onclick="closeReqDrawer()">Cancel</button>
+    <button class="btn btn-p" onclick="submitRequest()">Submit request</button>
+  </div>
+</aside>
+
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+const stTag = {
+  available:'tag-g', active:'tag-g', used:'tag-b', cleared:'tag-n', issued:'tag-a',
+  stopped:'tag-r', bounced:'tag-r', cancelled:'tag-r', exhausted:'tag-a', returned:'tag-n', pending:'tag-a', approved:'tag-b', rejected:'tag-r', issued:'tag-g'
+};
+
+function showTab(btn, id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  ['books','requests','leaves','issues','stops'].forEach(function (p) {
+    var el = document.getElementById('panel-' + p);
+    if (el) el.hidden = p !== id;
+  });
+  if (id === 'requests') loadRequests();
+  if (id === 'leaves') loadLeaves();
+  if (id === 'issues') loadIssues();
+  if (id === 'stops') { loadStops(); toggleStopMode(); }
+}
+
+function toggleStopMode() {
+  var m = document.getElementById('stopMode').value;
+  document.getElementById('stopSingle').hidden = m !== 'single';
+  document.getElementById('stopRange').hidden = m !== 'range';
+  document.getElementById('stopBookOnly').hidden = m !== 'book';
+}
+
+async function loadIssues() {
+  try {
+    var rows = await DigiFyntekAPI.request('/api/instruments/issues');
+    var tb = document.getElementById('tbIssues');
+    if (!rows.length) tb.innerHTML = '<tr><td colspan="9">No issues yet</td></tr>';
+    else tb.innerHTML = rows.map(function (r) {
+      return '<tr>' +
+        '<td>' + (r.issue_date ? String(r.issue_date).slice(0,10) : '—') + '</td>' +
+        '<td class="mono">' + (r.book_no||'') + '</td>' +
+        '<td>' + (r.member_name||r.member_ref||'—') + '</td>' +
+        '<td class="mono">' + (r.account_no||'—') + '</td>' +
+        '<td>' + (r.total_leaves||0) + '</td>' +
+        '<td>' + (r.leaves_available||0) + '</td>' +
+        '<td>' + (r.leaves_used||0) + '</td>' +
+        '<td>' + (r.leaves_stopped||0) + '</td>' +
+        '<td><span class="tag ' + (stTag[r.status]||'tag-n') + '">' + r.status + '</span></td>' +
+        '</tr>';
+    }).join('');
+  } catch (e) {
+    document.getElementById('tbIssues').innerHTML = '<tr><td colspan="9" style="color:#e11d48">' + e.message + '</td></tr>';
+  }
+}
+
+async function loadStops() {
+  try {
+    var rows = await DigiFyntekAPI.request('/api/instruments/stops');
+    var tb = document.getElementById('tbStops');
+    if (!rows.length) tb.innerHTML = '<tr><td colspan="6">No stop payments</td></tr>';
+    else tb.innerHTML = rows.map(function (r) {
+      return '<tr>' +
+        '<td>' + (r.stop_date ? String(r.stop_date).slice(0,10) : '—') + '</td>' +
+        '<td class="mono">' + (r.cheque_no||'') + '</td>' +
+        '<td class="mono">' + (r.book_no||'') + '</td>' +
+        '<td>' + (r.member_name||r.member_ref||'—') + '</td>' +
+        '<td class="mono">' + (r.amount!=null?DigiFyntekAPI.fmtPKR(r.amount):'—') + '</td>' +
+        '<td>' + (r.stop_reason||'—') + '</td>' +
+        '</tr>';
+    }).join('');
+  } catch (e) {
+    document.getElementById('tbStops').innerHTML = '<tr><td colspan="6" style="color:#e11d48">' + e.message + '</td></tr>';
+  }
+}
+
+async function submitStop() {
+  var msg = document.getElementById('stopMsg');
+  msg.textContent = 'Submitting…';
+  var mode = document.getElementById('stopMode').value;
+  var body = {
+    mode: mode,
+    reason_code: document.getElementById('stopCode').value,
+    reason: document.getElementById('stopReason').value.trim() || 'Stop payment',
+  };
+  if (mode === 'single') body.cheque_no = document.getElementById('stopChequeNo').value.trim();
+  if (mode === 'range') {
+    body.book_id = Number(document.getElementById('stopBookId').value);
+    body.leaf_from = Number(document.getElementById('stopLeafFrom').value);
+    body.leaf_to = Number(document.getElementById('stopLeafTo').value);
+  }
+  if (mode === 'book') body.book_id = Number(document.getElementById('stopBookOnlyId').value);
+  try {
+    var r = await DigiFyntekAPI.request('/api/instruments/stop-payment', {
+      method: 'POST', body: JSON.stringify(body)
+    });
+    msg.textContent = 'Stopped ' + r.stopped_count + ' cheque(s)';
+    msg.style.color = '#059669';
+    loadStops();
+    loadSummary();
+    loadLeaves();
+  } catch (e) {
+    msg.textContent = e.message;
+    msg.style.color = '#e11d48';
+  }
+}
+
+
+
+async function loadBranches(selId) {
+  var sel = document.getElementById(selId || 'reqBranch');
+  if (!sel) return;
+  function optText(b) {
+    var code = (b.code || '').trim();
+    var name = (b.name || '').trim();
+    if (code && name) return code + ' — ' + name;
+    return b.label || code || name || '—';
+  }
+  try {
+    var rows = await DigiFyntekAPI.request('/api/instruments/branches');
+    sel.innerHTML = '<option value="">Select branch (code — name)…</option>' +
+      rows.map(function (b) {
+        var name = (b.name || '').replace(/"/g, '');
+        var code = (b.code || '').replace(/"/g, '');
+        return '<option value="' + code + '" data-name="' + name + '">' + optText(b) + '</option>';
+      }).join('');
+  } catch (e) {
+    sel.innerHTML =
+      '<option value="">Select branch (code — name)…</option>' +
+      '<option value="HQ" data-name="Head Office">HQ — Head Office</option>' +
+      '<option value="BR01" data-name="Main Branch">BR01 — Main Branch</option>' +
+      '<option value="BR02" data-name="City Branch">BR02 — City Branch</option>' +
+      '<option value="BR03" data-name="Rural Branch">BR03 — Rural Branch</option>';
+  }
+}
+
+function openReqDrawer() {
+  document.getElementById('reqDrawer').classList.add('open');
+  document.getElementById('reqBg').classList.add('open');
+  var d = document.getElementById('reqDate');
+  if (d) d.value = new Date().toISOString().slice(0, 10);
+  loadBranches('reqBranch');
+}
+function closeReqDrawer() {
+  document.getElementById('reqDrawer').classList.remove('open');
+  document.getElementById('reqBg').classList.remove('open');
+}
+
+async function loadRequests() {
+  try {
+    var p = new URLSearchParams();
+    var qEl = document.getElementById('rq');
+    var stEl = document.getElementById('rStatus');
+    if (qEl && qEl.value.trim()) p.set('q', qEl.value.trim());
+    if (stEl && stEl.value) p.set('status', stEl.value);
+    var rows = await DigiFyntekAPI.request('/api/instruments/requests' + (p.toString() ? '?' + p : ''));
+    var tb = document.getElementById('tbReq');
+    if (!tb) return;
+    if (!rows.length) {
+      tb.innerHTML = '<tr><td colspan="9">No requests</td></tr>';
+      return;
+    }
+    tb.innerHTML = rows.map(function (r) {
+      var acts = '';
+      if (r.status === 'pending') {
+        acts += '<button class="btn" style="height:28px;font-size:11px" onclick="reviewReq(' + r.id + ',\'approve\')">Approve</button> ';
+        acts += '<button class="btn btn-d" style="height:28px;font-size:11px" onclick="reviewReq(' + r.id + ',\'reject\')">Reject</button> ';
+      }
+      if (r.status === 'approved' || r.status === 'pending') {
+        acts += '<button class="btn btn-p" style="height:28px;font-size:11px" onclick="issueFromReq(' + r.id + ')">Issue book</button>';
+      }
+      if (r.status === 'issued' && r.issued_book_id) acts = 'Book #' + r.issued_book_id;
+      return '<tr>' +
+        '<td class="mono">' + (r.request_no || '') + '</td>' +
+        '<td>' + (r.request_date ? String(r.request_date).slice(0, 10) : '—') + '</td>' +
+        '<td class="mono"><strong>' + (r.member_ref || '—') + '</strong></td>' +
+        '<td>' + (r.member_name || '—') + '</td>' +
+        '<td>' + (r.bank_branch || r.branch_code || '—') + '</td>' +
+        '<td class="mono">' + (r.account_no || '—') + '</td>' +
+        '<td>' + (r.leaves_requested || '') + '</td>' +
+        '<td><span class="tag ' + (stTag[r.status] || 'tag-n') + '">' + r.status + '</span></td>' +
+        '<td>' + (acts || '—') + '</td></tr>';
+    }).join('');
+  } catch (e) {
+    var tb = document.getElementById('tbReq');
+    if (tb) tb.innerHTML = '<tr><td colspan="9" style="color:#e11d48">' + e.message + '</td></tr>';
+  }
+}
+
+async function submitRequest() {
+  var msg = document.getElementById('reqMsg');
+  msg.textContent = 'Submitting…';
+  try {
+    var branchSel = document.getElementById('reqBranch');
+    var branchOpt = branchSel.options[branchSel.selectedIndex];
+    var body = {
+      member_ref: document.getElementById('reqMemberRef').value.trim(),
+      member_name: document.getElementById('reqMemberName').value.trim() || undefined,
+      account_no: document.getElementById('reqAccount').value.trim() || undefined,
+      branch_code: branchSel.value || undefined,
+      bank_branch: branchOpt && branchOpt.value ? (branchOpt.getAttribute('data-name') || branchOpt.text) : undefined,
+      vac_code: branchSel.value || undefined,
+      leaves_requested: Number(document.getElementById('reqLeaves').value) || 25,
+      request_date: document.getElementById('reqDate').value || undefined,
+      reason: document.getElementById('reqReason').value.trim() || undefined,
+    };
+    if (!body.member_ref) throw new Error('Member ref required');
+    if (!body.branch_code) throw new Error('Bank branch required');
+    var r = await DigiFyntekAPI.request('/api/instruments/requests', {
+      method: 'POST', body: JSON.stringify(body)
+    });
+    msg.textContent = 'Created ' + r.request_no;
+    msg.style.color = '#059669';
+    closeReqDrawer();
+    loadRequests();
+  } catch (e) {
+    msg.textContent = e.message;
+    msg.style.color = '#e11d48';
+  }
+}
+
+async function reviewReq(id, action) {
+  var notes = action === 'reject' ? prompt('Rejection notes') : (prompt('Approval notes (optional)') || '');
+  if (action === 'reject' && notes === null) return;
+  try {
+    await DigiFyntekAPI.request('/api/instruments/requests/' + id + '/review', {
+      method: 'POST', body: JSON.stringify({ action: action, review_notes: notes })
+    });
+    loadRequests();
+  } catch (e) { alert(e.message); }
+}
+
+async function issueFromReq(id) {
+  if (!confirm('Issue cheque book from this request?')) return;
+  try {
+    var r = await DigiFyntekAPI.request('/api/instruments/requests/' + id + '/issue', {
+      method: 'POST', body: JSON.stringify({})
+    });
+    alert('Issued book ' + r.book_no + ' (' + r.total_leaves + ' leaves)');
+    loadRequests();
+    loadSummary();
+    loadBooks();
+  } catch (e) { alert(e.message); }
+}
+
+
+async function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('bg').classList.add('open');
+  document.getElementById('issueDate').value = new Date().toISOString().slice(0,10);
+  loadBranches('issBranch');
+  var sel = document.getElementById('issBranch');
+  if (sel && sel.options.length <= 1) {
+    try {
+      var rows = await DigiFyntekAPI.request('/api/instruments/branches');
+      sel.innerHTML = '<option value="">Select branch…</option>' +
+        rows.map(function (b) {
+          return '<option value="' + (b.code||'') + '" data-name="' + (b.name||'').replace(/"/g,'') + '">' +
+            (b.label || b.code + ' — ' + b.name) + '</option>';
+        }).join('');
+    } catch (_) {}
+  }
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('bg').classList.remove('open');
+}
+
+async function loadSummary() {
+  try {
+    const s = await DigiFyntekAPI.request('/api/instruments/summary');
+    document.getElementById('kBooks').textContent = s.books;
+    document.getElementById('kAvail').textContent = s.available;
+    document.getElementById('kUsed').textContent = (s.used||0) + (s.cleared||0);
+    document.getElementById('kStop').textContent = (s.stopped||0) + (s.bounced||0);
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+async function loadBooks() {
+  try {
+    const p = new URLSearchParams();
+    const q = document.getElementById('bq').value.trim();
+    const st = document.getElementById('bStatus').value;
+    if (q) p.set('q', q);
+    if (st) p.set('status', st);
+    const rows = await DigiFyntekAPI.request('/api/instruments/books' + (p.toString() ? '?' + p : ''));
+    const tb = document.getElementById('tbBooks');
+    if (!rows.length) tb.innerHTML = '<tr><td colspan="8">No chequebooks</td></tr>';
+    else tb.innerHTML = rows.map(r =>
+      `<tr>
+        <td class="mono">${r.book_no}</td>
+        <td>${r.member_name||'—'}<br><span style="font-size:11px;color:var(--ink-3)">${r.member_ref||''}</span></td>
+        <td class="mono">${r.account_no||'—'}</td>
+        <td>${r.total_leaves}</td>
+        <td class="mono">${r.leaf_start}–${r.leaf_end}</td>
+        <td>${r.issue_date?String(r.issue_date).slice(0,10):'—'}</td>
+        <td><span class="tag ${stTag[r.status]||'tag-n'}">${r.status}</span></td>
+        <td>
+          <button class="btn" style="height:28px;font-size:11px" onclick="viewLeaves(${r.id})">Leaves</button>
+          ${r.status==='active'?`<button class="btn btn-d" style="height:28px;font-size:11px" onclick="cancelBook(${r.id})">Cancel</button>`:''}
+        </td>
+      </tr>`
+    ).join('');
+  } catch (e) {
+    document.getElementById('tbBooks').innerHTML = `<tr><td colspan="8" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+
+async function loadLeaves() {
+  try {
+    const p = new URLSearchParams();
+    const q = document.getElementById('lq').value.trim();
+    const st = document.getElementById('lStatus').value;
+    const bid = document.getElementById('lBook').value.trim();
+    if (q) p.set('q', q);
+    if (st) p.set('status', st);
+    if (bid) p.set('book_id', bid);
+    const rows = await DigiFyntekAPI.request('/api/instruments/leaves' + (p.toString() ? '?' + p : ''));
+    const tb = document.getElementById('tbLeaves');
+    if (!rows.length) tb.innerHTML = '<tr><td colspan="9">No leaves</td></tr>';
+    else tb.innerHTML = rows.map(r => {
+      const acts = [];
+      if (r.status === 'available' || r.status === 'issued') {
+        acts.push(`<button class="btn" style="height:28px;font-size:11px" onclick="markUsed(${r.id})">Use</button>`);
+        acts.push(`<button class="btn btn-d" style="height:28px;font-size:11px" onclick="stopChq(${r.id})">Stop</button>`);
+      }
+      if (r.status === 'used') {
+        acts.push(`<button class="btn" style="height:28px;font-size:11px" onclick="patchLeaf(${r.id},{status:'cleared'})">Clear</button>`);
+        acts.push(`<button class="btn btn-d" style="height:28px;font-size:11px" onclick="patchLeaf(${r.id},{status:'bounced'})">Bounce</button>`);
+      }
+      return `<tr>
+        <td class="mono">${r.cheque_no}</td>
+        <td class="mono">${r.book_no||''}</td>
+        <td>${r.member_name||r.member_ref||'—'}</td>
+        <td>${r.payee_name||'—'}</td>
+        <td class="mono">${r.amount!=null?DigiFyntekAPI.fmtPKR(r.amount):'—'}</td>
+        <td><span class="tag ${stTag[r.status]||'tag-n'}">${r.status}</span></td>
+        <td>${acts.join(' ')||'—'}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('tbLeaves').innerHTML = `<tr><td colspan="9" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+
+function viewLeaves(bookId) {
+  document.getElementById('lBook').value = bookId;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.tab')[1].classList.add('on');
+  document.getElementById('panel-books').hidden = true;
+  document.getElementById('panel-leaves').hidden = false;
+  loadLeaves();
+}
+
+async function issueBook() {
+  const msg = document.getElementById('issueMsg');
+  msg.textContent = 'Issuing…';
+  try {
+    const body = {
+      book_no: document.getElementById('bookNo').value.trim() || undefined,
+      member_ref: document.getElementById('memberRef').value.trim() || undefined,
+      member_name: document.getElementById('memberName').value.trim() || undefined,
+      account_no: document.getElementById('accountNo').value.trim() || undefined,
+      branch_code: (document.getElementById('issBranch') && document.getElementById('issBranch').value) || undefined,
+      bank_branch: (function(){ var s=document.getElementById('issBranch'); if(!s||!s.value) return undefined; var o=s.options[s.selectedIndex]; return o.getAttribute('data-name')||o.text; })(),
+      vac_code: (document.getElementById('issBranch') && document.getElementById('issBranch').value) || undefined,
+      leaf_start: Number(document.getElementById('leafStart').value),
+      leaf_end: Number(document.getElementById('leafEnd').value),
+      cheque_prefix: document.getElementById('prefix').value.trim() || undefined,
+      issue_date: document.getElementById('issueDate').value || undefined,
+      notes: document.getElementById('notes').value.trim() || undefined,
+    };
+    const r = await DigiFyntekAPI.request('/api/instruments/books', { method:'POST', body: JSON.stringify(body) });
+    msg.textContent = 'Issued ' + r.book_no + ' (' + r.total_leaves + ' leaves)';
+    msg.style.color = '#059669';
+    closeDrawer();
+    loadSummary();
+    loadBooks();
+  } catch (e) {
+    msg.textContent = e.message;
+    msg.style.color = '#e11d48';
+  }
+}
+
+async function patchLeaf(id, body) {
+  try {
+    await DigiFyntekAPI.request('/api/instruments/leaves/' + id, { method:'PATCH', body: JSON.stringify(body) });
+    loadLeaves();
+    loadSummary();
+  } catch (e) { alert(e.message); }
+}
+
+async function markUsed(id) {
+  const payee = prompt('Payee name');
+  if (payee === null) return;
+  const amount = prompt('Amount (PKR)', '0');
+  if (amount === null) return;
+  await patchLeaf(id, { status: 'used', payee_name: payee, amount: Number(amount) });
+}
+
+async function stopChq(id) {
+  const reason = prompt('Stop reason', 'Stop payment');
+  if (reason === null) return;
+  await patchLeaf(id, { status: 'stopped', stop_reason: reason });
+}
+
+async function cancelBook(id) {
+  if (!confirm('Cancel this chequebook and unused leaves?')) return;
+  try {
+    await DigiFyntekAPI.request('/api/instruments/books/' + id + '/cancel', { method:'POST', body:'{}' });
+    loadBooks();
+    loadSummary();
+  } catch (e) { alert(e.message); }
+}
+
+loadSummary();
+loadBooks();
+</script>
+</body>
+</html>

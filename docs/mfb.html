@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — MFB Prudential</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f6f7f9;--ink:#111827;--ink-2:#4b5563;--brand:#0e7490;--brand-deep:#164e63;--border:#e5e7eb;--side:250px;--top:60px;--font:Inter,system-ui,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font);background:var(--bg);color:var(--ink)}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--side);background:var(--brand-deep);color:#ecfeff;position:fixed;inset:0 auto 0 0}
+    .side-brand{height:var(--top);display:flex;align-items:center;padding:0 18px;font-weight:700}
+    .nav{padding:14px 10px}.nav a{display:block;padding:8px 11px;border-radius:9px;color:rgba(236,254,255,.7);text-decoration:none;font-size:13px}
+    .nav a.active,.nav a:hover{background:var(--brand);color:#fff}
+    .main{margin-left:var(--side);flex:1}.topbar{height:var(--top);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;font-weight:600}
+    .content{padding:24px}h1{font-size:22px;margin-bottom:4px}.sub{color:var(--ink-2);font-size:14px;margin-bottom:16px}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+    .kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}.kpi .l{font-size:11px;color:var(--ink-2)}.kpi .v{font-size:17px;font-weight:700;margin-top:4px}
+    .kpi .ok{color:#047857}.kpi .bad{color:#b91c1c}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .tab{height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+    .tab.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+    .card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}th{background:#f0f2f5;font-size:11px;text-transform:uppercase;color:var(--ink-2)}
+    .tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:12px}
+    input,select{height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit}
+    .btn{height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--border);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px}
+    .btn-p{background:var(--brand);color:#fff;border:none}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+    .tag-g{background:#d1fae5;color:#047857}.tag-a{background:#fef3c7;color:#b45309}.tag-r{background:#fee2e2;color:#b91c1c}.tag-n{background:#f3f4f6;color:#4b5563}
+    .mono{font-variant-numeric:tabular-nums}.note{font-size:12px;color:var(--ink-2);padding:12px 14px;background:#f8fafc;border-bottom:1px solid var(--border)}
+    pre{background:#0f172a;color:#e2e8f0;padding:14px;font-size:12px;overflow:auto;max-height:420px;margin:0}
+    @media(max-width:900px){.kpis{grid-template-columns:1fr}.sidebar{display:none}.main{margin-left:0}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand">DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">Asset quality & capital</header>
+    <div class="content">
+      <h1>Microfinance Bank toolkit</h1>
+      <p class="sub">Classification · specific/general provisioning · MCR · CAR 15% · regulatory pack — aligned with SBP MFB PR concepts.</p>
+
+      <div class="kpis">
+        <div class="kpi"><div class="l">Gross advances</div><div class="v" id="kGross">—</div></div>
+        <div class="kpi"><div class="l">NPL ratio (strict)</div><div class="v" id="kNpl">—</div></div>
+        <div class="kpi"><div class="l">Provision coverage</div><div class="v" id="kCov">—</div></div>
+        <div class="kpi"><div class="l">MCR (net of losses)</div><div class="v" id="kMcr">—</div></div>
+        <div class="kpi"><div class="l">CAR %</div><div class="v" id="kCar">—</div></div>
+        <div class="kpi"><div class="l">Specific + general prov.</div><div class="v" id="kProv">—</div></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab on" onclick="tab(this,'dash')">Dashboard</button>
+        <button class="tab" onclick="tab(this,'loans')">Loan portfolio</button>
+        <button class="tab" onclick="tab(this,'cap')">Capital / MCR / CAR</button>
+        <button class="tab" onclick="tab(this,'pack')">Regulatory pack</button>
+      </div>
+
+      <div id="p-dash" class="panel">
+        <div class="card">
+          <div class="note">Default general-loan bands: Performing &lt;30 · OAEM 30–59 · Substandard 60–89 · Doubtful 90–179 · Loss 180+. Housing bands differ. Production: lock to current SBP MFB PR annexure.</div>
+          <table>
+            <thead><tr><th>Classification</th><th>Accounts</th><th>Principal</th><th>Specific provision</th></tr></thead>
+            <tbody id="tbB"><tr><td colspan="4">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="p-loans" class="panel" hidden>
+        <div class="card">
+          <div class="tools">
+            <input id="lAcc" placeholder="Account # *" />
+            <input id="lName" placeholder="Borrower" />
+            <input id="lOs" type="number" placeholder="Outstanding principal" />
+            <input id="lDpd" type="number" placeholder="Days past due" value="0" />
+            <select id="lCat"><option value="general">General</option><option value="housing">Housing</option><option value="microenterprise">Microenterprise</option><option value="agri">Agri</option></select>
+            <select id="lSec"><option value="none">No security</option><option value="cash">Cash</option><option value="gold">Gold</option><option value="mortgage">Mortgage</option></select>
+            <input id="lSecV" type="number" placeholder="Security value" />
+            <button class="btn btn-p" onclick="saveLoan()">Save / classify</button>
+            <button class="btn" onclick="reclass()">Reclassify all</button>
+            <button class="btn" onclick="impLegacy()">Import legacy loans</button>
+          </div>
+          <table>
+            <thead><tr><th>Account</th><th>Borrower</th><th>DPD</th><th>Class</th><th>Outstanding</th><th>Specific prov.</th></tr></thead>
+            <tbody id="tbL"><tr><td colspan="6">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="p-cap" class="panel" hidden>
+        <div class="card">
+          <div class="note">Update paid-up capital, losses, RWA. CAR = eligible capital / RWA. MCR target defaults to Rs 2 billion (phased MFB PR).</div>
+          <div class="tools">
+            <select id="cLic"><option value="provincial">Provincial</option><option value="national">National</option></select>
+            <input id="cPaid" type="number" placeholder="Paid-up capital" />
+            <input id="cLoss" type="number" placeholder="Accumulated losses" />
+            <input id="cRwa" type="number" placeholder="Total RWA" />
+            <input id="cRes" type="number" placeholder="Reserve fund" />
+            <input id="cGen" type="number" step="0.01" placeholder="General prov %" value="1" />
+            <button class="btn btn-p" onclick="saveCap()">Save capital config</button>
+          </div>
+          <div id="capMsg" style="padding:12px;font-size:13px;color:var(--ink-2)"></div>
+        </div>
+      </div>
+
+      <div id="p-pack" class="panel" hidden>
+        <div class="card">
+          <div class="tools"><button class="btn btn-p" onclick="loadPack()">Generate regulatory pack (JSON)</button></div>
+          <pre id="packOut">Click generate…</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+function tab(btn, id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  ['dash','loans','cap','pack'].forEach(p => { document.getElementById('p-'+p).hidden = p !== id; });
+}
+function money(n) { return DigiFyntekAPI.fmtPKR ? DigiFyntekAPI.fmtPKR(n) : n; }
+const st = { performing:'tag-g', oaem:'tag-a', substandard:'tag-a', doubtful:'tag-r', loss:'tag-r' };
+
+async function loadSum() {
+  try {
+    const s = await DigiFyntekAPI.mfbSummary();
+    const p = s.portfolio, c = s.capital;
+    document.getElementById('kGross').textContent = money(p.gross_advances);
+    document.getElementById('kNpl').textContent = p.npl_ratio_pct + '%';
+    document.getElementById('kCov').textContent = p.provision_coverage_pct + '%';
+    document.getElementById('kMcr').innerHTML = money(c.mcr_net_of_losses) +
+      (c.mcr_ok ? ' <span class="ok">✓</span>' : ' <span class="bad">gap '+money(c.mcr_gap)+'</span>');
+    document.getElementById('kCar').innerHTML = c.car_pct + '%' +
+      (c.car_ok ? ' <span class="ok">≥'+c.car_minimum_pct+'%</span>' : ' <span class="bad">&lt;'+c.car_minimum_pct+'%</span>');
+    document.getElementById('kProv').textContent = money(p.specific_provision + p.general_provision);
+    const tb = document.getElementById('tbB');
+    const buckets = p.buckets || [];
+    tb.innerHTML = buckets.length ? buckets.map(b =>
+      `<tr><td><span class="tag ${st[b.classification]||'tag-n'}">${b.classification}</span></td>
+       <td>${b.accounts}</td><td class="mono">${money(b.principal)}</td>
+       <td class="mono">${money(b.specific_prov)}</td></tr>`).join('') : '<tr><td colspan="4">No portfolio data — add loans</td></tr>';
+  } catch (e) {
+    document.getElementById('tbB').innerHTML = `<tr><td colspan="4" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+async function loadLoans() {
+  try {
+    const rows = await DigiFyntekAPI.mfbLoans();
+    document.getElementById('tbL').innerHTML = rows.length ? rows.map(r =>
+      `<tr><td class="mono">${r.account_no}</td><td>${r.borrower_name||'—'}</td><td>${r.days_past_due}</td>
+       <td><span class="tag ${st[r.classification]||'tag-n'}">${r.classification}</span></td>
+       <td class="mono">${money(r.outstanding_principal)}</td>
+       <td class="mono">${money(r.specific_provision)}</td></tr>`).join('') : '<tr><td colspan="6">No loans</td></tr>';
+  } catch (e) {
+    document.getElementById('tbL').innerHTML = `<tr><td colspan="6" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+async function saveLoan() {
+  try {
+    await DigiFyntekAPI.mfbUpsertLoan({
+      account_no: document.getElementById('lAcc').value.trim(),
+      borrower_name: document.getElementById('lName').value.trim() || undefined,
+      outstanding_principal: Number(document.getElementById('lOs').value) || 0,
+      days_past_due: Number(document.getElementById('lDpd').value) || 0,
+      product_category: document.getElementById('lCat').value,
+      security_type: document.getElementById('lSec').value,
+      security_value: Number(document.getElementById('lSecV').value) || 0,
+    });
+    loadLoans(); loadSum();
+  } catch (e) { alert(e.message); }
+}
+async function reclass() {
+  try {
+    const r = await DigiFyntekAPI.mfbReclassify();
+    alert('Reclassified ' + r.reclassified);
+    loadLoans(); loadSum();
+  } catch (e) { alert(e.message); }
+}
+async function impLegacy() {
+  try {
+    const r = await DigiFyntekAPI.mfbImportLegacy();
+    alert('Imported ' + r.imported);
+    loadLoans(); loadSum();
+  } catch (e) { alert(e.message); }
+}
+async function loadCapForm() {
+  try {
+    const c = await DigiFyntekAPI.mfbConfig();
+    document.getElementById('cLic').value = c.license_type || 'provincial';
+    document.getElementById('cPaid').value = c.paid_up_capital || '';
+    document.getElementById('cLoss').value = c.accumulated_losses || '';
+    document.getElementById('cRwa').value = c.total_rwa || '';
+    document.getElementById('cRes').value = c.reserve_fund || '';
+    document.getElementById('cGen').value = c.general_provision_rate || 1;
+  } catch (_) {}
+}
+async function saveCap() {
+  try {
+    const body = {
+      license_type: document.getElementById('cLic').value,
+      paid_up_capital: Number(document.getElementById('cPaid').value) || 0,
+      accumulated_losses: Number(document.getElementById('cLoss').value) || 0,
+      total_rwa: Number(document.getElementById('cRwa').value) || 0,
+      reserve_fund: Number(document.getElementById('cRes').value) || 0,
+      general_provision_rate: Number(document.getElementById('cGen').value) || 1,
+    };
+    body.eligible_capital = Math.max(0, body.paid_up_capital - body.accumulated_losses);
+    const c = await DigiFyntekAPI.mfbUpdateConfig(body);
+    document.getElementById('capMsg').textContent =
+      'Saved · MCR ' + money(c.paid_up_capital - c.accumulated_losses) + ' · CAR ' + c.car_pct + '%';
+    loadSum();
+  } catch (e) { alert(e.message); }
+}
+async function loadPack() {
+  try {
+    const p = await DigiFyntekAPI.mfbPack();
+    document.getElementById('packOut').textContent = JSON.stringify(p, null, 2);
+  } catch (e) {
+    document.getElementById('packOut').textContent = e.message;
+  }
+}
+loadSum(); loadLoans(); loadCapForm();
+</script>
+</body>
+</html>

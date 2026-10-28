@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Islamic products</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f6f7f9;--surface:#fff;--surface-2:#f0f2f5;--ink:#111827;--ink-2:#4b5563;--ink-3:#9ca3af;--brand:#0e7490;--brand-bright:#06b6d4;--brand-soft:#ecfeff;--brand-deep:#164e63;--green:#059669;--green-soft:#d1fae5;--amber:#d97706;--amber-soft:#fef3c7;--rose:#e11d48;--blue:#2563eb;--blue-soft:#dbeafe;--border:#e5e7eb;--shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.03);--r:12px;--r-sm:8px;--font:'Inter',system-ui,sans-serif;--serif:'Source Serif 4',Georgia,serif;--side:250px;--top:60px}
+    *{margin:0;padding:0;box-sizing:border-box}body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.5}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--side);background:var(--brand-deep);color:#ecfeff;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:40}
+    .side-brand{height:var(--top);display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .side-brand .m{width:32px;height:32px;background:var(--brand-bright);border-radius:9px;display:flex;align-items:center;justify-content:center}.side-brand .m svg{width:16px;height:16px;color:#fff}.side-brand .n{font-size:16px;font-weight:700}
+    .nav{flex:1;overflow-y:auto;padding:14px 10px}.sec{margin-bottom:14px}.sec-t{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;opacity:.4;padding:0 10px;margin-bottom:5px}
+    .nav a{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:9px;color:rgba(236,254,255,.65);text-decoration:none;font-size:13px;font-weight:500}
+    .nav a:hover{background:rgba(255,255,255,.06);color:#fff}.nav a.active{background:var(--brand);color:#fff}.nav a svg{width:15px;height:15px;opacity:.8}
+    .main{margin-left:var(--side);flex:1}.topbar{height:var(--top);background:rgba(246,247,249,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:30}
+    .top-title{font-size:15px;font-weight:600}.av{width:34px;height:34px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+    .content{padding:24px}.page-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:16px;flex-wrap:wrap}
+    .page-head h1{font-family:var(--serif);font-size:24px;font-weight:500;margin-bottom:4px}.page-head p{font-size:14px;color:var(--ink-2)}
+    .btn{height:36px;padding:0 14px;border-radius:var(--r-sm);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:none;display:inline-flex;align-items:center}
+    .btn-p{background:var(--brand);color:#fff}.btn-s{background:var(--surface);border:1px solid var(--border);color:var(--ink)}
+    .note{background:var(--brand-soft);border:1px solid #a5f3fc;border-radius:var(--r);padding:12px 14px;font-size:12px;color:#0e7490;margin-bottom:20px;line-height:1.5}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+    .prod{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+    .prod h3{font-size:14px;font-weight:600;margin-bottom:6px}.prod .ar{font-size:11px;color:var(--brand);font-weight:500;margin-bottom:8px}
+    .prod p{font-size:12px;color:var(--ink-2);line-height:1.45;margin-bottom:10px}
+    .prod ul{font-size:11px;color:var(--ink-3);padding-left:16px;line-height:1.5}
+    .tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:999px;display:inline-block;margin-bottom:8px}
+    .tag-g{background:var(--green-soft);color:var(--green)}.tag-a{background:var(--amber-soft);color:var(--amber)}.tag-b{background:var(--blue-soft);color:var(--blue)}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+    .card-h{padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{text-align:left;padding:10px 14px;background:var(--surface-2);color:var(--ink-2);font-weight:600;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+    td{padding:12px 14px;border-bottom:1px solid var(--border)}tr:last-child td{border-bottom:none}
+    .mono{font-family:ui-monospace,monospace;font-size:12px}
+    @media(max-width:1000px){.grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:800px){.grid{grid-template-columns:1fr}.sidebar{transform:translateX(-100%)}.main{margin-left:0}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-brand"><div class="m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></svg></div><div class="n">DigiFyntek</div></div>
+    <nav class="nav">
+      <div class="sec"><div class="sec-t">Overview</div>
+        <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a>
+        <a href="setup.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2"/></svg> Institution setup</a>
+      </div>
+      <div class="sec"><div class="sec-t">Credit &amp; risk</div>
+        <a href="loans.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Loans &amp; PAR</a>
+        <a class="active" href="islamic.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Islamic products</a>
+        <a href="collateral.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Collateral</a>
+        <a href="instruments.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Instruments</a>
+      </div>
+      <div class="sec"><div class="sec-t">CRM</div>
+        <a href="members.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Members</a>
+        <a href="member360.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Member 360°</a>
+      </div>
+      <div class="sec"><div class="sec-t">Compliance</div>
+        <a href="compliance.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Cooperative law</a>
+      </div>
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="topbar"><div class="top-title">Islamic microfinance &amp; cooperative products</div><div class="av">SA</div></header>
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>Islamic products</h1>
+          <p>Sharīʿah modes for VACs — no ribā. Enable via Institution setup → Finance mode = Islamic / Hybrid.</p>
+        </div>
+        <div style="display:flex;gap:8px"><a class="btn btn-s" href="islamic-ops.html" style="text-decoration:none;display:inline-flex;align-items:center">Ops: Salam · Ijārah · Qard</a><a class="btn btn-p" href="murabaha.html" style="text-decoration:none;display:inline-flex;align-items:center">Murābaḥah flow</a></div>
+      </div>
+      <div class="note">
+        <strong>Design:</strong> Same Members / Credit backbone. Fields use <em>cost + profit</em>, <em>rent</em>, or <em>0% qard</em> — not interest rate. Asset must be identified for Murābaḥah / Ijārah. Optional Sharīʿah template sign-off. SBP IsMF guidelines apply if licensed MFB; primary societies stay under Registrar + Islamic bye-laws.
+      </div>
+
+      <div class="grid">
+        <div class="prod">
+          <span class="tag tag-g">VAC core</span>
+          <h3>Input Murābaḥah</h3>
+          <div class="ar">مرابحة</div>
+          <p>Society buys seed/fertilizer/pesticide and sells to member at cost + disclosed profit, payable in installments.</p>
+          <ul>
+            <li>Asset must be owned then sold</li>
+            <li>Price fixed upfront</li>
+            <li>Crop-season schedule</li>
+          </ul>
+        </div>
+        <div class="prod">
+          <span class="tag tag-g">Agri</span>
+          <h3>Crop Salam</h3>
+          <div class="ar">سلم</div>
+          <p>Advance payment for defined produce delivered at harvest. Classic agri finance mode.</p>
+          <ul>
+            <li>Quantity, quality, delivery date fixed</li>
+            <li>Full price paid in advance</li>
+            <li>Delivery to society / designated place</li>
+          </ul>
+        </div>
+        <div class="prod">
+          <span class="tag tag-b">Asset</span>
+          <h3>Equipment Ijārah</h3>
+          <div class="ar">إجارة</div>
+          <p>Lease of tube-well, tractor, tools. Rent over term; optional transfer of ownership (muntahia bittamlīk).</p>
+          <ul>
+            <li>Society owns asset during lease</li>
+            <li>Rent ≠ interest</li>
+            <li>Maintenance terms clear</li>
+          </ul>
+        </div>
+        <div class="prod">
+          <span class="tag tag-a">Social</span>
+          <h3>Qard Ḥasan</h3>
+          <div class="ar">قرض حسن</div>
+          <p>Interest-free benevolent loan. Only actual admin fee (capped). Akhuwat-style for emergency / ultra-poor.</p>
+          <ul>
+            <li>0% profit</li>
+            <li>Guarantors common</li>
+            <li>Fee ≠ hidden interest</li>
+          </ul>
+        </div>
+        <div class="prod">
+          <span class="tag tag-b">Savings</span>
+          <h3>Muḍārabah savings</h3>
+          <div class="ar">مضاربة</div>
+          <p>Member capital; society as muḍārib invests in ḥalāl activity. Profit by weightage; loss on capital (unless negligence).</p>
+          <ul>
+            <li>No fixed return promise</li>
+            <li>Declared profit periods</li>
+            <li>Pool segregation</li>
+          </ul>
+        </div>
+        <div class="prod">
+          <span class="tag tag-g">Partnership</span>
+          <h3>Diminishing Mushārakah</h3>
+          <div class="ar">مشاركة متناقصة</div>
+          <p>Shared ownership of asset; member buys society’s share over time. Used for larger equipment / micro-housing.</p>
+          <ul>
+            <li>Profit/rent on outstanding share</li>
+            <li>Schedule of unit purchase</li>
+            <li>Clear exit</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Active Islamic facilities (sample)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Facility #</th>
+              <th>Mode</th>
+              <th>Member</th>
+              <th>Underlying</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">IM-2026-0012</td>
+              <td>Murābaḥah</td>
+              <td>Hasnain Malik</td>
+              <td>DAP + urea (Kharif)</td>
+              <td>PKR 45,000</td>
+              <td>Active</td>
+            </tr>
+            <tr>
+              <td class="mono">SL-2026-0004</td>
+              <td>Salam</td>
+              <td>Zain Ali</td>
+              <td>Wheat 20 maund</td>
+              <td>PKR 80,000</td>
+              <td>Pending delivery</td>
+            </tr>
+            <tr>
+              <td class="mono">QH-2026-0088</td>
+              <td>Qard Ḥasan</td>
+              <td>Fatima Bibi</td>
+              <td>Emergency enterprise</td>
+              <td>PKR 25,000</td>
+              <td>Active · 0% profit</td>
+            </tr>
+            <tr>
+              <td class="mono">IJ-2025-0009</td>
+              <td>Ijārah</td>
+              <td>Arslan Khan</td>
+              <td>Tube-well motor</td>
+              <td>PKR 120,000</td>
+              <td>Lease active</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Field mapping (vs conventional loan)</div>
+        <table>
+          <thead><tr><th>Conventional</th><th>Islamic equivalent</th></tr></thead>
+          <tbody>
+            <tr><td>Interest rate %</td><td>Profit margin % (Murābaḥah) / Rent (Ijārah) / 0% (Qard)</td></tr>
+            <tr><td>Cash disbursement</td><td>Asset purchase then sale / lease; or qard cash</td></tr>
+            <tr><td>Penalty interest</td><td>Actual cost only or charity — not income to society (policy)</td></tr>
+            <tr><td>Loan agreement</td><td>Mode-specific contract + asset schedule</td></tr>
+            <tr><td>Savings interest</td><td>Muḍārabah profit share by weightage</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+</body>
+</html>

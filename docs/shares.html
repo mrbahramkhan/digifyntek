@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Shares</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f6f7f9;--surface:#fff;--ink:#111827;--ink-2:#4b5563;--brand:#0e7490;--brand-deep:#164e63;--border:#e5e7eb;--green:#059669;--side:250px;--top:60px;--font:Inter,system-ui,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font);background:var(--bg);color:var(--ink)}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--side);background:var(--brand-deep);color:#ecfeff;position:fixed;inset:0 auto 0 0;padding:0}
+    .side-brand{height:var(--top);display:flex;align-items:center;padding:0 18px;font-weight:700;border-bottom:1px solid rgba(255,255,255,.08)}
+    .nav{padding:14px 10px}.sec-t{font-size:10px;opacity:.4;text-transform:uppercase;padding:0 10px;margin:10px 0 4px}
+    .nav a{display:block;padding:8px 11px;border-radius:9px;color:rgba(236,254,255,.7);text-decoration:none;font-size:13px}
+    .nav a.active,.nav a:hover{background:var(--brand);color:#fff}
+    .main{margin-left:var(--side);flex:1}.topbar{height:var(--top);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;font-weight:600;background:rgba(246,247,249,.9)}
+    .content{padding:24px}h1{font-size:22px;margin-bottom:4px}.sub{color:var(--ink-2);font-size:14px;margin-bottom:16px}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+    .kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}.kpi .l{font-size:11px;color:var(--ink-2)}.kpi .v{font-size:20px;font-weight:700;margin-top:4px}
+    .card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}th{background:#f0f2f5;font-size:11px;text-transform:uppercase;color:var(--ink-2)}
+    .btn{height:36px;padding:0 14px;border-radius:8px;border:none;font-weight:600;cursor:pointer;font-family:inherit}
+    .btn-p{background:var(--brand);color:#fff}.btn-s{background:#fff;border:1px solid var(--border)}
+    .fg{margin-bottom:10px}label{display:block;font-size:12px;margin-bottom:4px;color:var(--ink-2)}input{width:100%;height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px}
+    .layout{display:grid;grid-template-columns:1.4fr .6fr;gap:16px}@media(max-width:900px){.layout,.kpis{grid-template-columns:1fr}.sidebar{display:none}.main{margin-left:0}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand">DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar"><span>Share capital</span></header>
+    <div class="content">
+      <h1>Member shares</h1>
+      <p class="sub">Folios, face value, capital for MCL checks.</p>
+      <div class="kpis">
+        <div class="kpi"><div class="l">Active folios</div><div class="v" id="kFolios">—</div></div>
+        <div class="kpi"><div class="l">Total shares</div><div class="v" id="kShares">—</div></div>
+        <div class="kpi"><div class="l">Share capital</div><div class="v" id="kCap">—</div></div>
+      </div>
+      <div class="layout">
+        <div class="card">
+          <table><thead><tr><th>Folio</th><th>Member</th><th>Shares</th><th>Face</th><th>Capital</th><th>Status</th></tr></thead>
+          <tbody id="tb"><tr><td colspan="6">Loading…</td></tr></tbody></table>
+        </div>
+        <div class="card" style="padding:16px">
+          <strong style="display:block;margin-bottom:12px">Issue shares</strong>
+          <div class="fg"><label>Member ID</label><input id="mid" type="number" /></div>
+          <div class="fg"><label>Shares</label><input id="sh" type="number" value="1" /></div>
+          <div class="fg"><label>Face value</label><input id="fv" type="number" value="1000" /></div>
+          <button class="btn btn-p" style="width:100%" onclick="issue()">Issue</button>
+          <p id="msg" style="font-size:12px;margin-top:8px;color:var(--ink-2)"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+async function load() {
+  try {
+    const [sum, rows] = await Promise.all([
+      DigiFyntekAPI.request('/api/shares/summary'),
+      DigiFyntekAPI.request('/api/shares'),
+    ]);
+    document.getElementById('kFolios').textContent = sum.folios;
+    document.getElementById('kShares').textContent = sum.total_shares;
+    document.getElementById('kCap').textContent = DigiFyntekAPI.fmtPKR(sum.capital);
+    const tb = document.getElementById('tb');
+    if (!rows.length) { tb.innerHTML = '<tr><td colspan="6">No folios</td></tr>'; return; }
+    tb.innerHTML = rows.map(r =>
+      `<tr><td class="mono">${r.folio_no}</td><td>${r.full_name||''}</td><td>${r.shares}</td>
+       <td>${DigiFyntekAPI.fmtPKR(r.face_value)}</td><td>${DigiFyntekAPI.fmtPKR(r.shares*r.face_value)}</td><td>${r.status}</td></tr>`
+    ).join('');
+  } catch (e) {
+    document.getElementById('tb').innerHTML = `<tr><td colspan="6" style="color:#e11d48">${e.message}</td></tr>`;
+  }
+}
+async function issue() {
+  try {
+    await DigiFyntekAPI.request('/api/shares', {
+      method: 'POST',
+      body: JSON.stringify({
+        member_id: Number(document.getElementById('mid').value),
+        shares: Number(document.getElementById('sh').value),
+        face_value: Number(document.getElementById('fv').value),
+      }),
+    });
+    document.getElementById('msg').textContent = 'Issued';
+    load();
+  } catch (e) { document.getElementById('msg').textContent = e.message; }
+}
+load();
+</script>
+</body>
+</html>

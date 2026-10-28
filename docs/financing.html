@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Financing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+  <script>(function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();</script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>Financing</h1>
+      <span class="meta">Disburse · repay · schedule · GL-backed</span>
+    </header>
+    <div class="workspace">
+      <div class="kpis">
+        <div class="kpi"><div class="l">Contracts</div><div class="v" id="kN">—</div></div>
+        <div class="kpi"><div class="l">Active OS</div><div class="v" id="kOs">—</div></div>
+        <div class="kpi"><div class="l">Selected</div><div class="v" id="kSel">—</div></div>
+        <div class="kpi"><div class="l">Status</div><div class="v" id="kSt">—</div></div>
+      </div>
+
+      <div class="split">
+        <div class="panel">
+          <div class="panel-h">Contracts</div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr><th>ID</th><th>Contract</th><th>Customer</th><th>Principal</th><th>OS</th><th>Status</th></tr>
+              </thead>
+              <tbody id="tb"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h">Actions</div>
+          <div class="panel-b">
+            <div class="form-sec" style="margin-top:0">Disburse new</div>
+            <form id="frmDisb">
+              <div class="form-grid">
+                <div class="field"><label>Customer ID *</label><input class="inp" id="d_cust" required /></div>
+                <div class="field"><label>Product</label>
+                  <select class="inp" id="d_prod">
+                    <option value="LON-AGRI">LON-AGRI</option>
+                    <option value="MUR-GOODS">MUR-GOODS</option>
+                  </select>
+                </div>
+                <div class="field"><label>Principal *</label><input class="inp" type="number" step="0.01" id="d_prin" required /></div>
+                <div class="field"><label>Credit account ID</label><input class="inp" id="d_acct" placeholder="optional CASA" /></div>
+                <div class="field"><label>Branch</label><input class="inp" id="d_br" value="001" /></div>
+                <div class="field"><label>Date</label><input class="inp" type="date" id="d_date" /></div>
+              </div>
+              <div class="form-actions"><button type="submit" class="btn btn-p">Disburse</button></div>
+            </form>
+
+            <div class="form-sec">Repay selected</div>
+            <form id="frmRepay">
+              <div class="form-grid">
+                <div class="field"><label>Contract ID *</label><input class="inp" id="r_id" required /></div>
+                <div class="field"><label>Amount *</label><input class="inp" type="number" step="0.01" id="r_amt" required /></div>
+                <div class="field"><label>From account ID</label><input class="inp" id="r_acct" placeholder="optional" /></div>
+                <div class="field"><label>Date</label><input class="inp" type="date" id="r_date" /></div>
+                <div class="field full"><label>Narrative</label><input class="inp" id="r_narr" /></div>
+              </div>
+              <div class="form-actions"><button type="submit" class="btn btn-p">Post repayment</button></div>
+            </form>
+
+            <div class="form-sec">Generate schedule</div>
+            <form id="frmSched">
+              <div class="form-grid">
+                <div class="field"><label>Contract ID *</label><input class="inp" id="s_id" required /></div>
+                <div class="field"><label>Installments *</label><input class="inp" type="number" id="s_n" value="12" min="1" max="360" required /></div>
+                <div class="field"><label>First due date</label><input class="inp" type="date" id="s_due" /></div>
+                <div class="field"><label>Charge / installment</label><input class="inp" type="number" step="0.01" id="s_ch" value="0" /></div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-p">Generate</button>
+                <button type="button" class="btn" id="btnViewSched">View schedule</button>
+              </div>
+            </form>
+            <div id="msg" class="hint"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:12px">
+        <div class="panel-h">Schedule / repayments detail</div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>#</th><th>Due</th><th>Principal</th><th>Charge</th><th>Total</th><th>Paid</th><th>Status</th></tr></thead>
+            <tbody id="tbSched"><tr><td colspan="7" class="empty">Select contract or generate schedule</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+  const today = new Date().toISOString().slice(0, 10);
+  d_date.value = r_date.value = s_due.value = today;
+  let rows = [];
+
+  function fmt(n) {
+    return Number(n || 0).toLocaleString('en-PK', { maximumFractionDigits: 2 });
+  }
+
+  async function load() {
+    rows = await DigiFyntekAPI.request('/api/v1/financing');
+    let os = 0;
+    document.getElementById('tb').innerHTML = rows.length
+      ? rows.map(function (r) {
+          os += Number(r.outstanding) || 0;
+          return (
+            '<tr data-id="' + r.id + '" style="cursor:pointer">' +
+            '<td class="num">' + r.id + '</td>' +
+            '<td class="num">' + r.contract_no + '</td>' +
+            '<td>' + (r.full_name || r.customer_id) + '</td>' +
+            '<td class="num">' + fmt(r.principal) + '</td>' +
+            '<td class="num">' + fmt(r.outstanding) + '</td>' +
+            '<td>' + r.status + '</td></tr>'
+          );
+        }).join('')
+      : '<tr><td colspan="6" class="empty">No contracts</td></tr>';
+    kN.textContent = rows.length;
+    kOs.textContent = fmt(os);
+  }
+
+  async function selectId(id) {
+    r_id.value = s_id.value = id;
+    kSel.textContent = id;
+    try {
+      const d = await DigiFyntekAPI.request('/api/v1/financing/' + id);
+      kSt.textContent = d.status;
+      const sched = d.schedule || [];
+      tbSched.innerHTML = sched.length
+        ? sched.map(function (s) {
+            return (
+              '<tr><td class="num">' + s.installment_no + '</td>' +
+              '<td>' + String(s.due_date).slice(0, 10) + '</td>' +
+              '<td class="num">' + fmt(s.principal_due) + '</td>' +
+              '<td class="num">' + fmt(s.charge_due) + '</td>' +
+              '<td class="num">' + fmt(s.total_due) + '</td>' +
+              '<td class="num">' + fmt(s.principal_paid) + '</td>' +
+              '<td>' + s.status + '</td></tr>'
+            );
+          }).join('')
+        : '<tr><td colspan="7" class="empty">No schedule — generate one</td></tr>';
+    } catch (e) {
+      tbSched.innerHTML = '<tr><td colspan="7" class="empty">' + e.message + '</td></tr>';
+    }
+  }
+
+  document.getElementById('tb').onclick = function (e) {
+    const tr = e.target.closest('tr[data-id]');
+    if (tr) selectId(tr.getAttribute('data-id'));
+  };
+
+  function flash(ok, text) {
+    msg.textContent = text;
+    msg.className = ok ? 'ok' : 'err';
+  }
+
+  frmDisb.onsubmit = async function (e) {
+    e.preventDefault();
+    try {
+      const r = await DigiFyntekAPI.request('/api/v1/financing/disburse', {
+        method: 'POST',
+        body: JSON.stringify({
+          customer_id: Number(d_cust.value),
+          product_code: d_prod.value,
+          principal: Number(d_prin.value),
+          branch_code: d_br.value,
+          credit_account_id: d_acct.value ? Number(d_acct.value) : null,
+          business_date: d_date.value,
+          is_islamic: d_prod.value.indexOf('MUR') === 0,
+        }),
+      });
+      flash(true, 'Disbursed ' + r.contract_no + ' · ' + (r.journal && r.journal.journal_ref));
+      await load();
+      if (r.id) selectId(r.id);
+    } catch (err) {
+      flash(false, err.message);
+    }
+  };
+
+  frmRepay.onsubmit = async function (e) {
+    e.preventDefault();
+    try {
+      const r = await DigiFyntekAPI.request('/api/v1/financing/' + r_id.value + '/repay', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount: Number(r_amt.value),
+          business_date: r_date.value,
+          from_account_id: r_acct.value ? Number(r_acct.value) : null,
+          narrative: r_narr.value,
+        }),
+      });
+      flash(
+        true,
+        'Repaid ' +
+          r.repayment_ref +
+          ' · OS after ' +
+          r.outstanding_after +
+          ' · ' +
+          r.contract_status
+      );
+      await load();
+      selectId(r_id.value);
+    } catch (err) {
+      flash(false, err.message);
+    }
+  };
+
+  frmSched.onsubmit = async function (e) {
+    e.preventDefault();
+    try {
+      const r = await DigiFyntekAPI.request('/api/v1/financing/' + s_id.value + '/schedule', {
+        method: 'POST',
+        body: JSON.stringify({
+          installments: Number(s_n.value),
+          first_due_date: s_due.value,
+          charge_per_installment: Number(s_ch.value) || 0,
+        }),
+      });
+      flash(true, 'Schedule generated · ' + r.installments + ' installments');
+      selectId(s_id.value);
+    } catch (err) {
+      flash(false, err.message);
+    }
+  };
+
+  btnViewSched.onclick = function () {
+    if (s_id.value) selectId(s_id.value);
+  };
+
+  load().catch(function (e) {
+    tb.innerHTML = '<tr><td colspan="6" class="empty">' + e.message + '</td></tr>';
+  });
+})();
+</script>
+</body>
+</html>

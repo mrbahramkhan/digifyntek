@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Loan Portfolio</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+  <script>(function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();</script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-brand"><span class="m">D</span> DigiFyntek</div>
+    <nav class="nav"></nav>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>Loan portfolio</h1>
+      <span class="meta">Credit · disbursement & recovery</span>
+      <div class="spacer"></div>
+      <button type="button" class="btn btn-p" id="btnNew">+ New loan</button>
+    </header>
+    <div class="workspace">
+      <div class="kpis">
+        <div class="kpi"><div class="l">Accounts</div><div class="v" id="kCount">—</div></div>
+        <div class="kpi"><div class="l">Principal</div><div class="v" id="kPrin">—</div></div>
+        <div class="kpi"><div class="l">Outstanding</div><div class="v" id="kOs">—</div></div>
+        <div class="kpi"><div class="l">Selected</div><div class="v" id="kSel">—</div></div>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <div class="panel-h">
+            <span>Loans</span>
+            <div class="spacer"></div>
+            <input class="inp" id="q" placeholder="Search loan / member / CNIC" style="width:240px;height:28px" />
+          </div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>Loan #</th>
+                  <th>Member</th>
+                  <th>Principal</th>
+                  <th>Outstanding</th>
+                  <th>Disbursed</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tb"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h"><span id="formTitle">Loan form</span></div>
+          <div class="panel-b">
+            <form id="frm">
+              <input type="hidden" id="f_id" />
+              <div class="form-sec">Facility</div>
+              <div class="form-grid">
+                <div class="field">
+                  <label>Member ID / code <span class="req">*</span></label>
+                  <input class="inp" id="f_member" required placeholder="Member code" />
+                </div>
+                <div class="field">
+                  <label>Loan number</label>
+                  <input class="inp" id="f_loan" placeholder="Auto if blank" />
+                </div>
+                <div class="field">
+                  <label>Principal (PKR) <span class="req">*</span></label>
+                  <input class="inp" type="number" step="0.01" id="f_prin" required />
+                </div>
+                <div class="field">
+                  <label>Outstanding (PKR)</label>
+                  <input class="inp" type="number" step="0.01" id="f_os" />
+                </div>
+                <div class="field">
+                  <label>Interest / profit rate %</label>
+                  <input class="inp" type="number" step="0.01" id="f_rate" />
+                </div>
+                <div class="field">
+                  <label>Product code</label>
+                  <input class="inp" id="f_prod" placeholder="e.g. AGRI-01" />
+                </div>
+                <div class="field">
+                  <label>Disbursement date</label>
+                  <input class="inp" type="date" id="f_disb" />
+                </div>
+                <div class="field">
+                  <label>Maturity date</label>
+                  <input class="inp" type="date" id="f_mat" />
+                </div>
+                <div class="field">
+                  <label>Branch code</label>
+                  <input class="inp" id="f_branch" />
+                </div>
+                <div class="field">
+                  <label>Status</label>
+                  <select class="inp" id="f_status">
+                    <option value="active">Active</option>
+                    <option value="closed">Closed</option>
+                    <option value="written_off">Written off</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-sec">Notes</div>
+              <div class="form-grid">
+                <div class="field full">
+                  <label>Remarks</label>
+                  <textarea class="inp" id="f_notes" rows="2"></textarea>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn" id="btnReset">Clear</button>
+                <button type="submit" class="btn btn-p">Save loan</button>
+              </div>
+              <div id="msg" class="hint"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+  let rows = [];
+  let selectedId = null;
+  function fmt(n) {
+    if (n == null || n === '') return '—';
+    return Number(n).toLocaleString('en-PK', { maximumFractionDigits: 0 });
+  }
+  function render() {
+    const q = (document.getElementById('q').value || '').toLowerCase();
+    const list = !q ? rows : rows.filter(function (r) {
+      return [r.loan_number, r.full_name, r.cnic, r.member_id, r.id].join(' ').toLowerCase().indexOf(q) >= 0;
+    });
+    const tb = document.getElementById('tb');
+    if (!list.length) {
+      tb.innerHTML = '<tr><td colspan="6" class="empty">No loans</td></tr>';
+    } else {
+      tb.innerHTML = list.map(function (r) {
+        const id = r.id || r.loan_number;
+        return '<tr class="' + (id === selectedId ? 'sel' : '') + '" data-id="' + id + '">' +
+          '<td class="num">' + (r.loan_number || id) + '</td>' +
+          '<td>' + (r.full_name || r.member_id || '—') + '</td>' +
+          '<td class="num">' + fmt(r.principal) + '</td>' +
+          '<td class="num">' + fmt(r.outstanding) + '</td>' +
+          '<td class="muted">' + (r.disbursed_at ? String(r.disbursed_at).slice(0, 10) : '—') + '</td>' +
+          '<td><span class="tag tag-n">' + (r.status || 'active') + '</span></td></tr>';
+      }).join('');
+    }
+    document.getElementById('kCount').textContent = rows.length;
+    var prin = 0, os = 0;
+    rows.forEach(function (r) { prin += Number(r.principal) || 0; os += Number(r.outstanding) || 0; });
+    document.getElementById('kPrin').textContent = fmt(prin);
+    document.getElementById('kOs').textContent = fmt(os);
+    document.getElementById('kSel').textContent = selectedId || '—';
+  }
+  function fill(r) {
+    selectedId = r ? (r.id || r.loan_number) : null;
+    document.getElementById('formTitle').textContent = r ? 'Edit loan' : 'New loan';
+    document.getElementById('f_id').value = r ? (r.id || '') : '';
+    document.getElementById('f_member').value = r ? (r.member_id || '') : '';
+    document.getElementById('f_loan').value = r ? (r.loan_number || '') : '';
+    document.getElementById('f_prin').value = r ? (r.principal ?? '') : '';
+    document.getElementById('f_os').value = r ? (r.outstanding ?? '') : '';
+    document.getElementById('f_rate').value = r ? (r.interest_rate ?? '') : '';
+    document.getElementById('f_prod').value = r ? (r.product_code || '') : '';
+    document.getElementById('f_disb').value = r && r.disbursed_at ? String(r.disbursed_at).slice(0, 10) : '';
+    document.getElementById('f_mat').value = r && r.maturity_date ? String(r.maturity_date).slice(0, 10) : '';
+    document.getElementById('f_branch').value = r ? (r.vac_code || r.branch_code || '') : '';
+    document.getElementById('f_status').value = r ? (r.status || 'active') : 'active';
+    document.getElementById('f_notes').value = r ? (r.notes || '') : '';
+    document.getElementById('msg').textContent = '';
+    render();
+  }
+  async function load() {
+    try {
+      const data = await DigiFyntekAPI.request('/api/loans?limit=500');
+      rows = Array.isArray(data) ? data : (data.items || data.rows || []);
+      render();
+    } catch (e) {
+      document.getElementById('tb').innerHTML = '<tr><td colspan="6" class="empty">' + e.message + '</td></tr>';
+    }
+  }
+  document.getElementById('tb').addEventListener('click', function (e) {
+    const tr = e.target.closest('tr[data-id]');
+    if (!tr) return;
+    const id = tr.getAttribute('data-id');
+    const r = rows.find(function (x) { return String(x.id) === id || String(x.loan_number) === id; });
+    if (r) fill(r);
+  });
+  document.getElementById('q').oninput = render;
+  document.getElementById('btnNew').onclick = function () { fill(null); };
+  document.getElementById('btnReset').onclick = function () { fill(null); };
+  document.getElementById('frm').onsubmit = async function (e) {
+    e.preventDefault();
+    const msg = document.getElementById('msg');
+    const body = {
+      member_id: document.getElementById('f_member').value.trim(),
+      loan_number: document.getElementById('f_loan').value.trim() || undefined,
+      principal: Number(document.getElementById('f_prin').value),
+      outstanding: document.getElementById('f_os').value === '' ? undefined : Number(document.getElementById('f_os').value),
+      interest_rate: document.getElementById('f_rate').value === '' ? undefined : Number(document.getElementById('f_rate').value),
+      product_code: document.getElementById('f_prod').value.trim() || undefined,
+      disbursed_at: document.getElementById('f_disb').value || null,
+      maturity_date: document.getElementById('f_mat').value || null,
+      vac_code: document.getElementById('f_branch').value.trim() || undefined,
+      status: document.getElementById('f_status').value,
+      notes: document.getElementById('f_notes').value.trim() || undefined,
+    };
+    const id = document.getElementById('f_id').value;
+    msg.textContent = 'Saving…';
+    try {
+      if (id) {
+        await DigiFyntekAPI.request('/api/loans/' + encodeURIComponent(id), { method: 'PUT', body: JSON.stringify(body) });
+      } else {
+        await DigiFyntekAPI.request('/api/loans', { method: 'POST', body: JSON.stringify(body) });
+      }
+      msg.textContent = 'Saved.';
+      msg.className = 'ok';
+      await load();
+    } catch (err) {
+      msg.textContent = err.message || 'Save failed (API may be read-only in legacy mode)';
+      msg.className = 'err';
+    }
+  };
+  load();
+})();
+</script>
+</body>
+</html>

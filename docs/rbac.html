@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — RBAC</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+  <script>(function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();</script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>Roles &amp; permissions</h1>
+      <span class="meta">Server-side requirePermission on sensitive APIs</span>
+      <div class="spacer"></div>
+      <button type="button" class="btn" id="btnReload">Refresh</button>
+    </header>
+    <div class="workspace">
+      <div class="kpis">
+        <div class="kpi"><div class="l">Your role</div><div class="v" id="kRole">—</div></div>
+        <div class="kpi"><div class="l">Permissions</div><div class="v" id="kPerms">—</div></div>
+        <div class="kpi"><div class="l">Super</div><div class="v" id="kSuper">—</div></div>
+      </div>
+      <div class="panel" style="margin-bottom:12px">
+        <div class="panel-h">Your permission set</div>
+        <div class="panel-b" id="myPerms" style="font-size:12px;line-height:1.8">Loading…</div>
+      </div>
+      <div class="panel">
+        <div class="panel-h">Role × permission matrix</div>
+        <div class="table-wrap" style="overflow:auto">
+          <table class="data" id="matrixTable">
+            <thead id="thead"><tr><th>Role</th></tr></thead>
+            <tbody id="tb"><tr><td class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="hint" style="margin-top:10px">
+        Sensitive posts (loan disburse/repay, EOD, approvals, ledger post/reverse, teller, KYC decide, payments, TD)
+        are gated by <code>requirePermission</code>. Missing permission → HTTP 403.
+      </p>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+  async function loadMe() {
+    try {
+      var me = await DigiFyntekAPI.request('/api/v1/rbac/me');
+      kRole.textContent = me.role || '—';
+      kPerms.textContent = me.is_super ? 'ALL' : (me.permissions || []).length;
+      kSuper.textContent = me.is_super ? 'yes' : 'no';
+      myPerms.textContent = me.is_super ? '* (full access)' : (me.permissions || []).join(', ');
+    } catch (e) {
+      myPerms.textContent = e.message;
+    }
+  }
+
+  async function loadMatrix() {
+    try {
+      var m = await DigiFyntekAPI.request('/api/v1/rbac/matrix');
+      var perms = m.permissions || [];
+      var roles = m.roles || [];
+      var matrix = m.matrix || {};
+      thead.innerHTML =
+        '<tr><th>Role</th>' +
+        perms.map(function (p) {
+          return '<th title="' + (p.description || '') + '" style="font-size:10px">' + p.perm_code + '</th>';
+        }).join('') +
+        '</tr>';
+      tb.innerHTML = roles
+        .map(function (r) {
+          var code = r.role_code;
+          var list = matrix[code] || [];
+          var all = list.indexOf('*') >= 0;
+          return (
+            '<tr><td><strong>' +
+            code +
+            '</strong></td>' +
+            perms
+              .map(function (p) {
+                var ok = all || list.indexOf(p.perm_code) >= 0;
+                return '<td class="num">' + (ok ? '✓' : '') + '</td>';
+              })
+              .join('') +
+            '</tr>'
+          );
+        })
+        .join('');
+    } catch (e) {
+      tb.innerHTML = '<tr><td class="empty">' + e.message + '</td></tr>';
+    }
+  }
+
+  btnReload.onclick = function () {
+    loadMe();
+    loadMatrix();
+  };
+  loadMe();
+  loadMatrix();
+})();
+</script>
+</body>
+</html>

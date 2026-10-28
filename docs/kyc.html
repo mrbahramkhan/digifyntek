@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — KYC Cases</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+  <script>(function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();</script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>KYC cases</h1>
+      <span class="meta">Onboarding · screening · decision trail</span>
+      <div class="spacer"></div>
+      <select class="inp" id="filter" style="width:140px;height:32px">
+        <option value="">All</option>
+        <option value="open">Open</option>
+        <option value="pending_docs">Pending docs</option>
+        <option value="in_review">In review</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+      </select>
+      <button type="button" class="btn" id="btnReload">Refresh</button>
+    </header>
+    <div class="workspace">
+      <div class="panel" style="margin-bottom:12px;border-color:#67e8f9;background:#ecfeff">
+        <div class="panel-b" style="padding:10px 12px;font-size:12px;color:#0e7490">
+          KYC outcome states: <strong>pending · verified · rejected · unavailable · manual_review</strong>.
+          No automatic NADRA “verified” — screening results are manual until an authorized provider is integrated.
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="panel">
+          <div class="panel-h">Cases</div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr><th>Ref</th><th>Customer</th><th>Type</th><th>Status</th><th>KYC</th><th>Risk</th></tr>
+              </thead>
+              <tbody id="tb"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">Workflow</div>
+          <div class="panel-b">
+            <div class="form-sec" style="margin-top:0">Open case</div>
+            <form id="frmOpen">
+              <div class="form-grid">
+                <div class="field"><label>Customer ID *</label><input class="inp" id="o_cust" required /></div>
+                <div class="field"><label>Type</label>
+                  <select class="inp" id="o_type">
+                    <option value="ONBOARDING">ONBOARDING</option>
+                    <option value="PERIODIC_REVIEW">PERIODIC_REVIEW</option>
+                    <option value="EDD">EDD</option>
+                    <option value="REMEDIATION">REMEDIATION</option>
+                  </select>
+                </div>
+                <div class="field"><label>Risk</label>
+                  <select class="inp" id="o_risk"><option>low</option><option>medium</option><option>high</option></select>
+                </div>
+                <div class="field"><label>Source of funds</label><input class="inp" id="o_sof" /></div>
+                <div class="field full"><label>Purpose of account</label><input class="inp" id="o_purpose" /></div>
+              </div>
+              <div class="form-actions"><button type="submit" class="btn btn-p">Open KYC case</button></div>
+            </form>
+
+            <div class="form-sec">Selected case</div>
+            <div class="form-grid">
+              <div class="field"><label>Case ID</label><input class="inp" id="c_id" /></div>
+              <div class="field"><label>Doc type</label><input class="inp" id="d_type" value="CNIC" /></div>
+              <div class="field full"><label>Doc ref / file</label><input class="inp" id="d_ref" placeholder="e.g. CNIC copy ref" /></div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn" id="btnDoc">Add document</button>
+              <button type="button" class="btn" id="btnReview">Mark in review</button>
+            </div>
+
+            <div class="form-sec">Screening update</div>
+            <div class="form-grid">
+              <div class="field"><label>Screen ID</label><input class="inp" id="sc_id" /></div>
+              <div class="field"><label>Status</label>
+                <select class="inp" id="sc_st">
+                  <option value="clear">clear</option>
+                  <option value="match">match</option>
+                  <option value="manual_review">manual_review</option>
+                  <option value="unavailable">unavailable</option>
+                  <option value="pending">pending</option>
+                </select>
+              </div>
+              <div class="field full"><label>Summary</label><input class="inp" id="sc_sum" /></div>
+            </div>
+            <div class="form-actions"><button type="button" class="btn" id="btnScreen">Update screening</button></div>
+
+            <div class="form-sec">Decision</div>
+            <div class="form-grid">
+              <div class="field"><label>Outcome</label>
+                <select class="inp" id="dec_out">
+                  <option value="verified">verified</option>
+                  <option value="rejected">rejected</option>
+                  <option value="manual_review">manual_review</option>
+                  <option value="unavailable">unavailable</option>
+                </select>
+              </div>
+              <div class="field"><label>Next review</label><input class="inp" type="date" id="dec_next" /></div>
+              <div class="field full"><label>Note</label><input class="inp" id="dec_note" /></div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-p" id="btnApprove">Approve</button>
+              <button type="button" class="btn btn-d" id="btnReject">Reject</button>
+            </div>
+            <div id="msg" class="hint"></div>
+          </div>
+        </div>
+      </div>
+      <pre id="detail" style="display:none;margin-top:12px;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;max-height:280px;overflow:auto"></pre>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+  function tag(s) {
+    var m = {
+      open: 'tag-a', pending_docs: 'tag-a', in_review: 'tag-a', approved: 'tag-g', rejected: 'tag-r',
+      verified: 'tag-g', pending: 'tag-a', clear: 'tag-g', match: 'tag-r', manual_review: 'tag-a'
+    };
+    return '<span class="tag ' + (m[s] || 'tag-n') + '">' + (s || '—') + '</span>';
+  }
+  function flash(ok, t) { msg.textContent = t; msg.className = ok ? 'ok' : 'err'; }
+
+  async function load() {
+    var q = filter.value ? '?status=' + encodeURIComponent(filter.value) : '';
+    try {
+      var rows = await DigiFyntekAPI.request('/api/v1/kyc' + q);
+      tb.innerHTML = rows.length
+        ? rows.map(function (r) {
+            return (
+              '<tr data-id="' + r.id + '" style="cursor:pointer">' +
+              '<td class="num">' + r.case_ref + '</td>' +
+              '<td>' + (r.full_name || r.customer_id) + '</td>' +
+              '<td>' + r.case_type + '</td>' +
+              '<td>' + tag(r.status) + '</td>' +
+              '<td>' + tag(r.kyc_outcome) + '</td>' +
+              '<td>' + r.risk_rating + '</td></tr>'
+            );
+          }).join('')
+        : '<tr><td colspan="6" class="empty">No cases</td></tr>';
+    } catch (e) {
+      tb.innerHTML = '<tr><td colspan="6" class="empty">' + e.message + '</td></tr>';
+    }
+  }
+
+  async function selectCase(id) {
+    c_id.value = id;
+    try {
+      var d = await DigiFyntekAPI.request('/api/v1/kyc/' + id);
+      detail.style.display = 'block';
+      detail.textContent = JSON.stringify(d, null, 2);
+      if (d.screenings && d.screenings[0]) sc_id.value = d.screenings[0].id;
+    } catch (e) {
+      flash(false, e.message);
+    }
+  }
+
+  tb.onclick = function (e) {
+    var tr = e.target.closest('tr[data-id]');
+    if (tr) selectCase(tr.getAttribute('data-id'));
+  };
+
+  frmOpen.onsubmit = async function (e) {
+    e.preventDefault();
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/kyc', {
+        method: 'POST',
+        body: JSON.stringify({
+          customer_id: Number(o_cust.value),
+          case_type: o_type.value,
+          risk_rating: o_risk.value,
+          source_of_funds: o_sof.value,
+          purpose_of_account: o_purpose.value,
+        }),
+      });
+      flash(true, 'Opened ' + r.case_ref);
+      load();
+      selectCase(r.id);
+    } catch (err) {
+      flash(false, err.message);
+    }
+  };
+
+  btnDoc.onclick = async function () {
+    if (!c_id.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/kyc/' + c_id.value + '/documents', {
+        method: 'POST',
+        body: JSON.stringify({ doc_type: d_type.value, doc_ref: d_ref.value }),
+      });
+      flash(true, 'Document added');
+      selectCase(c_id.value);
+      load();
+    } catch (err) {
+      flash(false, err.message);
+    }
+  };
+
+  btnReview.onclick = async function () {
+    if (!c_id.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/kyc/' + c_id.value + '/in-review', { method: 'POST', body: '{}' });
+      flash(true, 'In review');
+      load();
+      selectCase(c_id.value);
+    } catch (err) {
+      flash(false, err.message);
+    }
+  };
+
+  btnScreen.onclick = async function () {
+    if (!sc_id.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/kyc/screening/' + sc_id.value, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: sc_st.value, result_summary: sc_sum.value }),
+      });
+      flash(true, 'Screening updated');
+      if (c_id.value) selectCase(c_id.value);
+    } catch (err) {
+      flash(false, err.message);
+    }
+  };
+
+  async function decide(decision) {
+    if (!c_id.value) return;
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/kyc/' + c_id.value + '/decide', {
+        method: 'POST',
+        body: JSON.stringify({
+          decision: decision,
+          kyc_outcome: dec_out.value,
+          note: dec_note.value,
+          next_review_date: dec_next.value || null,
+        }),
+      });
+      flash(true, decision + ' · outcome ' + r.kyc_outcome);
+      load();
+      selectCase(c_id.value);
+    } catch (err) {
+      flash(false, err.message);
+    }
+  }
+  btnApprove.onclick = function () { decide('approved'); };
+  btnReject.onclick = function () { decide('rejected'); };
+
+  filter.onchange = load;
+  btnReload.onclick = load;
+  load();
+})();
+</script>
+</body>
+</html>

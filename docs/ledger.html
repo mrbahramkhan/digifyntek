@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Ledger</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+  <script>(function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();</script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar"><h1>Journal & trial balance</h1><span class="meta">Double-entry · immutable POSTED</span>
+      <div class="spacer"></div><button type="button" class="btn" id="btnTB">Trial balance</button></header>
+    <div class="workspace">
+      <div class="panel" style="margin-bottom:12px">
+        <div class="panel-h">Manual journal (must balance)</div>
+        <div class="panel-b">
+          <div class="form-grid">
+            <div class="field"><label>Business date</label><input class="inp" type="date" id="f_bdate" /></div>
+            <div class="field"><label>Narrative</label><input class="inp" id="f_narr" /></div>
+            <div class="field"><label>Line1 GL</label><input class="inp" id="f_gl1" value="1000" /></div>
+            <div class="field"><label>Line1 Debit</label><input class="inp" type="number" step="0.01" id="f_dr1" value="0" /></div>
+            <div class="field"><label>Line2 GL</label><input class="inp" id="f_gl2" value="2000" /></div>
+            <div class="field"><label>Line2 Credit</label><input class="inp" type="number" step="0.01" id="f_cr2" value="0" /></div>
+          </div>
+          <div class="form-actions"><button type="button" class="btn btn-p" id="btnPost">Post journal</button></div>
+          <div id="msg" class="hint"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h">Recent journals</div>
+        <div class="table-wrap"><table class="data"><thead><tr>
+          <th>Ref</th><th>Date</th><th>Debit</th><th>Credit</th><th>Status</th><th>Narrative</th>
+        </tr></thead><tbody id="tb"></tbody></table></div>
+      </div>
+      <pre id="tbOut" style="margin-top:12px;display:none;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;overflow:auto"></pre>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script><script src="js/api.js"></script><script src="js/shell.js"></script>
+<script>
+document.getElementById('f_bdate').value=new Date().toISOString().slice(0,10);
+async function load(){
+  const rows=await DigiFyntekAPI.request('/api/v1/ledger/journals');
+  document.getElementById('tb').innerHTML=rows.map(r=>
+    '<tr><td class="num">'+r.journal_ref+'</td><td>'+String(r.business_date).slice(0,10)+'</td><td class="num">'+r.total_debit+'</td><td class="num">'+r.total_credit+'</td><td>'+r.status+'</td><td class="muted">'+(r.narrative||'')+'</td></tr>'
+  ).join('')||'<tr><td colspan="6" class="empty">No journals</td></tr>';
+}
+document.getElementById('btnPost').onclick=async()=>{
+  const amt=Number(f_dr1.value)||Number(f_cr2.value)||0;
+  const msg=document.getElementById('msg');
+  try{
+    const r=await DigiFyntekAPI.request('/api/v1/ledger/journals',{method:'POST',body:JSON.stringify({
+      business_date:f_bdate.value,narrative:f_narr.value,
+      lines:[
+        {gl_code:f_gl1.value,debit:amt,credit:0},
+        {gl_code:f_gl2.value,debit:0,credit:amt}
+      ]
+    })});
+    msg.textContent='Posted '+r.journal_ref;msg.className='ok';load();
+  }catch(e){msg.textContent=e.message;msg.className='err';}
+};
+document.getElementById('btnTB').onclick=async()=>{
+  const tb=await DigiFyntekAPI.request('/api/v1/ledger/trial-balance');
+  const out=document.getElementById('tbOut');out.style.display='block';
+  out.textContent=JSON.stringify(tb,null,2);
+};
+load().catch(e=>document.getElementById('tb').innerHTML='<tr><td colspan="6" class="empty">'+e.message+'</td></tr>');
+</script>
+</body>
+</html>
