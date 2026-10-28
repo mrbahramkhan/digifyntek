@@ -9,8 +9,8 @@
     "db:init": "node scripts/init-db.js",
     "db:seed-admin": "node scripts/seed-admin.js",
     "healthcheck": "node scripts/healthcheck.js",
-    "test": "node --test tests/money.unit.test.js tests/ledger.integrity.test.js",
-    "test:unit": "node --test tests/money.unit.test.js",
+    "test": "node --test tests/money.unit.test.js tests/money.lib.test.js tests/ledger.integrity.test.js",
+    "test:unit": "node --test tests/money.unit.test.js tests/money.lib.test.js",
     "test:integrity": "node --test tests/ledger.integrity.test.js"
   },
   "engines": {

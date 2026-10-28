@@ -4,15 +4,10 @@
  */
 const pool = require('../config/db');
 const crypto = require('crypto');
+const { money, simpleInterest, sub, add, eq, lte, gte } = require('../lib/money');
 
 function ref(prefix) {
   return `${prefix}${Date.now().toString(36)}${crypto.randomBytes(2).toString('hex')}`.toUpperCase();
-}
-
-function money(n) {
-  const x = Number(n);
-  if (!Number.isFinite(x)) return 0;
-  return Math.round(x * 100) / 100;
 }
 
 async function audit(conn, { actor, action, entity_type, entity_id, detail }) {
@@ -682,10 +677,7 @@ function addDaysIso(iso, days) {
 
 /** Simple interest for tenor: principal * rate% * days/365 */
 function tdInterest(principal, ratePct, days) {
-  const p = money(principal);
-  const r = Number(ratePct) || 0;
-  const n = Number(days) || 0;
-  return money((p * r * n) / (100 * 365));
+  return simpleInterest(principal, ratePct, days, 365);
 }
 
 /**
