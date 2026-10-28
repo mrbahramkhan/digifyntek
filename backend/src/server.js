@@ -9,21 +9,21 @@ const { ping } = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const authRoutes = require('./routes/auth');
-const memberRoutes = require('./routes/members');
-const loanRoutes = require('./routes/loans');
-const collateralRoutes = require('./routes/collateral');
+// EXTRA/legacy (disabled): const memberRoutes = require('./routes/members');
+// EXTRA/legacy (disabled): const loanRoutes = require('./routes/loans');
+// EXTRA/legacy (disabled): const collateralRoutes = require('./routes/collateral');
 const instrumentRoutes = require('./routes/instruments');
-const cardRoutes = require('./routes/cards');
-const complianceRoutes = require('./routes/compliance');
-const dashboardRoutes = require('./routes/dashboard');
-const murabahaRoutes = require('./routes/murabaha');
-const islamicRoutes = require('./routes/islamic');
-const sharesRoutes = require('./routes/shares');
-const savingsRoutes = require('./routes/savings');
-const vacsRoutes = require('./routes/vacs');
-const coreBankingRoutes = require('./routes/corebanking');
-const cbsRoutes = require('./routes/cbs');
-const mfbRoutes = require('./routes/mfb');
+// EXTRA/legacy (disabled): const cardRoutes = require('./routes/cards');
+// EXTRA/legacy (disabled): const complianceRoutes = require('./routes/compliance');
+// EXTRA/legacy (disabled): const dashboardRoutes = require('./routes/dashboard');
+// EXTRA/legacy (disabled): const murabahaRoutes = require('./routes/murabaha');
+// EXTRA/legacy (disabled): const islamicRoutes = require('./routes/islamic');
+// EXTRA/legacy (disabled): const sharesRoutes = require('./routes/shares');
+// EXTRA/legacy (disabled): const savingsRoutes = require('./routes/savings');
+// EXTRA/legacy (disabled): const vacsRoutes = require('./routes/vacs');
+// EXTRA/legacy (disabled): const coreBankingRoutes = require('./routes/corebanking');
+// EXTRA/legacy (disabled): const cbsRoutes = require('./routes/cbs');
+// EXTRA/legacy (disabled): const mfbRoutes = require('./routes/mfb');
 const eodRoutes = require('./routes/eod');
 const cifRoutes = require('./routes/cif');
 const accountsRoutes = require('./routes/accounts');
@@ -55,7 +55,13 @@ app.use(
       if (!origin) return cb(null, true);
       if (!env.isProd) return cb(null, true);
       if (env.corsOrigins.includes(origin)) return cb(null, true);
-      return cb(new Error('Not allowed by CORS'));
+      // demo tunnels + same-host UI
+      try {
+        const u = new URL(origin);
+        if (u.hostname.endsWith('.trycloudflare.com')) return cb(null, true);
+        if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') return cb(null, true);
+      } catch (_) {}
+      return cb(null, false);
     },
     credentials: true,
   })
@@ -93,9 +99,12 @@ app.get('/health', async (_req, res) => {
     version: '1.2.0',
     db,
     modules: [
-      'auth', 'members', 'loans', 'shares', 'savings', 'vacs',
-      'core-banking', 'cbs', 'mfb-prudential', 'chequebooks',
-      'murabaha', 'islamic', 'collateral', 'cards', 'compliance', 'eod', 'cif', 'accounts', 'ledger',
+      // Core CBS (active)
+      'auth', 'cif', 'kyc', 'accounts', 'ledger', 'financing', 'term-deposits',
+      'approvals', 'payments-sim', 'teller', 'clearing', 'recon', 'eod', 'rbac',
+      'instruments', 'openapi',
+      // EXTRA/legacy disabled in this build: members, loans, shares, savings, vacs,
+      // core-banking, cbs, mfb, murabaha, islamic, collateral, cards, compliance, dashboard
     ],
     modes: {
       legacy: process.env.DB_MODE === 'legacy' || process.env.LEGACY_SCHEMA === '1',
@@ -114,21 +123,21 @@ app.get('/ready', async (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/members', memberRoutes);
-app.use('/api/loans', loanRoutes);
-app.use('/api/collateral', collateralRoutes);
+// EXTRA/legacy (disabled): app.use('/api/members', memberRoutes);
+// EXTRA/legacy (disabled): app.use('/api/loans', loanRoutes);
+// EXTRA/legacy (disabled): app.use('/api/collateral', collateralRoutes);
 app.use('/api/instruments', instrumentRoutes);
-app.use('/api/cards', cardRoutes);
-app.use('/api/compliance', complianceRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/murabaha', murabahaRoutes);
-app.use('/api/islamic', islamicRoutes);
-app.use('/api/shares', sharesRoutes);
-app.use('/api/savings', savingsRoutes);
-app.use('/api/vacs', vacsRoutes);
-app.use('/api/core', coreBankingRoutes);
-app.use('/api/cbs', cbsRoutes);
-app.use('/api/mfb', mfbRoutes);
+// EXTRA/legacy (disabled): app.use('/api/cards', cardRoutes);
+// EXTRA/legacy (disabled): app.use('/api/compliance', complianceRoutes);
+// EXTRA/legacy (disabled): app.use('/api/dashboard', dashboardRoutes);
+// EXTRA/legacy (disabled): app.use('/api/murabaha', murabahaRoutes);
+// EXTRA/legacy (disabled): app.use('/api/islamic', islamicRoutes);
+// EXTRA/legacy (disabled): app.use('/api/shares', sharesRoutes);
+// EXTRA/legacy (disabled): app.use('/api/savings', savingsRoutes);
+// EXTRA/legacy (disabled): app.use('/api/vacs', vacsRoutes);
+// EXTRA/legacy (disabled): app.use('/api/core', coreBankingRoutes);
+// EXTRA/legacy (disabled): app.use('/api/cbs', cbsRoutes);
+// EXTRA/legacy (disabled): app.use('/api/mfb', mfbRoutes);
 app.use('/api/eod', eodRoutes);
 app.use('/api/v1/cif', cifRoutes);
 app.use('/api/v1/accounts', accountsRoutes);

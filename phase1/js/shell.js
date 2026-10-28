@@ -22,9 +22,9 @@
       items: [
         { href: 'cif.html', label: 'CIF / Customers' },
         { href: 'kyc.html', label: 'KYC cases' },
-        { href: 'members.html', label: 'Member register (legacy)' },
-        { href: 'member360.html', label: 'Member 360' },
-        { href: 'cards.html', label: 'Membership cards' },
+        // EXTRA: { href: 'members.html', label: 'Member register (legacy)' },
+        // EXTRA: { href: 'member360.html', label: 'Member 360' },
+        // EXTRA: { href: 'cards.html', label: 'Membership cards' },
       ],
     },
     {
@@ -34,19 +34,19 @@
         { href: 'term-deposits.html', label: 'Term deposits' },
         { href: 'casa.html', label: 'Cash deposit / withdraw' },
         { href: 'teller.html', label: 'Teller / cash drawer' },
-        { href: 'savings.html', label: 'Deposit accounts (legacy)' },
-        { href: 'shares.html', label: 'Share capital' },
-        { href: 'cbs.html', label: 'Open account / CIF' },
+        // EXTRA: { href: 'savings.html', label: 'Deposit accounts (legacy)' },
+        // EXTRA: { href: 'shares.html', label: 'Share capital' },
+        // EXTRA: { href: 'cbs.html', label: 'Open account / CIF' }, // use cif.html + accounts.html
       ],
     },
     {
       sec: 'Lending',
       items: [
         { href: 'financing.html', label: 'Disburse financing' },
-        { href: 'loans.html', label: 'Loan portfolio (legacy)' },
-        { href: 'collateral.html', label: 'Collateral' },
-        { href: 'murabaha.html', label: 'Murābaḥah' },
-        { href: 'islamic-ops.html', label: 'Other Islamic modes' },
+        // EXTRA: { href: 'loans.html', label: 'Loan portfolio (legacy)' },
+        // EXTRA: { href: 'collateral.html', label: 'Collateral' },
+        // EXTRA (enable when Islamic product pack live): { href: 'murabaha.html', label: 'Murābaḥah' },
+        // EXTRA: { href: 'islamic-ops.html', label: 'Other Islamic modes' },
       ],
     },
     {
@@ -54,23 +54,23 @@
       items: [
         { href: 'ledger.html', label: 'Journal & trial balance' },
         { href: 'transfer.html', label: 'Internal transfer' },
-        { href: 'core-banking.html', label: 'General ledger (legacy)' },
+        // EXTRA: { href: 'core-banking.html', label: 'General ledger (legacy)' },
         { href: 'instruments.html', label: 'Cheque books' },
         { href: 'clearing.html', label: 'Cheque clearing' },
         { href: 'recon.html', label: 'Reconciliation' },
         { href: 'eod.html', label: 'End of day' },
         { href: 'approvals.html', label: 'Maker-checker queue' },
         { href: 'payments.html', label: 'Payments hub (sim)' },
-        { href: 'cbs.html#txn', label: 'Transfers' },
+        // EXTRA: { href: 'cbs.html#txn', label: 'Transfers' }, // use transfer.html
       ],
     },
     {
       sec: 'Risk & compliance',
       items: [
-        { href: 'mfb.html', label: 'Asset quality & capital' },
-        { href: 'compliance.html', label: 'Cooperative law' },
-        { href: 'registration.html', label: 'Licensing checklist' },
-        { href: 'islamic.html', label: 'Shariah catalogue' },
+        // EXTRA (MFB pack): { href: 'mfb.html', label: 'Asset quality & capital' },
+        // EXTRA: { href: 'compliance.html', label: 'Cooperative law' },
+        // EXTRA: { href: 'registration.html', label: 'Licensing checklist' },
+        // EXTRA: { href: 'islamic.html', label: 'Shariah catalogue' },
       ],
     },
     {

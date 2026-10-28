@@ -78,7 +78,27 @@ router.get('/trial-balance', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/transfers', auth(), async (req, res, next) => {
+router.post('/transfers', auth(), requirePermission('transfer.post', 'casa.post', 'ledger.post'), async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const result = await ledger.internalTransfer({
+      fromAccountId: b.from_account_id,
+      toAccountId: b.to_account_id,
+      amount: b.amount,
+      businessDate: b.business_date,
+      narrative: b.narrative,
+      createdBy: req.user?.userId || req.user?.id,
+      idempotencyKey: b.idempotency_key || req.headers['idempotency-key'],
+    });
+    res.status(201).json(result);
+  } catch (e) {
+    next(e);
+  }
+});
+
+
+// Alias used by some clients
+router.post('/transfer', auth(), requirePermission('transfer.post', 'casa.post', 'ledger.post'), async (req, res, next) => {
   try {
     const b = req.body || {};
     const result = await ledger.internalTransfer({
@@ -97,3 +117,4 @@ router.post('/transfers', auth(), async (req, res, next) => {
 });
 
 module.exports = router;
+
