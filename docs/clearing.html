@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigiFyntek — Cheque Clearing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>Cheque clearing</h1>
+      <span class="meta">Inward · outward · clear / bounce · GL</span>
+    </header>
+    <div class="workspace">
+      <div class="split">
+        <div class="panel">
+          <div class="panel-h">Batches</div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr><th>Ref</th><th>Dir</th><th>Date</th><th>Items</th><th>Amount</th><th>Status</th></tr>
+              </thead>
+              <tbody id="tb"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">Workflow</div>
+          <div class="panel-b">
+            <div class="form-sec" style="margin-top:0">New batch</div>
+            <div class="form-grid">
+              <div class="field"><label>Direction</label>
+                <select class="inp" id="b_dir">
+                  <option value="OUTWARD">OUTWARD (pay)</option>
+                  <option value="INWARD">INWARD (collect)</option>
+                </select>
+              </div>
+              <div class="field"><label>Business date</label><input class="inp" type="date" id="b_date" /></div>
+              <div class="field"><label>Branch</label><input class="inp" id="b_br" value="001" /></div>
+              <div class="field full"><label>Narrative</label><input class="inp" id="b_narr" /></div>
+            </div>
+            <div class="form-actions"><button type="button" class="btn btn-p" id="btnBatch">Create batch</button></div>
+
+            <div class="form-sec">Add item</div>
+            <div class="form-grid">
+              <div class="field"><label>Batch ID</label><input class="inp" id="i_batch" /></div>
+              <div class="field"><label>Cheque no *</label><input class="inp" id="i_chq" /></div>
+              <div class="field"><label>Amount *</label><input class="inp" type="number" step="0.01" id="i_amt" /></div>
+              <div class="field"><label>Account ID</label><input class="inp" id="i_acct" placeholder="CASA for GL" /></div>
+              <div class="field"><label>Leaf ID</label><input class="inp" id="i_leaf" placeholder="optional" /></div>
+              <div class="field"><label>Payee</label><input class="inp" id="i_payee" /></div>
+            </div>
+            <div class="form-actions"><button type="button" class="btn" id="btnItem">Add to batch</button></div>
+
+            <div class="form-sec">Batch actions</div>
+            <div class="form-actions">
+              <button type="button" class="btn" id="btnSubmit">Submit batch</button>
+              <button type="button" class="btn btn-p" id="btnSettle">Settle batch</button>
+            </div>
+
+            <div class="form-sec">Item decision</div>
+            <div class="form-grid">
+              <div class="field"><label>Item ID</label><input class="inp" id="d_item" /></div>
+              <div class="field"><label>Bounce reason</label><input class="inp" id="d_reason" /></div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-p" id="btnClear">Clear (GL)</button>
+              <button type="button" class="btn btn-d" id="btnBounce">Bounce</button>
+            </div>
+            <div id="msg" class="hint"></div>
+          </div>
+        </div>
+      </div>
+      <pre id="detail" style="display:none;margin-top:12px;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;max-height:280px;overflow:auto"></pre>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+  b_date.value = new Date().toISOString().slice(0, 10);
+  function fmt(n) { return Number(n || 0).toLocaleString('en-PK'); }
+  function tag(s) {
+    var m = { open: 'tag-a', submitted: 'tag-a', settled: 'tag-g', cancelled: 'tag-n',
+      pending: 'tag-a', presented: 'tag-a', cleared: 'tag-g', bounced: 'tag-r' };
+    return '<span class="tag ' + (m[s] || 'tag-n') + '">' + s + '</span>';
+  }
+  function flash(ok, t) { msg.textContent = t; msg.className = ok ? 'ok' : 'err'; }
+
+  async function load() {
+    try {
+      var rows = await DigiFyntekAPI.request('/api/v1/clearing/batches');
+      tb.innerHTML = rows.length
+        ? rows.map(function (r) {
+            return (
+              '<tr data-id="' + r.id + '" style="cursor:pointer">' +
+              '<td class="num">' + r.batch_ref + '</td>' +
+              '<td>' + r.direction + '</td>' +
+              '<td>' + String(r.business_date).slice(0, 10) + '</td>' +
+              '<td class="num">' + r.item_count + '</td>' +
+              '<td class="num">' + fmt(r.total_amount) + '</td>' +
+              '<td>' + tag(r.status) + '</td></tr>'
+            );
+          }).join('')
+        : '<tr><td colspan="6" class="empty">No batches</td></tr>';
+    } catch (e) {
+      tb.innerHTML = '<tr><td colspan="6" class="empty">' + e.message + '</td></tr>';
+    }
+  }
+
+  async function selectBatch(id) {
+    i_batch.value = id;
+    try {
+      var d = await DigiFyntekAPI.request('/api/v1/clearing/batches/' + id);
+      detail.style.display = 'block';
+      detail.textContent = JSON.stringify(d, null, 2);
+      if (d.items && d.items[0]) d_item.value = d.items[0].id;
+    } catch (e) { flash(false, e.message); }
+  }
+
+  tb.onclick = function (e) {
+    var tr = e.target.closest('tr[data-id]');
+    if (tr) selectBatch(tr.getAttribute('data-id'));
+  };
+
+  btnBatch.onclick = async function () {
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/clearing/batches', {
+        method: 'POST',
+        body: JSON.stringify({
+          direction: b_dir.value,
+          business_date: b_date.value,
+          branch_code: b_br.value,
+          narrative: b_narr.value,
+        }),
+      });
+      flash(true, 'Batch ' + r.batch_ref);
+      load(); selectBatch(r.id);
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnItem.onclick = async function () {
+    if (!i_batch.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/clearing/batches/' + i_batch.value + '/items', {
+        method: 'POST',
+        body: JSON.stringify({
+          cheque_no: i_chq.value,
+          amount: Number(i_amt.value),
+          account_id: i_acct.value ? Number(i_acct.value) : null,
+          cheque_leaf_id: i_leaf.value ? Number(i_leaf.value) : null,
+          payee_name: i_payee.value,
+        }),
+      });
+      flash(true, 'Item added');
+      selectBatch(i_batch.value); load();
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnSubmit.onclick = async function () {
+    if (!i_batch.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/clearing/batches/' + i_batch.value + '/submit', {
+        method: 'POST', body: '{}',
+      });
+      flash(true, 'Submitted'); selectBatch(i_batch.value); load();
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnSettle.onclick = async function () {
+    if (!i_batch.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/clearing/batches/' + i_batch.value + '/settle', {
+        method: 'POST', body: '{}',
+      });
+      flash(true, 'Settled'); selectBatch(i_batch.value); load();
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnClear.onclick = async function () {
+    if (!d_item.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/clearing/items/' + d_item.value + '/decide', {
+        method: 'POST', body: JSON.stringify({ decision: 'cleared' }),
+      });
+      flash(true, 'Cleared'); selectBatch(i_batch.value); load();
+    } catch (e) { flash(false, e.message); }
+  };
+
+  btnBounce.onclick = async function () {
+    if (!d_item.value) return;
+    try {
+      await DigiFyntekAPI.request('/api/v1/clearing/items/' + d_item.value + '/decide', {
+        method: 'POST',
+        body: JSON.stringify({ decision: 'bounced', bounce_reason: d_reason.value || 'Unpaid' }),
+      });
+      flash(true, 'Bounced'); selectBatch(i_batch.value); load();
+    } catch (e) { flash(false, e.message); }
+  };
+
+  load();
+})();
+</script>
+</body>
+</html>

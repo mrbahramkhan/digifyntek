@@ -531,3 +531,47 @@ CREATE TABLE IF NOT EXISTS cbs_cash_txns (
 INSERT IGNORE INTO cbs_vault (branch_code, balance) VALUES ('001', 500000.00);
 INSERT IGNORE INTO cbs_tellers (teller_code, user_id, branch_code, full_name)
 VALUES ('T001', 'superadmin', '001', 'Default Teller');
+
+-- Cheque clearing cycle (inward / outward)
+CREATE TABLE IF NOT EXISTS cbs_clearing_batches (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  batch_ref VARCHAR(40) NOT NULL,
+  direction ENUM('OUTWARD','INWARD') NOT NULL,
+  business_date DATE NOT NULL,
+  branch_code VARCHAR(16) NULL,
+  status ENUM('open','submitted','settled','cancelled') NOT NULL DEFAULT 'open',
+  item_count INT UNSIGNED NOT NULL DEFAULT 0,
+  total_amount DECIMAL(18,2) NOT NULL DEFAULT 0,
+  settled_count INT UNSIGNED NOT NULL DEFAULT 0,
+  bounced_count INT UNSIGNED NOT NULL DEFAULT 0,
+  narrative VARCHAR(255) NULL,
+  created_by VARCHAR(50) NULL,
+  settled_at DATETIME NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_batch (batch_ref),
+  KEY idx_dir_date (direction, business_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_clearing_items (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  batch_id BIGINT UNSIGNED NOT NULL,
+  item_ref VARCHAR(40) NOT NULL,
+  direction ENUM('OUTWARD','INWARD') NOT NULL,
+  cheque_no VARCHAR(40) NOT NULL,
+  cheque_leaf_id INT UNSIGNED NULL,
+  account_id BIGINT UNSIGNED NULL,
+  amount DECIMAL(18,2) NOT NULL,
+  payee_name VARCHAR(160) NULL,
+  drawer_name VARCHAR(160) NULL,
+  bank_name VARCHAR(120) NULL,
+  status ENUM('pending','presented','cleared','bounced','cancelled') NOT NULL DEFAULT 'pending',
+  bounce_reason VARCHAR(255) NULL,
+  journal_id BIGINT UNSIGNED NULL,
+  narrative VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_item (item_ref),
+  KEY idx_batch (batch_id),
+  KEY idx_cheque (cheque_no),
+  KEY idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

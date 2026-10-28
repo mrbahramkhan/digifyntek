@@ -34,6 +34,7 @@ const paymentsRoutes = require('./routes/payments');
 const kycRoutes = require('./routes/kyc');
 const termDepositRoutes = require('./routes/termdeposits');
 const tellerRoutes = require('./routes/teller');
+const clearingRoutes = require('./routes/clearing');
 
 const app = express();
 
@@ -145,6 +146,8 @@ app.use('/api/v1/term-deposits', termDepositRoutes);
 app.use('/api/term-deposits', termDepositRoutes);
 app.use('/api/v1/teller', tellerRoutes);
 app.use('/api/teller', tellerRoutes);
+app.use('/api/v1/clearing', clearingRoutes);
+app.use('/api/clearing', clearingRoutes);
 
 // Serve full UI (phase1) from same process — one deploy = full system
 const fs = require('fs');
