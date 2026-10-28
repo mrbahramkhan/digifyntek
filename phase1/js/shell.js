@@ -15,7 +15,7 @@
   /**
    * Product packs (major modules):
    *   core   — Fintech CBS
-   *   kisaan — Digital Kisaan / Cooperative
+   *   kisaan — Kisaan App
    *   islamic — Islamic finance
    *   fmfb   — FMFB / Microfinance bank
    * Toggle: localStorage DIGIFYNTEK_PACKS = "core,kisaan,islamic,fmfb"
@@ -89,10 +89,10 @@
     );
   }
 
-  // —— KISAAN: Digital Kisaan / Cooperative ——
+  // —— KISAAN: Kisaan App ——
   if (hasPack('kisaan')) {
     NAV.push({
-      sec: 'Kisaan · Cooperative',
+      sec: 'Kisaan App',
       pack: 'kisaan',
       items: [
         { href: 'members.html', label: 'Member register' },

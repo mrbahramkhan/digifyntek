@@ -3,7 +3,7 @@
 | Pack | Name | Domain |
 |------|------|--------|
 | core | Fintech CBS | CIF, KYC, CASA, ledger, financing, TD, teller, EOD, RBAC |
-| kisaan | Digital Kisaan | Members, shares, savings, cards, cooperative compliance |
+| kisaan | Kisaan App | Members, shares, savings, cards, cooperative compliance |
 | islamic | Islamic Finance | Murabaha, modes, Shariah catalogue |
 | fmfb | FMFB / Microfinance | Prudential, portfolio, collateral |
 

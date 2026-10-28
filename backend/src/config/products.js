@@ -6,7 +6,7 @@
  *   Defaults: all on for full platform; set PRODUCT_PACKS=core for CBS-only.
  *
  *   core     — Fintech CBS: CIF, CASA, ledger, financing, TD, teller, EOD, RBAC…
- *   kisaan   — Digital Kisaan / Cooperative: members, shares, savings, VAC/branch,
+ *   kisaan   — Kisaan App: members, shares, savings, VAC/branch,
  *              membership cards, cooperative compliance, registration checklist
  *   islamic  — Islamic finance modes: murabaha + other modes UI/API
  *   fmfb     — Microfinance bank: MFB prudential, asset quality, capital, collateral depth
@@ -50,7 +50,7 @@ if (!products.core) {
 
 products.label = {
   core: 'Fintech CBS',
-  kisaan: 'Digital Kisaan (Cooperative)',
+  kisaan: 'Kisaan App',
   islamic: 'Islamic Finance',
   fmfb: 'FMFB / Microfinance',
 };

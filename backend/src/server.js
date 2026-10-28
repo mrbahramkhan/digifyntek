@@ -27,7 +27,7 @@ const reconRoutes = require('./routes/recon');
 const rbacRoutes = require('./routes/rbac');
 const openapiRoutes = require('./routes/openapi');
 
-// --- Pack: Digital Kisaan (cooperative) ---
+// --- Pack: Kisaan App ---
 let memberRoutes, sharesRoutes, savingsRoutes, vacsRoutes, cardRoutes, complianceRoutes, dashboardRoutes;
 if (products.kisaan) {
   memberRoutes = require('./routes/members');
@@ -169,7 +169,7 @@ app.use('/api/recon', reconRoutes);
 app.use('/api/v1/rbac', rbacRoutes);
 app.use('/api/rbac', rbacRoutes);
 
-// ===== KISAAN — Digital Kisaan / Cooperative =====
+// ===== KISAAN — Kisaan App =====
 if (products.kisaan) {
   app.use('/api/members', memberRoutes);
   app.use('/api/shares', sharesRoutes);
