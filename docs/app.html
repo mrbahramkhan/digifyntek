@@ -33,6 +33,9 @@
       color: var(--ink-3); margin: 16px 0 8px;
     }
   </style>
+  <script>
+    (function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();
+  </script>
 </head>
 <body>
   <div id="loginView" class="login-wrap">
@@ -167,5 +170,27 @@
   else showLogin();
 })();
 </script>
+
+<script>
+(function(){
+  var t=localStorage.getItem('DIGIFYNTEK_THEME');
+  if(t==='dark')document.documentElement.setAttribute('data-theme','dark');
+  var box=document.querySelector('.login-box');
+  if(box && !document.querySelector('.theme-toggle')){
+    var b=document.createElement('button');
+    b.type='button'; b.className='theme-toggle';
+    b.style.cssText='position:absolute;top:16px;right:16px';
+    b.textContent=document.documentElement.getAttribute('data-theme')==='dark'?'☀':'☾';
+    b.onclick=function(){
+      var d=document.documentElement.getAttribute('data-theme')==='dark';
+      if(d){document.documentElement.removeAttribute('data-theme');localStorage.setItem('DIGIFYNTEK_THEME','light');b.textContent='☾';}
+      else{document.documentElement.setAttribute('data-theme','dark');localStorage.setItem('DIGIFYNTEK_THEME','dark');b.textContent='☀';}
+    };
+    var wrap=document.getElementById('loginView');
+    if(wrap){wrap.style.position='relative'; wrap.appendChild(b);}
+  }
+})();
+</script>
+
 </body>
 </html>

@@ -1,3 +1,11 @@
+
+  // Theme: default light, optional dark via localStorage
+  (function initTheme() {
+    var saved = localStorage.getItem('DIGIFYNTEK_THEME');
+    if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    else document.documentElement.removeAttribute('data-theme');
+  })();
+
 /** DigiFyntek — unified application shell (one bank / society system) */
 (function (g) {
   /**
@@ -158,3 +166,38 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })(typeof window !== 'undefined' ? window : this);
+
+
+  function ensureThemeToggle() {
+    var bar = document.querySelector('.topbar');
+    if (!bar || bar.querySelector('.theme-toggle')) return;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'theme-toggle';
+    btn.title = 'Toggle light / dark theme';
+    btn.setAttribute('aria-label', 'Toggle theme');
+    function syncIcon() {
+      var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      btn.textContent = dark ? '☀' : '☾';
+    }
+    syncIcon();
+    btn.onclick = function () {
+      var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (dark) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('DIGIFYNTEK_THEME', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('DIGIFYNTEK_THEME', 'dark');
+      }
+      syncIcon();
+    };
+    var spacer = bar.querySelector('.spacer');
+    if (spacer) spacer.after(btn);
+    else bar.appendChild(btn);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensureThemeToggle);
+  } else {
+    ensureThemeToggle();
+  }
