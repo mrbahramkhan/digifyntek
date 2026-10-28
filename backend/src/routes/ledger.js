@@ -1,5 +1,5 @@
 const express = require('express');
-const { auth } = require('../middleware/auth');
+const { auth, requirePermission } = require('../middleware/auth');
 const pool = require('../config/db');
 const ledger = require('../ledger/service');
 const router = express.Router();
@@ -38,7 +38,7 @@ router.get('/journals/:id', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/journals', auth(), async (req, res, next) => {
+router.post('/journals', auth(), requirePermission('ledger.post'), async (req, res, next) => {
   try {
     const b = req.body || {};
     const result = await ledger.postJournal({
@@ -58,7 +58,7 @@ router.post('/journals', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/journals/:id/reverse', auth(), async (req, res, next) => {
+router.post('/journals/:id/reverse', auth(), requirePermission('ledger.reverse'), async (req, res, next) => {
   try {
     const result = await ledger.reverseJournal(req.params.id, {
       postedBy: req.user?.userId || req.user?.id,

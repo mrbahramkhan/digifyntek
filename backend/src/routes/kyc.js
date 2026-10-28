@@ -1,5 +1,5 @@
 const express = require('express');
-const { auth } = require('../middleware/auth');
+const { auth, requirePermission } = require('../middleware/auth');
 const kyc = require('../kyc/service');
 const router = express.Router();
 
@@ -87,7 +87,7 @@ router.patch('/screening/:screenId', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/:id/decide', auth(), async (req, res, next) => {
+router.post('/:id/decide', auth(), requirePermission('kyc.decide'), async (req, res, next) => {
   try {
     const b = req.body || {};
     res.json(

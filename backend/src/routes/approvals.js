@@ -1,5 +1,5 @@
 const express = require('express');
-const { auth } = require('../middleware/auth');
+const { auth, requirePermission } = require('../middleware/auth');
 const approvals = require('../approvals/service');
 const router = express.Router();
 
@@ -42,7 +42,7 @@ router.post('/', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/:id/approve', auth(), async (req, res, next) => {
+router.post('/:id/approve', auth(), requirePermission('approval.decide'), async (req, res, next) => {
   try {
     const row = await approvals.decide(req.params.id, {
       checkerId: actor(req),
@@ -55,7 +55,7 @@ router.post('/:id/approve', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/:id/reject', auth(), async (req, res, next) => {
+router.post('/:id/reject', auth(), requirePermission('approval.decide'), async (req, res, next) => {
   try {
     const row = await approvals.decide(req.params.id, {
       checkerId: actor(req),

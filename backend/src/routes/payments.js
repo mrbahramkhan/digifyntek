@@ -1,5 +1,5 @@
 const express = require('express');
-const { auth } = require('../middleware/auth');
+const { auth, requirePermission } = require('../middleware/auth');
 const payments = require('../payments/service');
 const router = express.Router();
 
@@ -22,7 +22,7 @@ router.get('/:id', auth(), async (req, res, next) => {
 });
 
 /** Raast outbound — SIMULATOR only */
-router.post('/raast/outbound', auth(), async (req, res, next) => {
+router.post('/raast/outbound', auth(), requirePermission('payments.post'), async (req, res, next) => {
   try {
     const b = req.body || {};
     const result = await payments.initiateRaastOutbound({

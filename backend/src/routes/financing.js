@@ -1,5 +1,5 @@
 const express = require('express');
-const { auth } = require('../middleware/auth');
+const { auth, requirePermission } = require('../middleware/auth');
 const pool = require('../config/db');
 const ledger = require('../ledger/service');
 const router = express.Router();
@@ -42,7 +42,7 @@ router.get('/:id', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/disburse', auth(), async (req, res, next) => {
+router.post('/disburse', auth(), requirePermission('loan.disburse'), async (req, res, next) => {
   try {
     const b = req.body || {};
     const result = await ledger.disburseLoan({
@@ -63,7 +63,7 @@ router.post('/disburse', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/:id/repay', auth(), async (req, res, next) => {
+router.post('/:id/repay', auth(), requirePermission('loan.repay'), async (req, res, next) => {
   try {
     const b = req.body || {};
     const result = await ledger.repayLoan({

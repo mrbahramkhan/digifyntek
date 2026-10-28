@@ -68,6 +68,7 @@
     {
       sec: 'Administration',
       items: [
+        { href: 'rbac.html', label: 'Roles & permissions' },
         { href: 'setup.html', label: 'Institution & branches' },
       ],
     },

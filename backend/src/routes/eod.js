@@ -1,5 +1,5 @@
 const express = require('express');
-const { auth } = require('../middleware/auth');
+const { auth, requirePermission } = require('../middleware/auth');
 const eod = require('../eod/service');
 const router = express.Router();
 
@@ -11,7 +11,7 @@ router.get('/status', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/run', auth(), async (req, res, next) => {
+router.post('/run', auth(), requirePermission('eod.run'), async (req, res, next) => {
   try {
     const result = await eod.runEod(eod.org(req), req.user.userId || req.user.id, req.body || {});
     res.status(result.ok ? 200 : 400).json(result);

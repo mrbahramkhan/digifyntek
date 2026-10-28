@@ -1,5 +1,5 @@
 const express = require('express');
-const { auth } = require('../middleware/auth');
+const { auth, requirePermission } = require('../middleware/auth');
 const teller = require('../teller/service');
 const router = express.Router();
 
@@ -47,7 +47,7 @@ router.get('/drawers/:id', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/drawers/open', auth(), async (req, res, next) => {
+router.post('/drawers/open', auth(), requirePermission('teller.ops'), async (req, res, next) => {
   try {
     const b = req.body || {};
     res.status(201).json(
@@ -95,7 +95,7 @@ router.post('/drawers/:id/vault-out', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/drawers/:id/deposit', auth(), async (req, res, next) => {
+router.post('/drawers/:id/deposit', auth(), requirePermission('teller.ops', 'casa.post'), async (req, res, next) => {
   try {
     const b = req.body || {};
     res.status(201).json(
@@ -113,7 +113,7 @@ router.post('/drawers/:id/deposit', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/drawers/:id/withdraw', auth(), async (req, res, next) => {
+router.post('/drawers/:id/withdraw', auth(), requirePermission('teller.ops', 'casa.post'), async (req, res, next) => {
   try {
     const b = req.body || {};
     res.status(201).json(
@@ -131,7 +131,7 @@ router.post('/drawers/:id/withdraw', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/drawers/:id/close', auth(), async (req, res, next) => {
+router.post('/drawers/:id/close', auth(), requirePermission('teller.ops'), async (req, res, next) => {
   try {
     const b = req.body || {};
     res.json(

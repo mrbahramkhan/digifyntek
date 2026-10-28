@@ -1,5 +1,5 @@
 const express = require('express');
-const { auth } = require('../middleware/auth');
+const { auth, requirePermission } = require('../middleware/auth');
 const pool = require('../config/db');
 const ledger = require('../ledger/service');
 const router = express.Router();
@@ -55,7 +55,7 @@ router.get('/:id', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/', auth(), async (req, res, next) => {
+router.post('/', auth(), requirePermission('td.write'), async (req, res, next) => {
   try {
     const b = req.body || {};
     const result = await ledger.placeTermDeposit({
@@ -80,7 +80,7 @@ router.post('/', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/:id/mature', auth(), async (req, res, next) => {
+router.post('/:id/mature', auth(), requirePermission('td.write'), async (req, res, next) => {
   try {
     const b = req.body || {};
     res.status(201).json(
@@ -99,7 +99,7 @@ router.post('/:id/mature', auth(), async (req, res, next) => {
   }
 });
 
-router.post('/:id/premature', auth(), async (req, res, next) => {
+router.post('/:id/premature', auth(), requirePermission('td.write'), async (req, res, next) => {
   try {
     const b = req.body || {};
     res.status(201).json(

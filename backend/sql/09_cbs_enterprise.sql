@@ -626,3 +626,110 @@ CREATE TABLE IF NOT EXISTS cbs_recon_matches (
   KEY idx_line (line_id),
   KEY idx_jnl (journal_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- RBAC
+CREATE TABLE IF NOT EXISTS cbs_roles (
+  role_code VARCHAR(40) NOT NULL PRIMARY KEY,
+  role_name VARCHAR(80) NOT NULL,
+  description VARCHAR(255) NULL,
+  is_system TINYINT(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_permissions (
+  perm_code VARCHAR(60) NOT NULL PRIMARY KEY,
+  module VARCHAR(40) NOT NULL,
+  description VARCHAR(160) NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cbs_role_permissions (
+  role_code VARCHAR(40) NOT NULL,
+  perm_code VARCHAR(60) NOT NULL,
+  PRIMARY KEY (role_code, perm_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO cbs_roles (role_code, role_name, description) VALUES
+('superadmin', 'Super Admin', 'Full system access'),
+('admin', 'Administrator', 'Institution admin'),
+('ops_manager', 'Operations Manager', 'Approve + ops oversight'),
+('teller', 'Teller', 'Cash drawer and CASA cash'),
+('credit_officer', 'Credit Officer', 'Financing and CIF'),
+('compliance', 'Compliance', 'KYC and screening'),
+('accountant', 'Accountant', 'Ledger and EOD'),
+('viewer', 'Viewer', 'Read-only');
+
+INSERT IGNORE INTO cbs_permissions (perm_code, module, description) VALUES
+('cif.read', 'CIF', 'View customers'),
+('cif.write', 'CIF', 'Create/update customers'),
+('kyc.read', 'KYC', 'View KYC cases'),
+('kyc.write', 'KYC', 'Manage KYC cases'),
+('kyc.decide', 'KYC', 'Approve/reject KYC'),
+('accounts.read', 'Accounts', 'View accounts'),
+('accounts.write', 'Accounts', 'Open accounts'),
+('casa.post', 'CASA', 'Deposit/withdraw'),
+('transfer.post', 'Transfers', 'Internal transfer'),
+('ledger.read', 'Ledger', 'View journals / TB'),
+('ledger.post', 'Ledger', 'Post journals'),
+('ledger.reverse', 'Ledger', 'Reverse journals'),
+('loan.read', 'Lending', 'View financing'),
+('loan.disburse', 'Lending', 'Disburse loans'),
+('loan.repay', 'Lending', 'Post repayments'),
+('td.read', 'TD', 'View term deposits'),
+('td.write', 'TD', 'Place/settle TD'),
+('approval.read', 'Approvals', 'View queue'),
+('approval.decide', 'Approvals', 'Approve/reject'),
+('payments.read', 'Payments', 'View payments'),
+('payments.post', 'Payments', 'Initiate payments'),
+('teller.ops', 'Teller', 'Drawer and vault'),
+('clearing.ops', 'Clearing', 'Cheque clearing'),
+('recon.ops', 'Recon', 'Reconciliation'),
+('eod.run', 'EOD', 'Run end of day'),
+('admin.rbac', 'Admin', 'Manage roles'),
+('instruments.ops', 'Instruments', 'Cheque books');
+
+-- superadmin / admin: all perms via code path; still seed admin explicitly
+INSERT IGNORE INTO cbs_role_permissions (role_code, perm_code)
+SELECT 'admin', perm_code FROM cbs_permissions;
+
+INSERT IGNORE INTO cbs_role_permissions (role_code, perm_code) VALUES
+('ops_manager', 'cif.read'),
+('ops_manager', 'accounts.read'),
+('ops_manager', 'ledger.read'),
+('ops_manager', 'loan.read'),
+('ops_manager', 'approval.read'),
+('ops_manager', 'approval.decide'),
+('ops_manager', 'eod.run'),
+('ops_manager', 'teller.ops'),
+('ops_manager', 'clearing.ops'),
+('ops_manager', 'recon.ops'),
+('teller', 'cif.read'),
+('teller', 'accounts.read'),
+('teller', 'casa.post'),
+('teller', 'teller.ops'),
+('teller', 'instruments.ops'),
+('credit_officer', 'cif.read'),
+('credit_officer', 'cif.write'),
+('credit_officer', 'kyc.read'),
+('credit_officer', 'accounts.read'),
+('credit_officer', 'loan.read'),
+('credit_officer', 'loan.disburse'),
+('credit_officer', 'loan.repay'),
+('credit_officer', 'td.read'),
+('credit_officer', 'td.write'),
+('compliance', 'cif.read'),
+('compliance', 'kyc.read'),
+('compliance', 'kyc.write'),
+('compliance', 'kyc.decide'),
+('accountant', 'ledger.read'),
+('accountant', 'ledger.post'),
+('accountant', 'ledger.reverse'),
+('accountant', 'accounts.read'),
+('accountant', 'eod.run'),
+('accountant', 'recon.ops'),
+('accountant', 'clearing.ops'),
+('viewer', 'cif.read'),
+('viewer', 'accounts.read'),
+('viewer', 'ledger.read'),
+('viewer', 'loan.read'),
+('viewer', 'td.read'),
+('viewer', 'payments.read'),
+('viewer', 'approval.read');
