@@ -62,9 +62,10 @@
   if (hasPack('conventional')) {
     NAV.push(
       {
-        sec: 'Conventional · Customers',
+        sec: 'Conventional Banking',
         pack: 'conventional',
         items: [
+          { href: 'conventional-dashboard.html', label: 'Conventional dashboard' },
           { href: 'cif.html', label: 'CIF / Customers' },
           { href: 'kyc.html', label: 'KYC cases' },
         ],
@@ -130,6 +131,7 @@
       sec: 'Agri App',
       pack: 'agri',
       items: [
+        { href: 'agri-dashboard.html', label: 'Agri dashboard' },
         { href: 'members.html', label: 'Member register' },
         { href: 'member360.html', label: 'Member 360' },
         { href: 'cards.html', label: 'Membership cards' },
