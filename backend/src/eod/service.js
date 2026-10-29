@@ -301,7 +301,7 @@ async function runEod(orgCode, userId, body = {}) {
       steps.push({
         code: 'ACCRUAL',
         ok: true,
-        detail: `Posted ${acc.total_count} accruals · amount ${acc.total_amount} · SAV ${acc.savings.count || 0} TD ${acc.term_deposits.count || 0} LON ${acc.financing.count || 0}`,
+        detail: `Posted ${acc.total_count} · amt ${acc.total_amount} · SAV ${acc.savings.count||0} TD ${acc.term_deposits.count||0} LON ${acc.financing.count||0} ISL-FIN ${acc.islamic_financing?.count||0} ISL-TD ${acc.islamic_term_deposits?.count||0}`,
         accrual: acc,
       });
     } catch (e) {

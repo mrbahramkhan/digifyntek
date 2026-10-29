@@ -876,8 +876,10 @@ INSERT IGNORE INTO cbs_coa (gl_code, gl_name, gl_type) VALUES
 ('2200', 'Term Deposit Liability', 'LIABILITY'),
 ('3000', 'Share Capital', 'EQUITY'),
 ('4000', 'Interest Income', 'INCOME'),
+('4100', 'Islamic Profit Income', 'INCOME'),
 ('5000', 'Interest Expense', 'EXPENSE'),
-('5100', 'Operating Expense', 'EXPENSE');
+('5100', 'Profit Expense to Depositors', 'EXPENSE'),
+('5110', 'Operating Expense', 'EXPENSE');
 
 INSERT IGNORE INTO cbs_products (product_code, product_name, product_type, product_family, gl_code, gl_liability, gl_asset, active) VALUES
 ('SAV-PKR', 'Savings Account PKR', 'savings', 'CASA', '2000', '2000', NULL, 1),

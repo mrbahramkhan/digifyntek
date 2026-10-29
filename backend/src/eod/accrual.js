@@ -100,6 +100,7 @@ async function accrueTermDeposits({ businessDate, actor }) {
       `SELECT id, td_ref, principal, outstanding_principal, rate_pct, interest_accrued, status
        FROM cbs_term_deposits
        WHERE status = 'active' AND COALESCE(rate_pct, 0) > 0
+         AND COALESCE(is_islamic, 0) = 0
        LIMIT 5000`
     );
     rows = r;
@@ -165,6 +166,7 @@ async function accrueFinancing({ businessDate, actor }) {
       `SELECT id, contract_no, principal, outstanding, rate_pct, status
        FROM cbs_financing_contracts
        WHERE status = 'active' AND COALESCE(outstanding, 0) > 0
+         AND COALESCE(is_islamic, 0) = 0
        LIMIT 5000`
     );
     rows = r;
@@ -217,18 +219,191 @@ async function accrueFinancing({ businessDate, actor }) {
   return results;
 }
 
+
+/**
+ * Islamic financing profit accrual (Murabaha-style amortized profit recognition).
+ * Uses rate_pct as annualized profit rate proxy on outstanding, or profit_amount/tenor if present.
+ * GL: Dr 1100 (financing asset) / Cr 4100 (Islamic profit income) — not labeled as interest.
+ */
+async function accrueIslamicFinancing({ businessDate, actor }) {
+  const results = { count: 0, amount: 0, journals: [], skipped: 0, errors: [] };
+  let rows = [];
+  try {
+    const [r] = await pool.query(
+      `SELECT id, contract_no, principal, outstanding, rate_pct, status, is_islamic,
+              disbursed_at, maturity_date, narrative
+       FROM cbs_financing_contracts
+       WHERE status = 'active'
+         AND COALESCE(is_islamic, 0) = 1
+         AND COALESCE(outstanding, 0) > 0
+       LIMIT 5000`
+    );
+    rows = r;
+  } catch (e) {
+    results.errors.push(e.message);
+    return results;
+  }
+
+  for (const c of rows) {
+    const os = money(c.outstanding);
+    let rate = Number(c.rate_pct) || 0;
+    // If no rate, try approximate from principal vs outstanding remaining profit
+    let profit = 0;
+    if (rate > 0) {
+      profit = simpleDailyInterest(os, rate, 1);
+    } else if (c.maturity_date && c.disbursed_at) {
+      // Unearned = max(0, something) — without profit_amount column use 0
+      profit = 0;
+    }
+    if (profit <= 0) {
+      results.skipped += 1;
+      continue;
+    }
+    const sourceRef = `ACCR-ISL-FIN-${c.id}-${businessDate}`;
+    try {
+      const journal = await ledger.postJournal({
+        businessDate,
+        sourceModule: 'EOD_ACCRUAL_ISLAMIC',
+        sourceRef,
+        narrative: `Islamic profit accrual ${c.contract_no}`,
+        postedBy: actor,
+        idempotencyKey: sourceRef,
+        lines: [
+          {
+            gl_code: '1100',
+            debit: profit,
+            credit: 0,
+            narrative: 'Islamic financing — profit receivable',
+          },
+          {
+            gl_code: '4100',
+            debit: 0,
+            credit: profit,
+            narrative: 'Islamic profit income (not ribā)',
+          },
+        ],
+      });
+      await pool.query(
+        `UPDATE cbs_financing_contracts
+         SET outstanding = COALESCE(outstanding, 0) + ?
+         WHERE id = ?`,
+        [profit, c.id]
+      );
+      results.count += 1;
+      results.amount = money(results.amount + profit);
+      results.journals.push(journal.id || journal.journal_ref);
+    } catch (e) {
+      if (/duplicate|idempoten/i.test(e.message)) results.skipped += 1;
+      else results.errors.push(`${c.contract_no}: ${e.message}`);
+    }
+  }
+  return results;
+}
+
+/**
+ * Islamic term deposit — estimated profit to depositors (e.g. mudaraba provisional).
+ * GL: Dr 5100 Profit expense to depositors / Cr 2200 TD liability
+ */
+async function accrueIslamicTermDeposits({ businessDate, actor }) {
+  const results = { count: 0, amount: 0, journals: [], skipped: 0, errors: [] };
+  let rows = [];
+  try {
+    const [r] = await pool.query(
+      `SELECT id, td_ref, principal, outstanding_principal, rate_pct, interest_accrued, status, is_islamic
+       FROM cbs_term_deposits
+       WHERE status = 'active'
+         AND COALESCE(is_islamic, 0) = 1
+         AND COALESCE(rate_pct, 0) > 0
+       LIMIT 5000`
+    );
+    rows = r;
+  } catch (e) {
+    results.errors.push(e.message);
+    return results;
+  }
+
+  for (const td of rows) {
+    const prin = money(td.outstanding_principal ?? td.principal);
+    const profit = simpleDailyInterest(prin, td.rate_pct, 1);
+    if (profit <= 0) {
+      results.skipped += 1;
+      continue;
+    }
+    const sourceRef = `ACCR-ISL-TD-${td.id}-${businessDate}`;
+    try {
+      const journal = await ledger.postJournal({
+        businessDate,
+        sourceModule: 'EOD_ACCRUAL_ISLAMIC',
+        sourceRef,
+        narrative: `Islamic TD provisional profit ${td.td_ref}`,
+        postedBy: actor,
+        idempotencyKey: sourceRef,
+        lines: [
+          {
+            gl_code: '5100',
+            debit: profit,
+            credit: 0,
+            narrative: 'Profit expense to Islamic depositors',
+          },
+          {
+            gl_code: '2200',
+            debit: 0,
+            credit: profit,
+            narrative: 'Islamic TD profit payable',
+          },
+        ],
+      });
+      await pool.query(
+        `UPDATE cbs_term_deposits
+         SET interest_accrued = COALESCE(interest_accrued, 0) + ?
+         WHERE id = ?`,
+        [profit, td.id]
+      );
+      try {
+        await pool.query(
+          `INSERT INTO cbs_td_events (td_id, event_type, amount, journal_id, note, actor)
+           VALUES (?, 'ACCRUE', ?, ?, ?, ?)`,
+          [td.id, profit, journal.id || null, `Islamic EOD ${businessDate}`, actor]
+        );
+      } catch (_) {}
+      results.count += 1;
+      results.amount = money(results.amount + profit);
+      results.journals.push(journal.id || journal.journal_ref);
+    } catch (e) {
+      if (/duplicate|idempoten/i.test(e.message)) results.skipped += 1;
+      else results.errors.push(`${td.td_ref}: ${e.message}`);
+    }
+  }
+  return results;
+}
+
+
 async function runAllAccruals({ businessDate, actor, skip = {} }) {
   const out = {
     business_date: businessDate,
     savings: skip.savings ? { skipped: true } : await accrueSavings({ businessDate, actor }),
     term_deposits: skip.td ? { skipped: true } : await accrueTermDeposits({ businessDate, actor }),
     financing: skip.financing ? { skipped: true } : await accrueFinancing({ businessDate, actor }),
+    islamic_financing: skip.islamic_financing || skip.islamic
+      ? { skipped: true }
+      : await accrueIslamicFinancing({ businessDate, actor }),
+    islamic_term_deposits: skip.islamic_td || skip.islamic
+      ? { skipped: true }
+      : await accrueIslamicTermDeposits({ businessDate, actor }),
   };
   out.total_amount = money(
-    (out.savings.amount || 0) + (out.term_deposits.amount || 0) + (out.financing.amount || 0)
+    (out.savings.amount || 0) +
+      (out.term_deposits.amount || 0) +
+      (out.financing.amount || 0) +
+      (out.islamic_financing.amount || 0) +
+      (out.islamic_term_deposits.amount || 0)
   );
   out.total_count =
-    (out.savings.count || 0) + (out.term_deposits.count || 0) + (out.financing.count || 0);
+    (out.savings.count || 0) +
+    (out.term_deposits.count || 0) +
+    (out.financing.count || 0) +
+    (out.islamic_financing.count || 0) +
+    (out.islamic_term_deposits.count || 0);
   return out;
 }
 
@@ -237,5 +412,7 @@ module.exports = {
   accrueSavings,
   accrueTermDeposits,
   accrueFinancing,
+  accrueIslamicFinancing,
+  accrueIslamicTermDeposits,
   runAllAccruals,
 };

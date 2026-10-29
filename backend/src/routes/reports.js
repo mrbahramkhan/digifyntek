@@ -189,7 +189,7 @@ router.get('/accrual-summary', auth(), async (req, res, next) => {
     const [rows] = await pool.query(
       `SELECT id, journal_ref, business_date, source_ref, narrative, total_debit, total_credit, status, posted_at
        FROM cbs_journal_headers
-       WHERE source_module = 'EOD_ACCRUAL'
+       WHERE source_module IN ('EOD_ACCRUAL', 'EOD_ACCRUAL_ISLAMIC')
          AND business_date BETWEEN ? AND ?
        ORDER BY business_date DESC, id DESC
        LIMIT 1000`,
