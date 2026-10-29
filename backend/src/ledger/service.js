@@ -435,6 +435,7 @@ async function disburseLoan({
   customerId, productCode, principal, branchCode, businessDate,
   creditAccountId, narrative, createdBy, idempotencyKey,
   loanGl = '1100', cashGl = '1000', depositGl = '2000', isIslamic = false,
+  islamicMode = null, ratePct = 0,
 }) {
   const amt = money(principal);
   if (amt <= 0) { const e = new Error('Principal must be positive'); e.status = 400; throw e; }
@@ -468,14 +469,18 @@ async function disburseLoan({
     lines,
   });
 
+  // Ensure optional columns exist
+  try { await pool.query(`ALTER TABLE cbs_financing_contracts ADD COLUMN islamic_mode VARCHAR(40) NULL`); } catch (_) {}
+  try { await pool.query(`ALTER TABLE cbs_financing_contracts ADD COLUMN rate_pct DECIMAL(8,4) NULL DEFAULT 0`); } catch (_) {}
+
   const [ins] = await pool.query(
     `INSERT INTO cbs_financing_contracts
       (contract_no, customer_id, product_code, branch_code, principal, outstanding,
-       is_islamic, status, disbursed_at, disbursement_journal_id, narrative, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)`,
+       is_islamic, islamic_mode, rate_pct, status, disbursed_at, disbursement_journal_id, narrative, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)`,
     [
       contractNo, customerId, productCode || 'LON-AGRI', branchCode || '001',
-      amt, amt, isIslamic ? 1 : 0,
+      amt, amt, isIslamic ? 1 : 0, islamicMode || null, Number(ratePct) || 0,
       businessDate || new Date().toISOString().slice(0, 10),
       journal.id, narrative || null, createdBy || null,
     ]

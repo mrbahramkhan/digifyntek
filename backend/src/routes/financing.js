@@ -4,6 +4,32 @@ const pool = require('../config/db');
 const ledger = require('../ledger/service');
 const router = express.Router();
 
+router.get('/products', auth(), async (req, res, next) => {
+  try {
+    const pool = require('../config/db');
+    const islamic = req.query.islamic;
+    let sql = `SELECT product_code, product_name, product_type, product_family, islamic_mode, is_islamic, interest_rate, active
+               FROM cbs_products WHERE active = 1`;
+    const params = [];
+    if (islamic === '1') {
+      sql += ` AND is_islamic = 1`;
+    } else if (islamic === '0') {
+      sql += ` AND COALESCE(is_islamic,0) = 0`;
+    }
+    if (req.query.family) {
+      sql += ` AND product_family = ?`;
+      params.push(req.query.family);
+    }
+    sql += ` ORDER BY is_islamic, product_code`;
+    const [rows] = await pool.query(sql, params);
+    res.json(rows);
+  } catch (e) {
+    next(e);
+  }
+});
+
+
+
 router.get('/', auth(), async (req, res, next) => {
   try {
     const [rows] = await pool.query(
@@ -45,17 +71,34 @@ router.get('/:id', auth(), async (req, res, next) => {
 router.post('/disburse', auth(), requirePermission('loan.disburse'), async (req, res, next) => {
   try {
     const b = req.body || {};
+    // Resolve islamic flag from body or product master
+    let isIslamic = !!b.is_islamic;
+    let islamicMode = b.islamic_mode || null;
+    let ratePct = b.rate_pct != null ? Number(b.rate_pct) : null;
+    try {
+      const [[prod]] = await pool.query(
+        `SELECT is_islamic, islamic_mode, interest_rate FROM cbs_products WHERE product_code = ? LIMIT 1`,
+        [b.product_code || 'LON-AGRI']
+      );
+      if (prod) {
+        if (b.is_islamic === undefined) isIslamic = !!prod.is_islamic;
+        islamicMode = islamicMode || prod.islamic_mode || null;
+        if (ratePct == null && prod.interest_rate != null) ratePct = Number(prod.interest_rate);
+      }
+    } catch (_) {}
     const result = await ledger.disburseLoan({
       customerId: b.customer_id,
       productCode: b.product_code,
       principal: b.principal,
       branchCode: b.branch_code,
       businessDate: b.business_date,
-      creditAccountId: b.credit_account_id || null,
+      creditAccountId: b.credit_account_id || b.to_account_id || null,
       narrative: b.narrative,
       createdBy: req.user?.userId || req.user?.id,
       idempotencyKey: b.idempotency_key || req.headers['idempotency-key'],
-      isIslamic: !!b.is_islamic,
+      isIslamic,
+      islamicMode,
+      ratePct: ratePct || 0,
     });
     res.status(201).json(result);
   } catch (e) {

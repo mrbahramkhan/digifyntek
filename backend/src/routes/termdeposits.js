@@ -58,6 +58,19 @@ router.get('/:id', auth(), async (req, res, next) => {
 router.post('/', auth(), requirePermission('td.write'), async (req, res, next) => {
   try {
     const b = req.body || {};
+    let isIslamic = !!b.is_islamic;
+    let islamicMode = b.islamic_mode || null;
+    try {
+      const [[prod]] = await pool.query(
+        `SELECT is_islamic, islamic_mode, interest_rate FROM cbs_products WHERE product_code = ? LIMIT 1`,
+        [b.product_code || 'TD-PKR']
+      );
+      if (prod) {
+        if (b.is_islamic === undefined) isIslamic = !!prod.is_islamic;
+        islamicMode = islamicMode || prod.islamic_mode;
+        if (b.rate_pct == null && prod.interest_rate != null) b.rate_pct = prod.interest_rate;
+      }
+    } catch (_) {}
     const result = await ledger.placeTermDeposit({
       customerId: b.customer_id,
       fundingAccountId: b.funding_account_id || null,
@@ -68,7 +81,8 @@ router.post('/', auth(), requirePermission('td.write'), async (req, res, next) =
       branchCode: b.branch_code,
       productCode: b.product_code,
       rolloverInstruction: b.rollover_instruction,
-      isIslamic: !!b.is_islamic,
+      isIslamic,
+      islamicMode,
       withholdingTaxPct: b.withholding_tax_pct,
       narrative: b.narrative,
       createdBy: req.user?.userId || req.user?.id,
