@@ -275,6 +275,18 @@
   }
   var box = document.getElementById('packToggles');
   if (!box) return;
+  if (window.DigiFyntekAPI && DigiFyntekAPI.loadProductConfig) {
+    DigiFyntekAPI.loadProductConfig().then(function(r){
+      if (r && r.single_pack) {
+        var panel = document.getElementById('packPanel');
+        if (panel) {
+          panel.querySelector('.panel-h').textContent = 'Client product line';
+          var b = panel.querySelector('.panel-b');
+          if (b) b.innerHTML = '<p><strong>' + (r.labels && r.labels[r.single_pack] || r.single_pack) + '</strong> · client <code>' + (r.client_id||'') + '</code></p><p class="hint">Is deploy pe sirf yeh line enabled hai. Multi-pack ke liye server PRODUCT_PACKS badlein.</p>';
+        }
+      }
+    });
+  }
   var cur = packs();
   defs.forEach(function(d){
     var on = cur.indexOf(d.id) >= 0;

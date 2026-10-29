@@ -1,0 +1,5 @@
+{
+  "client_id": "client-isl-01",
+  "client_name": "Demo Islamic Bank",
+  "packs": ["islamic"]
+}

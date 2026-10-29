@@ -114,6 +114,8 @@ app.get('/health', async (_req, res) => {
   res.json({
     ok: true,
     product: 'DigiFyntek',
+    client_id: products.client_id,
+    client_name: products.client_name,
     version: '1.2.0',
     db,
     modules: {
@@ -203,7 +205,7 @@ if (products.fmfb) {
 
 app.use('/api', openapiRoutes);
 app.get('/api/products', (_req, res) => {
-  res.json({ packs: products.packs, flags: { conventional: products.conventional, islamic: products.islamic, agri: products.agri, fmfb: products.fmfb, core: products.core, kisaan: products.kisaan }, labels: products.label });
+  res.json(typeof products.public === 'function' ? products.public() : { packs: products.packs, labels: products.label });
 });
 
 // Serve full UI (phase1) from same process — one deploy = full system

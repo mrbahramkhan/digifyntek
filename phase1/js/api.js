@@ -252,3 +252,17 @@
 
 
 })(window);
+
+/** Load enabled product packs from server (client deploy config) */
+DigiFyntekAPI.loadProductConfig = async function () {
+  try {
+    var r = await DigiFyntekAPI.request('/api/products');
+    window.__DIGI_PRODUCTS__ = r;
+    try {
+      if (r && r.packs) localStorage.setItem('DIGIFYNTEK_PACKS', r.packs.join(','));
+    } catch (e) {}
+    return r;
+  } catch (e) {
+    return null;
+  }
+};

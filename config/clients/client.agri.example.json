@@ -1,0 +1,5 @@
+{
+  "client_id": "client-agri-01",
+  "client_name": "Demo Agri Cooperative",
+  "packs": ["agri"]
+}

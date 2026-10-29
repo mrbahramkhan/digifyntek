@@ -32,6 +32,16 @@
   }
 
   var PACKS = loadPacks();
+  // Server is source of truth when page set window.__DIGI_PRODUCTS__ (from /api/products)
+  try {
+    if (window.__DIGI_PRODUCTS__ && window.__DIGI_PRODUCTS__.packs && window.__DIGI_PRODUCTS__.packs.length) {
+      PACKS = window.__DIGI_PRODUCTS__.packs.map(function (p) {
+        if (p === 'core') return 'conventional';
+        if (p === 'kisaan') return 'agri';
+        return p;
+      });
+    }
+  } catch (e) {}
   function hasPack(id) {
     if (id === 'core') id = 'conventional';
     if (id === 'kisaan') id = 'agri';
