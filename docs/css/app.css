@@ -483,3 +483,23 @@ code {
   border-color: #334155;
   color: #fbbf24;
 }
+
+
+/* Kisaan App dashboard cards */
+.mod-grid a.ka-card {
+  border-top: 3px solid #059669 !important;
+  position: relative;
+  padding-top: 12px;
+}
+.mod-grid a.ka-card .ka-icon {
+  font-size: 22px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.mod-grid a.ka-card:hover {
+  background: #ecfdf5;
+  border-color: #10b981;
+}
+[data-theme="dark"] .mod-grid a.ka-card:hover {
+  background: #064e3b;
+}

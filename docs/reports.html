@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reports — DigiFyntek</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+  <script>(function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();</script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar"><h1>Reports</h1><span class="meta">MIS · portfolio · cheques · EOD · accrual</span><div class="spacer"></div></header>
+    <div class="workspace">
+      <div class="toolbar">
+        <select id="reportId" class="inp" style="max-width:280px">
+          <option value="trial-balance">Trial balance</option>
+          <option value="casa-balances">CASA balances</option>
+          <option value="loan-portfolio">Financing portfolio</option>
+          <option value="td-portfolio">Term deposit portfolio</option>
+          <option value="member-summary">Kisaan members summary</option>
+          <option value="cheque-inventory">Cheque book inventory</option>
+          <option value="stop-payments">Stop payment list</option>
+          <option value="eod-history">EOD history</option>
+          <option value="accrual-summary">Accrual journals</option>
+        </select>
+        <input class="inp" id="asOf" type="date" style="max-width:160px" title="As of / to date" />
+        <input class="inp" id="accountId" placeholder="Account ID (statement)" style="max-width:140px" />
+        <button class="btn btn-p" onclick="runReport()">Run report</button>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="panel">
+        <div class="panel-h" id="reportTitle">Select a report</div>
+        <div class="panel-b table-wrap">
+          <pre id="raw" class="hint" style="display:none;white-space:pre-wrap"></pre>
+          <table class="data" id="tbl"><thead id="th"></thead><tbody id="tb"><tr><td class="empty">Choose a report and click Run</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+async function runReport() {
+  const id = document.getElementById('reportId').value;
+  const asOf = document.getElementById('asOf').value;
+  const accountId = document.getElementById('accountId').value.trim();
+  document.getElementById('reportTitle').textContent = id;
+  document.getElementById('kpis').innerHTML = '';
+  let path = '/api/v1/reports/' + id;
+  const q = [];
+  if (asOf) {
+    if (id === 'trial-balance') q.push('as_of=' + asOf);
+    else if (id === 'accrual-summary') q.push('to=' + asOf);
+  }
+  if (id === 'account-statement') {
+    if (!accountId) { alert('Account ID required'); return; }
+    path = '/api/v1/reports/account-statement?account_id=' + encodeURIComponent(accountId);
+  } else if (q.length) path += '?' + q.join('&');
+
+  try {
+    const data = await DigiFyntekAPI.request(path);
+    render(id, data);
+  } catch (e) {
+    document.getElementById('tb').innerHTML = '<tr><td class="empty">' + (e.message || e) + '</td></tr>';
+  }
+}
+
+function kpi(label, val) {
+  return '<div class="kpi"><div class="l">' + label + '</div><div class="v">' + val + '</div></div>';
+}
+
+function render(id, data) {
+  const k = document.getElementById('kpis');
+  const th = document.getElementById('th');
+  const tb = document.getElementById('tb');
+  if (id === 'trial-balance') {
+    k.innerHTML = kpi('Debit', data.total_debit) + kpi('Credit', data.total_credit) + kpi('Balanced', data.balanced ? 'Yes' : 'No');
+    th.innerHTML = '<tr><th>GL</th><th>Debit</th><th>Credit</th></tr>';
+    const lines = data.lines || data.rows || [];
+    tb.innerHTML = lines.length ? lines.map(r => '<tr><td>' + (r.gl_code||r.gl||'') + '</td><td class="num">' + (r.debit||0) + '</td><td class="num">' + (r.credit||0) + '</td></tr>').join('') : '<tr><td colspan="3" class="empty">No lines</td></tr>';
+    return;
+  }
+  if (id === 'casa-balances') {
+    k.innerHTML = kpi('Accounts', data.count) + kpi('Total balance', data.total_balance);
+    th.innerHTML = '<tr><th>ID</th><th>Account</th><th>Customer</th><th>Product</th><th>Balance</th><th>Status</th></tr>';
+    tb.innerHTML = (data.rows||[]).map(r => '<tr><td>'+r.id+'</td><td>'+(r.account_no||'')+'</td><td>'+(r.full_name||r.customer_id||'')+'</td><td>'+r.product_code+'</td><td class="num">'+r.balance+'</td><td>'+r.status+'</td></tr>').join('') || '<tr><td colspan="6" class="empty">None</td></tr>';
+    return;
+  }
+  if (id === 'loan-portfolio') {
+    k.innerHTML = kpi('Contracts', data.count) + kpi('Active', data.active_count) + kpi('OS', data.outstanding_total);
+    th.innerHTML = '<tr><th>Contract</th><th>Customer</th><th>Principal</th><th>OS</th><th>Rate</th><th>Status</th></tr>';
+    tb.innerHTML = (data.rows||[]).map(r => '<tr><td>'+r.contract_no+'</td><td>'+(r.full_name||r.customer_id)+'</td><td class="num">'+r.principal+'</td><td class="num">'+r.outstanding+'</td><td>'+(r.rate_pct||'—')+'</td><td>'+r.status+'</td></tr>').join('') || '<tr><td colspan="6" class="empty">None</td></tr>';
+    return;
+  }
+  if (id === 'td-portfolio') {
+    k.innerHTML = kpi('TDs', data.count) + kpi('Active', data.active_count) + kpi('Principal', data.principal_total) + kpi('Accrued', data.accrued_total);
+    th.innerHTML = '<tr><th>Ref</th><th>Customer</th><th>Principal</th><th>Rate</th><th>Maturity</th><th>Accrued</th><th>Status</th></tr>';
+    tb.innerHTML = (data.rows||[]).map(r => '<tr><td>'+r.td_ref+'</td><td>'+(r.full_name||r.customer_id)+'</td><td class="num">'+r.principal+'</td><td>'+r.rate_pct+'</td><td>'+String(r.maturity_date||'').slice(0,10)+'</td><td class="num">'+(r.interest_accrued||0)+'</td><td>'+r.status+'</td></tr>').join('') || '<tr><td colspan="7" class="empty">None</td></tr>';
+    return;
+  }
+  if (id === 'member-summary') {
+    k.innerHTML = kpi('Members / CIF', data.count);
+    th.innerHTML = '<tr><th>ID</th><th>Name</th><th>CNIC / ref</th><th>Status</th></tr>';
+    tb.innerHTML = (data.rows||[]).map(r => '<tr><td>'+r.id+'</td><td>'+(r.full_name||r.member_name||'')+'</td><td>'+(r.cnic||r.member_no||'')+'</td><td>'+(r.status||'')+'</td></tr>').join('') || '<tr><td colspan="4" class="empty">None</td></tr>';
+    return;
+  }
+  if (id === 'cheque-inventory') {
+    k.innerHTML = (data.books_by_status||[]).map(s => kpi('Books '+s.status, s.n)).join('') + (data.leaves_by_status||[]).map(s => kpi('Leaves '+s.status, s.n)).join('');
+    th.innerHTML = '<tr><th>Book #</th><th>Member</th><th>Account</th><th>Range</th><th>Leaves</th><th>Status</th></tr>';
+    tb.innerHTML = (data.books||[]).map(r => '<tr><td>'+r.book_no+'</td><td>'+(r.member_ref||'')+'</td><td>'+(r.account_no||'')+'</td><td>'+r.leaf_start+'-'+r.leaf_end+'</td><td>'+r.total_leaves+'</td><td>'+r.status+'</td></tr>').join('') || '<tr><td colspan="6" class="empty">None</td></tr>';
+    return;
+  }
+  if (id === 'stop-payments') {
+    k.innerHTML = kpi('Stopped', data.count);
+    th.innerHTML = '<tr><th>Cheque #</th><th>Book</th><th>Account</th><th>Amount</th><th>Stop date</th><th>Reason</th></tr>';
+    tb.innerHTML = (data.rows||[]).map(r => '<tr><td>'+r.cheque_no+'</td><td>'+r.book_no+'</td><td>'+(r.account_no||'')+'</td><td class="num">'+(r.amount||'')+'</td><td>'+String(r.stop_date||'').slice(0,10)+'</td><td>'+(r.stop_reason||'')+'</td></tr>').join('') || '<tr><td colspan="6" class="empty">None</td></tr>';
+    return;
+  }
+  if (id === 'eod-history') {
+    k.innerHTML = kpi('Runs', data.count);
+    th.innerHTML = '<tr><th>ID</th><th>Business date</th><th>Status</th><th>Run by</th><th>Next date</th></tr>';
+    tb.innerHTML = (data.rows||[]).map(r => '<tr><td>'+r.id+'</td><td>'+String(r.business_date||'').slice(0,10)+'</td><td>'+r.status+'</td><td>'+(r.run_by||'')+'</td><td>'+String(r.next_business_date||'').slice(0,10)+'</td></tr>').join('') || '<tr><td colspan="5" class="empty">None</td></tr>';
+    return;
+  }
+  if (id === 'accrual-summary') {
+    k.innerHTML = kpi('Journals', data.count) + kpi('Total debit', data.total_debit);
+    th.innerHTML = '<tr><th>Ref</th><th>Date</th><th>Source ref</th><th>Debit</th><th>Narrative</th></tr>';
+    tb.innerHTML = (data.rows||[]).map(r => '<tr><td>'+r.journal_ref+'</td><td>'+String(r.business_date||'').slice(0,10)+'</td><td>'+(r.source_ref||'')+'</td><td class="num">'+r.total_debit+'</td><td>'+(r.narrative||'')+'</td></tr>').join('') || '<tr><td colspan="5" class="empty">None — run EOD accrual first</td></tr>';
+    return;
+  }
+  // fallback
+  document.getElementById('raw').style.display = 'block';
+  document.getElementById('raw').textContent = JSON.stringify(data, null, 2);
+}
+document.getElementById('asOf').value = new Date().toISOString().slice(0, 10);
+</script>
+</body>
+</html>

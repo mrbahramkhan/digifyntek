@@ -287,11 +287,29 @@ async function runEod(orgCode, userId, body = {}) {
 
   // --- Accrual (optional, idempotent marker only — no double interest without product engine) ---
   if (!body.skip_accrual) {
-    steps.push({
-      code: 'ACCRUAL',
-      ok: true,
-      detail: 'Accrual step recorded (configure product rates for live interest postings)',
-    });
+    try {
+      const accrual = require('./accrual');
+      const acc = await accrual.runAllAccruals({
+        businessDate: bizDate,
+        actor: String(userId || 'eod'),
+        skip: {
+          savings: body.skip_savings_accrual === true,
+          td: body.skip_td_accrual === true,
+          financing: body.skip_loan_accrual === true,
+        },
+      });
+      steps.push({
+        code: 'ACCRUAL',
+        ok: true,
+        detail: `Posted ${acc.total_count} accruals · amount ${acc.total_amount} · SAV ${acc.savings.count || 0} TD ${acc.term_deposits.count || 0} LON ${acc.financing.count || 0}`,
+        accrual: acc,
+      });
+    } catch (e) {
+      steps.push({ code: 'ACCRUAL', ok: false, detail: e.message });
+      if (body.accrual_required === true) overall = 'failed';
+    }
+  } else {
+    steps.push({ code: 'ACCRUAL', ok: true, detail: 'Skipped by request' });
   } else {
     steps.push({ code: 'ACCRUAL', ok: true, detail: 'Skipped by request' });
   }

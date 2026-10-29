@@ -30,4 +30,21 @@ router.put('/business-date', auth(), async (req, res, next) => {
   }
 });
 
+
+router.post('/accrual/run', auth(), requirePermission('eod.run'), async (req, res, next) => {
+  try {
+    const accrual = require('../eod/accrual');
+    const biz = req.body?.business_date || new Date().toISOString().slice(0, 10);
+    const result = await accrual.runAllAccruals({
+      businessDate: biz,
+      actor: req.user?.userId || req.user?.id || 'accrual',
+      skip: req.body?.skip || {},
+    });
+    res.json(result);
+  } catch (e) {
+    next(e);
+  }
+});
+
 module.exports = router;
+

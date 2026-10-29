@@ -63,6 +63,7 @@
           <label style="font-size:12px;display:flex;align-items:center;gap:6px">
             <input type="checkbox" id="allowUnposted" /> Allow unposted
           </label>
+          <button class="btn" type="button" onclick="runAccrualOnly()">Run accrual only</button>
           <button class="btn btn-p" type="button" onclick="runEod()">Run end of day</button>
         </div>
         <div id="msg"></div>
@@ -134,6 +135,20 @@ async function setDate() {
   }
 }
 
+async function runAccrualOnly() {
+  const msg = document.getElementById('msg') || document.getElementById('eodMsg');
+  try {
+    const biz = (document.getElementById('bizDate') && document.getElementById('bizDate').value) || new Date().toISOString().slice(0,10);
+    const r = await DigiFyntekAPI.request('/api/eod/accrual/run', {
+      method: 'POST',
+      body: JSON.stringify({ business_date: biz }),
+    });
+    alert('Accrual done: count=' + r.total_count + ' amount=' + r.total_amount);
+    if (typeof loadStatus === 'function') loadStatus();
+  } catch (e) {
+    alert(e.message || e);
+  }
+}
 async function runEod() {
   if (!confirm('Run End of Day for the selected business date? This will close the day and open the next date.')) return;
   const msg = document.getElementById('msg');

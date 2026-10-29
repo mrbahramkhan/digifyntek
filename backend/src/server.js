@@ -26,6 +26,7 @@ const clearingRoutes = require('./routes/clearing');
 const reconRoutes = require('./routes/recon');
 const rbacRoutes = require('./routes/rbac');
 const openapiRoutes = require('./routes/openapi');
+const reportsRoutes = require('./routes/reports');
 
 // --- Pack: Kisaan App ---
 let memberRoutes, sharesRoutes, savingsRoutes, vacsRoutes, cardRoutes, complianceRoutes, dashboardRoutes;
@@ -167,6 +168,8 @@ app.use('/api/clearing', clearingRoutes);
 app.use('/api/v1/recon', reconRoutes);
 app.use('/api/recon', reconRoutes);
 app.use('/api/v1/rbac', rbacRoutes);
+app.use('/api/v1/reports', reportsRoutes);
+app.use('/api/reports', reportsRoutes);
 app.use('/api/rbac', rbacRoutes);
 
 // ===== KISAAN — Kisaan App =====
