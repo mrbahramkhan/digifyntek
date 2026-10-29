@@ -1,15 +1,13 @@
 /**
- * DigiFyntek product packs — independent major modules.
+ * DigiFyntek — three primary product lines (+ optional FMFB)
  *
- * Env (comma-separated PRODUCT_PACKS or individual ENABLE_* flags):
- *   PRODUCT_PACKS=core,kisaan,islamic,fmfb
- *   Defaults: all on for full platform; set PRODUCT_PACKS=core for CBS-only.
+ * PRODUCT_PACKS=conventional,islamic,agri
+ * Aliases: core→conventional, kisaan→agri
  *
- *   core     — Fintech CBS: CIF, CASA, ledger, financing, TD, teller, EOD, RBAC…
- *   kisaan   — Kisaan App: members, shares, savings, VAC/branch,
- *              membership cards, cooperative compliance, registration checklist
- *   islamic  — Islamic finance modes: murabaha + other modes UI/API
- *   fmfb     — Microfinance bank: MFB prudential, asset quality, capital, collateral depth
+ *   conventional — Conventional banking (CIF, CASA, loans, TD, teller, EOD…)
+ *   islamic      — Islamic banking (Shariah products, murabaha, profit accrual)
+ *   agri         — Agri App (cooperative members, shares, agri compliance)
+ *   fmfb         — optional microfinance prudential pack
  */
 
 function flag(name, def = false) {
@@ -28,31 +26,49 @@ function parsePacks() {
         .filter(Boolean)
     );
   }
-  // Default: full platform (all packs)
-  return new Set(['core', 'kisaan', 'islamic', 'fmfb']);
+  return new Set(['conventional', 'islamic', 'agri', 'fmfb']);
 }
 
-const packs = parsePacks();
+const raw = parsePacks();
+
+// Normalize aliases
+const packs = new Set();
+for (const p of raw) {
+  if (p === 'core' || p === 'cbs' || p === 'fintech' || p === 'conventional') packs.add('conventional');
+  else if (p === 'kisaan' || p === 'cooperative' || p === 'digitalkisaan' || p === 'agri') packs.add('agri');
+  else if (p === 'islamic' || p === 'shariah') packs.add('islamic');
+  else if (p === 'fmfb' || p === 'mfb' || p === 'microfinance') packs.add('fmfb');
+  else packs.add(p);
+}
 
 const products = {
   packs: [...packs],
-  core: packs.has('core') || packs.has('cbs') || packs.has('fintech'),
-  kisaan: packs.has('kisaan') || packs.has('cooperative') || packs.has('digitalkisaan') || flag('ENABLE_KISAAN'),
-  islamic: packs.has('islamic') || packs.has('shariah') || flag('ENABLE_ISLAMIC'),
-  fmfb: packs.has('fmfb') || packs.has('mfb') || packs.has('microfinance') || flag('ENABLE_FMFB'),
+  // primary three
+  conventional:
+    packs.has('conventional') || flag('ENABLE_CONVENTIONAL') || flag('ENABLE_CORE'),
+  islamic: packs.has('islamic') || flag('ENABLE_ISLAMIC'),
+  agri: packs.has('agri') || flag('ENABLE_AGRI') || flag('ENABLE_KISAAN'),
+  fmfb: packs.has('fmfb') || flag('ENABLE_FMFB'),
 };
 
-// Core is always required for ledger integrity
-if (!products.core) {
-  products.core = true;
-  if (!products.packs.includes('core')) products.packs.unshift('core');
+// Shared ledger / CIF always on with conventional; if only islamic still need ledger
+if (!products.conventional && !products.islamic) {
+  products.conventional = true;
+  if (!products.packs.includes('conventional')) products.packs.unshift('conventional');
 }
 
+// Back-compat flags used by server.js
+products.core = products.conventional;
+products.kisaan = products.agri;
+
 products.label = {
-  core: 'Fintech CBS',
-  kisaan: 'Kisaan App',
-  islamic: 'Islamic Finance',
+  conventional: 'Conventional Banking',
+  islamic: 'Islamic Banking',
+  agri: 'Agri App',
   fmfb: 'FMFB / Microfinance',
+  // aliases
+  core: 'Conventional Banking',
+  kisaan: 'Agri App',
 };
 
 module.exports = products;

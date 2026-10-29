@@ -28,7 +28,7 @@ const rbacRoutes = require('./routes/rbac');
 const openapiRoutes = require('./routes/openapi');
 const reportsRoutes = require('./routes/reports');
 
-// --- Pack: Kisaan App ---
+// --- Pack: Agri App (alias kisaan) ---
 let memberRoutes, sharesRoutes, savingsRoutes, vacsRoutes, cardRoutes, complianceRoutes, dashboardRoutes;
 if (products.kisaan) {
   memberRoutes = require('./routes/members');
@@ -118,10 +118,13 @@ app.get('/health', async (_req, res) => {
     db,
     modules: {
       packs: products.packs,
+      conventional: products.conventional,
+      islamic: products.islamic,
+      agri: products.agri,
+      fmfb: products.fmfb,
+      // aliases
       core: products.core,
       kisaan: products.kisaan,
-      islamic: products.islamic,
-      fmfb: products.fmfb,
     },
     product_labels: products.label,
     modes: {
@@ -172,7 +175,7 @@ app.use('/api/v1/reports', reportsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/rbac', rbacRoutes);
 
-// ===== KISAAN — Kisaan App =====
+// ===== AGRI APP (kisaan routes) =====
 if (products.kisaan) {
   app.use('/api/members', memberRoutes);
   app.use('/api/shares', sharesRoutes);
@@ -200,7 +203,7 @@ if (products.fmfb) {
 
 app.use('/api', openapiRoutes);
 app.get('/api/products', (_req, res) => {
-  res.json({ packs: products.packs, flags: { core: products.core, kisaan: products.kisaan, islamic: products.islamic, fmfb: products.fmfb }, labels: products.label });
+  res.json({ packs: products.packs, flags: { conventional: products.conventional, islamic: products.islamic, agri: products.agri, fmfb: products.fmfb, core: products.core, kisaan: products.kisaan }, labels: products.label });
 });
 
 // Serve full UI (phase1) from same process — one deploy = full system

@@ -6,58 +6,62 @@
     else document.documentElement.removeAttribute('data-theme');
   })();
 
-/** DigiFyntek — multi-product shell (CBS + Kisaan + Islamic + FMFB packs) */
+/** DigiFyntek — Conventional Banking · Islamic Banking · Agri App */
 (function (g) {
   /**
    * Information architecture
    * 1 Home · 2 Customers · 3 Accounts · 4 Lending · 5 Operations · 6 Risk · 7 Admin
    */
   /**
-   * Product packs (major modules):
-   *   core   — Fintech CBS
-   *   kisaan — Kisaan App
-   *   islamic — Islamic finance
-   *   fmfb   — FMFB / Microfinance bank
-   * Toggle: localStorage DIGIFYNTEK_PACKS = "core,kisaan,islamic,fmfb"
-   * Or server /api/products
+   * Three primary lines: Conventional Banking · Islamic Banking · Agri App
+   * localStorage DIGIFYNTEK_PACKS = "conventional,islamic,agri"
+   * Aliases: core→conventional, kisaan→agri
    */
   function loadPacks() {
     try {
       var raw = localStorage.getItem('DIGIFYNTEK_PACKS');
       if (raw) {
-        return raw.split(',').map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean);
+        return raw.split(',').map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean).map(function (p) {
+          if (p === 'core' || p === 'cbs' || p === 'fintech') return 'conventional';
+          if (p === 'kisaan' || p === 'cooperative') return 'agri';
+          return p;
+        });
       }
     } catch (e) {}
-    return ['core', 'kisaan', 'islamic', 'fmfb'];
+    return ['conventional', 'islamic', 'agri', 'fmfb'];
   }
 
   var PACKS = loadPacks();
-  function hasPack(id) { return PACKS.indexOf(id) >= 0; }
+  function hasPack(id) {
+    if (id === 'core') id = 'conventional';
+    if (id === 'kisaan') id = 'agri';
+    return PACKS.indexOf(id) >= 0;
+  }
 
   var NAV = [
     {
       sec: 'Home',
       items: [
         { href: 'app.html', label: 'Dashboard' },
-        { href: 'app.html#packs', label: 'Product modules' },
+        { href: 'app.html#packs', label: 'Product lines' },
       ],
     },
   ];
 
-  // —— CORE: Fintech CBS ——
-  if (hasPack('core')) {
+  // —— Conventional Banking ——
+  if (hasPack('conventional')) {
     NAV.push(
       {
-        sec: 'CBS · Customers',
-        pack: 'core',
+        sec: 'Conventional · Customers',
+        pack: 'conventional',
         items: [
           { href: 'cif.html', label: 'CIF / Customers' },
           { href: 'kyc.html', label: 'KYC cases' },
         ],
       },
       {
-        sec: 'CBS · Accounts',
-        pack: 'core',
+        sec: 'Conventional · Accounts',
+        pack: 'conventional',
         items: [
           { href: 'accounts.html', label: 'CASA accounts' },
           { href: 'term-deposits.html', label: 'Term deposits' },
@@ -66,16 +70,16 @@
         ],
       },
       {
-        sec: 'CBS · Lending',
-        pack: 'core',
+        sec: 'Conventional · Lending',
+        pack: 'conventional',
         items: [
           { href: 'financing.html', label: 'Disburse financing' },
           { href: 'products.html', label: 'Product catalogue' },
         ],
       },
       {
-        sec: 'CBS · Operations',
-        pack: 'core',
+        sec: 'Conventional · Operations',
+        pack: 'conventional',
         items: [
           { href: 'ledger.html', label: 'Journal & trial balance' },
           { href: 'transfer.html', label: 'Internal transfer' },
@@ -91,11 +95,30 @@
     );
   }
 
-  // —— KISAAN: Kisaan App ——
-  if (hasPack('kisaan')) {
+  // —— Islamic Banking ——
+  if (hasPack('islamic')) {
     NAV.push({
-      sec: 'Kisaan App',
-      pack: 'kisaan',
+      sec: 'Islamic Banking',
+      pack: 'islamic',
+      items: [
+        { href: 'islamic-dashboard.html', label: 'Islamic dashboard' },
+        { href: 'products.html', label: 'Islamic products' },
+        { href: 'accounts.html', label: 'Islamic deposits' },
+        { href: 'financing.html', label: 'Islamic financing' },
+        { href: 'term-deposits.html', label: 'Islamic TD' },
+        { href: 'murabaha.html', label: 'Murābaḥah' },
+        { href: 'islamic-ops.html', label: 'Other Islamic modes' },
+        { href: 'islamic.html', label: 'Shariah catalogue' },
+        { href: 'eod.html', label: 'EOD / profit accrual' },
+      ],
+    });
+  }
+
+  // —— Agri App (formerly Kisaan App) ——
+  if (hasPack('agri') || hasPack('kisaan')) {
+    NAV.push({
+      sec: 'Agri App',
+      pack: 'agri',
       items: [
         { href: 'members.html', label: 'Member register' },
         { href: 'member360.html', label: 'Member 360' },
@@ -109,22 +132,7 @@
     });
   }
 
-  // —— ISLAMIC ——
-  if (hasPack('islamic')) {
-    NAV.push({
-      sec: 'Islamic finance',
-      pack: 'islamic',
-      items: [
-        { href: 'islamic-dashboard.html', label: 'Islamic dashboard' },
-        { href: 'products.html', label: 'Islamic banking products' },
-        { href: 'murabaha.html', label: 'Murābaḥah' },
-        { href: 'islamic-ops.html', label: 'Other Islamic modes' },
-        { href: 'islamic.html', label: 'Shariah catalogue' },
-      ],
-    });
-  }
-
-  // —— FMFB ——
+  // —— FMFB (optional) ——
   if (hasPack('fmfb')) {
     NAV.push({
       sec: 'FMFB · Microfinance',

@@ -1,12 +1,17 @@
-# DigiFyntek — major product modules
+# Product lines
 
-| Pack | Name | Domain |
-|------|------|--------|
-| core | Fintech CBS | CIF, KYC, CASA, ledger, financing, TD, teller, EOD, RBAC |
-| kisaan | Kisaan App | Members, shares, savings, cards, cooperative compliance |
-| islamic | Islamic Finance | Murabaha, modes, Shariah catalogue |
-| fmfb | FMFB / Microfinance | Prudential, portfolio, collateral |
+| Pack id | Display name | Domain |
+|---------|--------------|--------|
+| `conventional` | **Conventional Banking** | CIF, CASA, loans, TD, teller, ledger, EOD, cheques, reports |
+| `islamic` | **Islamic Banking** | Islamic deposits, Murabaha/Ijarah/…, Islamic TD, profit accrual |
+| `agri` | **Agri App** | Cooperative/agri members, shares, cards, compliance (ex-Kisaan App) |
+| `fmfb` | FMFB (optional) | Microfinance prudential |
 
-Server: `PRODUCT_PACKS=core,kisaan,islamic,fmfb`  
-UI: localStorage `DIGIFYNTEK_PACKS` or dashboard toggles  
+Aliases: `core`→conventional, `kisaan`→agri
+
+```bash
+PRODUCT_PACKS=conventional,islamic,agri
+```
+
+UI: `localStorage.DIGIFYNTEK_PACKS`
 API: `GET /api/products`

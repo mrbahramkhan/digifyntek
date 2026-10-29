@@ -71,14 +71,14 @@
       </header>
       <div class="workspace">
         <div class="kpis">
-          <div class="kpi" style="border-top-color:#059669"><div class="l">Kisaan members</div><div class="v" id="kMembers">—</div></div>
+          <div class="kpi" style="border-top-color:#059669"><div class="l">Agri members</div><div class="v" id="kMembers">—</div></div>
           <div class="kpi"><div class="l">Active loans</div><div class="v" id="kLoans">—</div></div>
           <div class="kpi"><div class="l">Portfolio OS</div><div class="v" id="kOs">—</div></div>
           <div class="kpi"><div class="l">PAR / risk</div><div class="v" id="kPar">—</div></div>
         </div>
 
         
-        <div class="sec-label" id="kisaanAppSection">🌾 Kisaan App</div>
+        <div class="sec-label" id="agriAppSection">🌾 Agri App</div>
         <div class="mod-grid" style="margin-bottom:6px">
           <a href="members.html" class="ka-card">
             <div class="ka-icon">👥</div>
@@ -123,7 +123,7 @@
         </div>
         <div class="panel" style="margin-bottom:14px;border-left:4px solid #059669">
           <div class="panel-b" style="padding:10px 14px;font-size:12px;color:var(--ink-2)">
-            <strong style="color:#047857">Kisaan App</strong> — cooperative society operations (members, shares, deposits, cards, compliance).
+            <strong style="color:#047857">Agri App</strong> — cooperative society operations (members, shares, deposits, cards, compliance).
             Fintech CBS modules are listed under <em>Daily operations</em> below.
           </div>
         </div>
@@ -248,9 +248,9 @@
 
 
   <div id="packPanel" class="panel" style="margin-top:14px">
-    <div class="panel-h">Product modules (major packs)</div>
+    <div class="panel-h">Product lines (three apps)</div>
     <div class="panel-b">
-      <p class="hint" style="margin-bottom:10px">Har pack alag major module hai. Toggle local; server env <code>PRODUCT_PACKS</code> API routes control karta hai.</p>
+      <p class="hint" style="margin-bottom:10px">Teen alag lines: Conventional Banking, Islamic Banking, Agri App. Toggle local; server env <code>PRODUCT_PACKS</code> API routes control karta hai.</p>
       <div id="packToggles" style="display:flex;flex-wrap:wrap;gap:10px"></div>
       <p class="hint" style="margin-top:10px">API: <code>GET /api/products</code></p>
     </div>
@@ -258,9 +258,9 @@
 <script>
 (function(){
   var defs = [
-    { id:'core', title:'Fintech CBS', desc:'CIF, CASA, ledger, financing, TD, teller, EOD, RBAC' },
-    { id:'kisaan', title:'Kisaan App', desc:'Members, shares, savings, cards, cooperative compliance' },
-    { id:'islamic', title:'Islamic Finance', desc:'Murabaha, other modes, Shariah catalogue' },
+    { id:'conventional', title:'Conventional Banking', desc:'CIF, CASA, loans, TD, teller, ledger, EOD, RBAC' },
+    { id:'agri', title:'Agri App', desc:'Members, shares, savings, cards, cooperative / agri compliance' },
+    { id:'islamic', title:'Islamic Banking', desc:'Islamic deposits, Murabaha, Ijarah, TD, profit accrual' },
     { id:'fmfb', title:'FMFB / Microfinance', desc:'Prudential, portfolio, collateral, GL tools' }
   ];
   function packs(){
@@ -268,7 +268,7 @@
       var r = localStorage.getItem('DIGIFYNTEK_PACKS');
       if (r) return r.split(',').map(function(s){return s.trim()}).filter(Boolean);
     } catch(e){}
-    return ['core','kisaan','islamic','fmfb'];
+    return ['conventional','islamic','agri','fmfb'];
   }
   function save(list){
     localStorage.setItem('DIGIFYNTEK_PACKS', list.join(','));
@@ -289,7 +289,7 @@
     if (!t || !t.getAttribute('data-pack')) return;
     var list = [];
     box.querySelectorAll('input[data-pack]').forEach(function(i){ if (i.checked) list.push(i.getAttribute('data-pack')); });
-    if (list.indexOf('core') < 0) list.unshift('core');
+    if (list.indexOf('conventional') < 0 && list.indexOf('core') < 0) list.unshift('conventional');
     save(list);
   });
 })();
