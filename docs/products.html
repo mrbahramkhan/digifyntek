@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Products — DigiFyntek</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+  <script>(function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();</script>
+  <style>
+    .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    .prod-card {
+      border: 1px solid var(--line, #e5e7eb); border-radius: 12px; padding: 14px 16px;
+      background: var(--panel, #fff); border-top: 3px solid #64748b;
+    }
+    .prod-card.isl { border-top-color: #0d9488; }
+    .prod-card .code { font-weight: 700; font-size: 13px; letter-spacing: 0.02em; }
+    .prod-card .name { font-size: 14px; margin: 4px 0 8px; }
+    .prod-card .meta { font-size: 11px; color: var(--ink-2, #64748b); display: flex; flex-wrap: wrap; gap: 6px; }
+    .prod-card .tag {
+      display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600;
+      background: #f1f5f9; color: #334155;
+    }
+    .prod-card.isl .tag.mode { background: #ccfbf1; color: #0f766e; }
+    .prod-card .rate { margin-top: 8px; font-size: 12px; font-weight: 600; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>Product catalogue</h1>
+      <span class="meta">Conventional · Islamic financing · Islamic TD</span>
+      <div class="spacer"></div>
+    </header>
+    <div class="workspace">
+      <div class="toolbar">
+        <select id="filter" class="inp" style="max-width:220px">
+          <option value="all">All products</option>
+          <option value="islamic">Islamic only</option>
+          <option value="conventional">Conventional only</option>
+          <option value="ISLAMIC_FINANCE">Islamic financing family</option>
+          <option value="ISLAMIC_TD">Islamic TD family</option>
+          <option value="LOAN">Loans</option>
+          <option value="TD">Term deposits</option>
+          <option value="CASA">CASA</option>
+        </select>
+        <button class="btn" onclick="load()">Refresh</button>
+        <a class="btn btn-p" href="financing.html">Open financing</a>
+        <a class="btn" href="term-deposits.html">Open term deposits</a>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="sec-label">🕌 Islamic financing</div>
+      <div class="prod-grid" id="gridIslFin"></div>
+      <div class="sec-label" style="margin-top:18px">📿 Islamic term deposits</div>
+      <div class="prod-grid" id="gridIslTd"></div>
+      <div class="sec-label" style="margin-top:18px">Conventional</div>
+      <div class="prod-grid" id="gridConv"></div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+function card(p) {
+  var isl = Number(p.is_islamic) === 1;
+  var rate = p.interest_rate != null ? Number(p.interest_rate) : null;
+  return '<div class="prod-card' + (isl ? ' isl' : '') + '">' +
+    '<div class="code">' + (p.product_code || '') + '</div>' +
+    '<div class="name">' + (p.product_name || '') + '</div>' +
+    '<div class="meta">' +
+      '<span class="tag">' + (p.product_type || '') + '</span>' +
+      '<span class="tag">' + (p.product_family || '') + '</span>' +
+      (p.islamic_mode ? '<span class="tag mode">' + p.islamic_mode + '</span>' : '') +
+      (isl ? '<span class="tag mode">Islamic</span>' : '') +
+    '</div>' +
+    (rate != null ? '<div class="rate">' + (isl ? 'Profit rate' : 'Rate') + ': ' + rate + '% p.a.</div>' : '') +
+  '</div>';
+}
+
+async function load() {
+  var f = document.getElementById('filter').value;
+  var path = '/api/v1/financing/products';
+  if (f === 'islamic') path += '?islamic=1';
+  else if (f === 'conventional') path += '?islamic=0';
+  else if (f === 'ISLAMIC_FINANCE' || f === 'ISLAMIC_TD' || f === 'LOAN' || f === 'TD' || f === 'CASA')
+    path += '?family=' + encodeURIComponent(f);
+
+  var rows = [];
+  try {
+    rows = await DigiFyntekAPI.request(path);
+    if (!Array.isArray(rows)) rows = rows.rows || [];
+  } catch (e) {
+    document.getElementById('gridConv').innerHTML = '<p class="hint">' + (e.message || e) + '</p>';
+    return;
+  }
+
+  var islFin = rows.filter(function (p) { return Number(p.is_islamic) === 1 && (p.product_family === 'ISLAMIC_FINANCE' || p.product_type === 'islamic'); });
+  var islTd = rows.filter(function (p) { return Number(p.is_islamic) === 1 && (p.product_family === 'ISLAMIC_TD' || (String(p.product_code || '').indexOf('TD-ISL') === 0)); });
+  var conv = rows.filter(function (p) { return Number(p.is_islamic) !== 1; });
+
+  // if filter all and empty islamic from API without seed, show static fallback cards
+  if (!rows.length) {
+    document.getElementById('gridIslFin').innerHTML = '<p class="hint">No products in DB. Run <code>backend/sql/10_islamic_product_types.sql</code></p>';
+    document.getElementById('gridIslTd').innerHTML = '';
+    document.getElementById('gridConv').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('kpis').innerHTML =
+    '<div class="kpi"><div class="l">Total</div><div class="v">' + rows.length + '</div></div>' +
+    '<div class="kpi"><div class="l">Islamic financing</div><div class="v">' + islFin.length + '</div></div>' +
+    '<div class="kpi"><div class="l">Islamic TD</div><div class="v">' + islTd.length + '</div></div>' +
+    '<div class="kpi"><div class="l">Conventional</div><div class="v">' + conv.length + '</div></div>';
+
+  document.getElementById('gridIslFin').innerHTML = islFin.map(card).join('') || '<p class="hint">None in this filter</p>';
+  document.getElementById('gridIslTd').innerHTML = islTd.map(card).join('') || '<p class="hint">None in this filter</p>';
+  document.getElementById('gridConv').innerHTML = conv.map(card).join('') || '<p class="hint">None in this filter</p>';
+}
+
+document.getElementById('filter').onchange = load;
+load();
+</script>
+</body>
+</html>

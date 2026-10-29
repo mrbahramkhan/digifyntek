@@ -70,6 +70,7 @@
         pack: 'core',
         items: [
           { href: 'financing.html', label: 'Disburse financing' },
+          { href: 'products.html', label: 'Product catalogue' },
         ],
       },
       {
@@ -114,6 +115,7 @@
       sec: 'Islamic finance',
       pack: 'islamic',
       items: [
+        { href: 'products.html', label: 'Islamic products' },
         { href: 'murabaha.html', label: 'Murābaḥah' },
         { href: 'islamic-ops.html', label: 'Other Islamic modes' },
         { href: 'islamic.html', label: 'Shariah catalogue' },

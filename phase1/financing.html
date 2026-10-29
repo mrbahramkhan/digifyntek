@@ -198,7 +198,7 @@
           branch_code: d_br.value,
           credit_account_id: d_acct.value ? Number(d_acct.value) : null,
           business_date: d_date.value,
-          is_islamic: d_prod.value.indexOf('MUR') === 0,
+          is_islamic: document.getElementById('d_isl').checked || /^(MUR|IJARAH|SALAM|ISTISNA|MUSHARAKA|QARD)/.test(d_prod.value),
         }),
       });
       flash(true, 'Disbursed ' + r.contract_no + ' · ' + (r.journal && r.journal.journal_ref));
@@ -263,6 +263,36 @@
     tb.innerHTML = '<tr><td colspan="6" class="empty">' + e.message + '</td></tr>';
   });
 })();
+
+async function loadProducts() {
+  try {
+    var rows = await DigiFyntekAPI.request('/api/v1/financing/products');
+    if (!Array.isArray(rows) || !rows.length) return;
+    var sel = document.getElementById('d_prod');
+    if (!sel) return;
+    var conv = rows.filter(function (r) { return Number(r.is_islamic) !== 1 && (r.product_type === 'loan' || r.product_family === 'LOAN'); });
+    var isl = rows.filter(function (r) { return Number(r.is_islamic) === 1; });
+    var html = '';
+    if (conv.length) {
+      html += '<optgroup label="Conventional">';
+      conv.forEach(function (r) {
+        html += '<option value="' + r.product_code + '">' + r.product_code + ' — ' + (r.product_name || '') + '</option>';
+      });
+      html += '</optgroup>';
+    }
+    if (isl.length) {
+      html += '<optgroup label="Islamic financing">';
+      isl.forEach(function (r) {
+        var mode = r.islamic_mode ? ' [' + r.islamic_mode + ']' : '';
+        html += '<option value="' + r.product_code + '">' + r.product_code + ' — ' + (r.product_name || '') + mode + '</option>';
+      });
+      html += '</optgroup>';
+    }
+    if (html) sel.innerHTML = html;
+    if (typeof d_prod !== 'undefined' && d_prod.onchange) d_prod.onchange();
+  } catch (e) { console.warn('products load', e); }
+}
+loadProducts();
 </script>
 </body>
 </html>

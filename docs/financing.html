@@ -44,13 +44,26 @@
             <form id="frmDisb">
               <div class="form-grid">
                 <div class="field"><label>Customer ID *</label><input class="inp" id="d_cust" required /></div>
-                <div class="field"><label>Product</label>
+                <div class="field"><label>Product *</label>
                   <select class="inp" id="d_prod">
-                    <option value="LON-AGRI">LON-AGRI</option>
-                    <option value="MUR-GOODS">MUR-GOODS</option>
+                    <optgroup label="Conventional">
+                      <option value="LON-AGRI">LON-AGRI — Agriculture loan</option>
+                      <option value="LON-SME">LON-SME — SME term loan</option>
+                    </optgroup>
+                    <optgroup label="Islamic financing">
+                      <option value="MUR-GOODS">MUR-GOODS — Murabaha goods</option>
+                      <option value="MUR-AUTO">MUR-AUTO — Murabaha vehicle</option>
+                      <option value="IJARAH-EQ">IJARAH-EQ — Ijarah equipment</option>
+                      <option value="SALAM-AGRI">SALAM-AGRI — Salam agriculture</option>
+                      <option value="ISTISNA-CON">ISTISNA-CON — Istisna construction</option>
+                      <option value="MUSHARAKA">MUSHARAKA — Diminishing musharaka</option>
+                      <option value="QARD-HASAN">QARD-HASAN — Qard Hasan (0%)</option>
+                    </optgroup>
                   </select>
                 </div>
+                <div class="field"><label>Rate / profit % p.a.</label><input class="inp" type="number" step="0.01" id="d_rate" value="12" /></div>
                 <div class="field"><label>Principal *</label><input class="inp" type="number" step="0.01" id="d_prin" required /></div>
+                <div class="field full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="d_isl" /> Islamic contract (profit accrual, not ribā)</label></div>
                 <div class="field"><label>Credit account ID</label><input class="inp" id="d_acct" placeholder="optional CASA" /></div>
                 <div class="field"><label>Branch</label><input class="inp" id="d_br" value="001" /></div>
                 <div class="field"><label>Date</label><input class="inp" type="date" id="d_date" /></div>
@@ -169,6 +182,10 @@
     msg.className = ok ? 'ok' : 'err';
   }
 
+  d_prod.onchange = function () {
+    var isl = /^(MUR|IJARAH|SALAM|ISTISNA|MUSHARAKA|QARD)/.test(d_prod.value);
+    document.getElementById('d_isl').checked = isl;
+  };
   frmDisb.onsubmit = async function (e) {
     e.preventDefault();
     try {
@@ -181,7 +198,7 @@
           branch_code: d_br.value,
           credit_account_id: d_acct.value ? Number(d_acct.value) : null,
           business_date: d_date.value,
-          is_islamic: d_prod.value.indexOf('MUR') === 0,
+          is_islamic: document.getElementById('d_isl').checked || /^(MUR|IJARAH|SALAM|ISTISNA|MUSHARAKA|QARD)/.test(d_prod.value),
         }),
       });
       flash(true, 'Disbursed ' + r.contract_no + ' · ' + (r.journal && r.journal.journal_ref));
@@ -246,6 +263,36 @@
     tb.innerHTML = '<tr><td colspan="6" class="empty">' + e.message + '</td></tr>';
   });
 })();
+
+async function loadProducts() {
+  try {
+    var rows = await DigiFyntekAPI.request('/api/v1/financing/products');
+    if (!Array.isArray(rows) || !rows.length) return;
+    var sel = document.getElementById('d_prod');
+    if (!sel) return;
+    var conv = rows.filter(function (r) { return Number(r.is_islamic) !== 1 && (r.product_type === 'loan' || r.product_family === 'LOAN'); });
+    var isl = rows.filter(function (r) { return Number(r.is_islamic) === 1; });
+    var html = '';
+    if (conv.length) {
+      html += '<optgroup label="Conventional">';
+      conv.forEach(function (r) {
+        html += '<option value="' + r.product_code + '">' + r.product_code + ' — ' + (r.product_name || '') + '</option>';
+      });
+      html += '</optgroup>';
+    }
+    if (isl.length) {
+      html += '<optgroup label="Islamic financing">';
+      isl.forEach(function (r) {
+        var mode = r.islamic_mode ? ' [' + r.islamic_mode + ']' : '';
+        html += '<option value="' + r.product_code + '">' + r.product_code + ' — ' + (r.product_name || '') + mode + '</option>';
+      });
+      html += '</optgroup>';
+    }
+    if (html) sel.innerHTML = html;
+    if (typeof d_prod !== 'undefined' && d_prod.onchange) d_prod.onchange();
+  } catch (e) { console.warn('products load', e); }
+}
+loadProducts();
 </script>
 </body>
 </html>
