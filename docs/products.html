@@ -40,6 +40,7 @@
           <option value="all">All products</option>
           <option value="islamic">Islamic only</option>
           <option value="conventional">Conventional only</option>
+          <option value="ISLAMIC_CASA">Islamic deposits (CASA)</option>
           <option value="ISLAMIC_FINANCE">Islamic financing family</option>
           <option value="ISLAMIC_TD">Islamic TD family</option>
           <option value="LOAN">Loans</option>
@@ -51,7 +52,9 @@
         <a class="btn" href="term-deposits.html">Open term deposits</a>
       </div>
       <div class="kpis" id="kpis"></div>
-      <div class="sec-label">🕌 Islamic financing</div>
+      <div class="sec-label">🏦 Islamic deposits (CASA)</div>
+      <div class="prod-grid" id="gridIslCasa"></div>
+      <div class="sec-label" style="margin-top:18px">🕌 Islamic financing</div>
       <div class="prod-grid" id="gridIslFin"></div>
       <div class="sec-label" style="margin-top:18px">📿 Islamic term deposits</div>
       <div class="prod-grid" id="gridIslTd"></div>
@@ -97,6 +100,7 @@ async function load() {
     return;
   }
 
+  var islCasa = rows.filter(function (p) { return Number(p.is_islamic) === 1 && (p.product_family === 'ISLAMIC_CASA' || p.islamic_mode === 'WADIAH' || (p.islamic_mode === 'QARD' && (p.product_type === 'current' || p.product_type === 'savings'))); });
   var islFin = rows.filter(function (p) { return Number(p.is_islamic) === 1 && (p.product_family === 'ISLAMIC_FINANCE' || p.product_type === 'islamic'); });
   var islTd = rows.filter(function (p) { return Number(p.is_islamic) === 1 && (p.product_family === 'ISLAMIC_TD' || (String(p.product_code || '').indexOf('TD-ISL') === 0)); });
   var conv = rows.filter(function (p) { return Number(p.is_islamic) !== 1; });
@@ -111,10 +115,13 @@ async function load() {
 
   document.getElementById('kpis').innerHTML =
     '<div class="kpi"><div class="l">Total</div><div class="v">' + rows.length + '</div></div>' +
+    '<div class="kpi"><div class="l">Islamic CASA</div><div class="v">' + islCasa.length + '</div></div>' +
     '<div class="kpi"><div class="l">Islamic financing</div><div class="v">' + islFin.length + '</div></div>' +
     '<div class="kpi"><div class="l">Islamic TD</div><div class="v">' + islTd.length + '</div></div>' +
     '<div class="kpi"><div class="l">Conventional</div><div class="v">' + conv.length + '</div></div>';
 
+  var casaEl = document.getElementById('gridIslCasa');
+  if (casaEl) casaEl.innerHTML = islCasa.map(card).join('') || '<p class="hint">None in this filter</p>';
   document.getElementById('gridIslFin').innerHTML = islFin.map(card).join('') || '<p class="hint">None in this filter</p>';
   document.getElementById('gridIslTd').innerHTML = islTd.map(card).join('') || '<p class="hint">None in this filter</p>';
   document.getElementById('gridConv').innerHTML = conv.map(card).join('') || '<p class="hint">None in this filter</p>';

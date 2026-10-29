@@ -26,7 +26,19 @@
             <form id="frm">
               <div class="form-grid">
                 <div class="field"><label>Customer ID <span class="req">*</span></label><input class="inp" id="f_cust" required /></div>
-                <div class="field"><label>Product</label><select class="inp" id="f_prod"><option value="SAV-PKR">SAV-PKR Savings</option><option value="CUR-PKR">CUR-PKR Current</option></select></div>
+                <div class="field"><label>Product</label>
+                  <select class="inp" id="f_prod">
+                    <optgroup label="Conventional CASA">
+                      <option value="SAV-PKR">SAV-PKR — Savings</option>
+                      <option value="CUR-PKR">CUR-PKR — Current</option>
+                    </optgroup>
+                    <optgroup label="Islamic deposits">
+                      <option value="ISL-CUR-QARD">ISL-CUR-QARD — Islamic current (Qard)</option>
+                      <option value="ISL-SAV-MUD">ISL-SAV-MUD — Islamic savings (Mudaraba)</option>
+                      <option value="ISL-SAV-WAD">ISL-SAV-WAD — Islamic savings (Wadiah)</option>
+                    </optgroup>
+                  </select>
+                </div>
                 <div class="field"><label>Branch</label><input class="inp" id="f_br" value="001" /></div>
                 <div class="field"><label>Account no (optional)</label><input class="inp" id="f_ano" /></div>
               </div>
@@ -59,6 +71,39 @@ document.getElementById('frm').onsubmit=async e=>{
   }catch(err){msg.textContent=err.message;msg.className='err';}
 };
 load();
+
+async function loadCasaProducts() {
+  try {
+    var rows = await DigiFyntekAPI.request('/api/v1/financing/products');
+    if (!Array.isArray(rows)) return;
+    var casa = rows.filter(function (r) {
+      return r.product_type === 'savings' || r.product_type === 'current' || r.product_family === 'CASA' || r.product_family === 'ISLAMIC_CASA';
+    });
+    if (!casa.length) return;
+    var sel = document.getElementById('f_prod');
+    if (!sel) return;
+    var conv = casa.filter(function (r) { return Number(r.is_islamic) !== 1; });
+    var isl = casa.filter(function (r) { return Number(r.is_islamic) === 1; });
+    var html = '';
+    if (conv.length) {
+      html += '<optgroup label="Conventional CASA">';
+      conv.forEach(function (r) {
+        html += '<option value="' + r.product_code + '">' + r.product_code + ' — ' + (r.product_name || '') + '</option>';
+      });
+      html += '</optgroup>';
+    }
+    if (isl.length) {
+      html += '<optgroup label="Islamic deposits">';
+      isl.forEach(function (r) {
+        var m = r.islamic_mode ? ' [' + r.islamic_mode + ']' : '';
+        html += '<option value="' + r.product_code + '">' + r.product_code + ' — ' + (r.product_name || '') + m + '</option>';
+      });
+      html += '</optgroup>';
+    }
+    if (html) sel.innerHTML = html;
+  } catch (e) {}
+}
+loadCasaProducts();
 </script>
 </body>
 </html>

@@ -115,7 +115,7 @@
       sec: 'Islamic finance',
       pack: 'islamic',
       items: [
-        { href: 'products.html', label: 'Islamic products' },
+        { href: 'products.html', label: 'Islamic banking products' },
         { href: 'murabaha.html', label: 'Murābaḥah' },
         { href: 'islamic-ops.html', label: 'Other Islamic modes' },
         { href: 'islamic.html', label: 'Shariah catalogue' },
