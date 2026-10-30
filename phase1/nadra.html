@@ -31,6 +31,10 @@
             </div>
             <div class="form-actions"><button class="btn btn-p" type="button" onclick="verify()">Verify with NADRA</button></div>
             <div id="msg" class="hint" style="margin-top:10px"></div>
+            <div class="form-actions" id="cifActions" style="display:none;margin-top:10px">
+              <button type="button" class="btn btn-p" id="btnToCif">Apply to CIF form</button>
+              <a class="btn" href="cif.html">Open CIF</a>
+            </div>
             <pre id="out" style="display:none;margin-top:12px;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;max-height:320px;overflow:auto"></pre>
           </div>
         </div>
@@ -79,6 +83,9 @@ async function verify(){
     msg.className=r.verified?'ok':'err';
     out.style.display='block';
     out.textContent=JSON.stringify(r,null,2);
+    window.__lastNadra=r;
+    var act=document.getElementById('cifActions');
+    if(act) act.style.display=(r.verified&&r.citizen)?'flex':'none';
     loadHist();
   }catch(e){msg.textContent=e.message||e;msg.className='err';}
 }

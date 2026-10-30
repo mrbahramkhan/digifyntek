@@ -61,8 +61,35 @@ router.post('/verify', auth(), requirePermission('kyc.write', 'cif.write', 'kyc.
       result.audit_error = e.message;
     }
 
-    // Update customer KYC / screening if linked
-    if (b.customer_id && result.verified) {
+    // Auto-fill / update CIF when linked + verified
+    if (b.customer_id && result.verified && result.citizen) {
+      try {
+        const c = result.citizen;
+        await pool.query(
+          `UPDATE cbs_customers SET
+             full_name = COALESCE(?, full_name),
+             father_or_husband = COALESCE(?, father_or_husband),
+             dob = COALESCE(?, dob),
+             gender = COALESCE(?, gender),
+             address = COALESCE(?, address),
+             cnic = COALESCE(?, cnic),
+             kyc_status = 'verified'
+           WHERE id = ?`,
+          [
+            c.full_name || null,
+            c.father_or_husband || null,
+            c.date_of_birth || null,
+            c.gender ? String(c.gender).toUpperCase().charAt(0) : null,
+            c.permanent_address || c.address || null,
+            c.cnic || null,
+            b.customer_id,
+          ]
+        );
+        result.cif_updated = true;
+      } catch (e) {
+        result.cif_update_error = e.message;
+      }
+    } else if (b.customer_id && result.verified) {
       try {
         await pool.query(
           `UPDATE cbs_customers SET kyc_status = CASE

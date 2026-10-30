@@ -31,7 +31,13 @@
               <div class="form-sec">Identity (CDD)</div>
               <div class="form-grid">
                 <div class="field full"><label>Full name <span class="req">*</span></label><input class="inp" id="f_name" required /></div>
-                <div class="field"><label>CNIC</label><input class="inp" id="f_cnic" placeholder="xxxxx-xxxxxxx-x" /></div>
+                <div class="field"><label>CNIC</label>
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <input class="inp" id="f_cnic" placeholder="xxxxx-xxxxxxx-x" style="flex:1" />
+                    <button type="button" class="btn btn-s" id="btnNadra" title="Verify with NADRA and auto-fill">NADRA</button>
+                  </div>
+                  <div class="hint" id="nadraHint" style="margin-top:4px"></div>
+                </div>
                 <div class="field"><label>Mobile</label><input class="inp" id="f_phone" /></div>
                 <div class="field"><label>Father / husband</label><input class="inp" id="f_father" /></div>
                 <div class="field"><label>DOB</label><input class="inp" type="date" id="f_dob" /></div>
@@ -110,6 +116,85 @@
   }
   document.getElementById('tb').onclick=e=>{const tr=e.target.closest('tr[data-id]');if(!tr)return;fill(rows.find(x=>String(x.id)===tr.dataset.id));};
   document.getElementById('q').oninput=render;
+  
+  function applyNadraCitizen(citizen, meta) {
+    if (!citizen) return;
+    if (citizen.full_name) document.getElementById('f_name').value = citizen.full_name;
+    if (citizen.cnic) document.getElementById('f_cnic').value = citizen.cnic;
+    if (citizen.father_or_husband) document.getElementById('f_father').value = citizen.father_or_husband;
+    if (citizen.date_of_birth) {
+      var d = String(citizen.date_of_birth).slice(0, 10);
+      document.getElementById('f_dob').value = d;
+    }
+    if (citizen.gender) {
+      var g = String(citizen.gender).toUpperCase().charAt(0);
+      if (g === 'M' || g === 'F' || g === 'O') document.getElementById('f_gender').value = g;
+    }
+    if (citizen.permanent_address || citizen.address) {
+      document.getElementById('f_addr').value = citizen.permanent_address || citizen.address;
+    }
+    if (citizen.city) document.getElementById('f_city').value = citizen.city;
+    if (meta && meta.verified) {
+      document.getElementById('f_kyc').value = 'verified';
+    }
+  }
+
+  async function verifyNadraFill() {
+    var hint = document.getElementById('nadraHint');
+    var cnic = document.getElementById('f_cnic').value.trim();
+    if (!cnic) {
+      hint.textContent = 'Enter CNIC first';
+      hint.className = 'hint err';
+      return;
+    }
+    hint.textContent = 'Calling NADRA…';
+    hint.className = 'hint';
+    try {
+      var body = {
+        cnic: cnic,
+        full_name: document.getElementById('f_name').value.trim() || undefined,
+        father_name: document.getElementById('f_father').value.trim() || undefined,
+        date_of_birth: document.getElementById('f_dob').value || undefined,
+        customer_id: document.getElementById('f_id').value ? Number(document.getElementById('f_id').value) : undefined
+      };
+      var r = await DigiFyntekAPI.request('/api/v1/nadra/verify', {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+      if (r.verified && r.citizen) {
+        applyNadraCitizen(r.citizen, r);
+        hint.textContent = 'NADRA verified — CIF fields filled (score ' + (r.match_score || '') + '). Review & Save.';
+        hint.className = 'hint ok';
+      } else {
+        hint.textContent = (r.message || r.status || 'Not verified') + ' — fields not overwritten';
+        hint.className = 'hint err';
+        if (r.status === 'not_found' || r.status === 'blocked') {
+          document.getElementById('f_kyc').value = r.status === 'blocked' ? 'rejected' : 'pending';
+        }
+      }
+    } catch (e) {
+      hint.textContent = e.message || e;
+      hint.className = 'hint err';
+    }
+  }
+
+  // Apply payload from NADRA page (sessionStorage)
+  try {
+    var pending = sessionStorage.getItem('DIGIFYNTEK_NADRA_CIF');
+    if (pending) {
+      var data = JSON.parse(pending);
+      sessionStorage.removeItem('DIGIFYNTEK_NADRA_CIF');
+      if (data.citizen) applyNadraCitizen(data.citizen, data);
+      var h = document.getElementById('nadraHint');
+      if (h) {
+        h.textContent = 'Pre-filled from NADRA verification. Review & Save.';
+        h.className = 'hint ok';
+      }
+    }
+  } catch (e) {}
+
+  document.getElementById('btnNadra').onclick = verifyNadraFill;
+
   document.getElementById('btnNew').onclick=()=>fill(null);
   document.getElementById('btnClear').onclick=()=>fill(null);
   document.getElementById('frm').onsubmit=async e=>{
