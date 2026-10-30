@@ -13,9 +13,9 @@ const FALLBACK = {
   teller: ['cif.read', 'accounts.read', 'casa.post', 'teller.ops', 'instruments.ops'],
   credit_officer: [
     'cif.read', 'cif.write', 'kyc.read', 'accounts.read',
-    'loan.read', 'loan.disburse', 'loan.repay', 'td.read', 'td.write',
+    'loan.read', 'loan.disburse', 'loan.repay', 'td.read', 'td.write', 'nadra.verify',
   ],
-  compliance: ['cif.read', 'kyc.read', 'kyc.write', 'kyc.decide'],
+  compliance: ['cif.read', 'kyc.read', 'kyc.write', 'kyc.decide', 'nadra.verify'],
   accountant: [
     'ledger.read', 'ledger.post', 'ledger.reverse', 'accounts.read', 'eod.run', 'recon.ops', 'clearing.ops',
   ],

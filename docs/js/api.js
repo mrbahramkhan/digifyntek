@@ -76,10 +76,21 @@
         body: JSON.stringify({ userId, password }),
       }).then((data) => {
         setSession(data.token, data.user);
+        try {
+          request('/api/v1/rbac/me').then((me) => {
+            localStorage.setItem('DIGIFYNTEK_PERMS', JSON.stringify(me.permissions || []));
+          }).catch(() => {});
+        } catch (e) {}
         return data;
       });
     },
 
+    hasPermission(perm) {
+      try {
+        const perms = JSON.parse(localStorage.getItem('DIGIFYNTEK_PERMS') || '[]');
+        return perms.includes('*') || perms.includes(perm);
+      } catch { return false; }
+    },
     logout() {
       clearSession();
       window.location.href = 'login.html';
