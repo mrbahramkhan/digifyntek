@@ -2,45 +2,68 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DigiFyntek — RBAC</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RBAC — DigiFyntek</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/app.css" />
-  <script>(function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();</script>
+  <script>(function(){var t=localStorage.getItem("DIGIFYNTEK_THEME");if(t==="dark")document.documentElement.setAttribute("data-theme","dark");})();</script>
+  <style>
+    .rbac-me{padding:12px 14px;border-radius:12px;border:1px solid var(--line,#e5e7eb);background:var(--panel,#fff);margin-bottom:14px;font-size:13px}
+    .matrix-wrap{overflow:auto;max-height:420px;border:1px solid var(--line,#e5e7eb);border-radius:10px}
+    .matrix{border-collapse:collapse;font-size:11px;min-width:100%}
+    .matrix th,.matrix td{border:1px solid var(--line,#e5e7eb);padding:4px 6px;text-align:center}
+    .matrix th{position:sticky;top:0;background:var(--panel,#f8fafc);z-index:1}
+    .matrix td.perm{text-align:left;font-family:ui-monospace,monospace;white-space:nowrap}
+    .matrix .yes{color:#15803d;font-weight:700}
+    .matrix .no{color:#cbd5e1}
+  </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
   <div class="main">
-    <header class="topbar">
-      <h1>Roles &amp; permissions</h1>
-      <span class="meta">Server-side requirePermission on sensitive APIs</span>
-      <div class="spacer"></div>
-      <button type="button" class="btn" id="btnReload">Refresh</button>
-    </header>
+    <header class="topbar"><h1>Role-based access control</h1><span class="meta">Roles · permissions · user assignment</span><div class="spacer"></div></header>
     <div class="workspace">
-      <div class="kpis">
-        <div class="kpi"><div class="l">Your role</div><div class="v" id="kRole">—</div></div>
-        <div class="kpi"><div class="l">Permissions</div><div class="v" id="kPerms">—</div></div>
-        <div class="kpi"><div class="l">Super</div><div class="v" id="kSuper">—</div></div>
-      </div>
-      <div class="panel" style="margin-bottom:12px">
-        <div class="panel-h">Your permission set</div>
-        <div class="panel-b" id="myPerms" style="font-size:12px;line-height:1.8">Loading…</div>
-      </div>
-      <div class="panel">
-        <div class="panel-h">Role × permission matrix</div>
-        <div class="table-wrap" style="overflow:auto">
-          <table class="data" id="matrixTable">
-            <thead id="thead"><tr><th>Role</th></tr></thead>
-            <tbody id="tb"><tr><td class="empty">Loading…</td></tr></tbody>
-          </table>
+      <div class="rbac-me" id="meBox">Loading…</div>
+      <div class="layout-2">
+        <div class="panel">
+          <div class="panel-h">Users · assign role</div>
+          <div class="panel-b">
+            <div class="form-grid">
+              <div class="field"><label>User</label><select class="inp" id="uSel"></select></div>
+              <div class="field"><label>Role</label><select class="inp" id="rSel"></select></div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-p" type="button" onclick="assignRole()">Save role</button>
+              <button class="btn" type="button" onclick="loadUsers()">Refresh</button>
+            </div>
+            <div id="msg" class="hint"></div>
+            <div class="table-wrap" style="margin-top:12px">
+              <table class="data"><thead><tr><th>User</th><th>Name</th><th>Role</th><th>Active</th></tr></thead>
+              <tbody id="uTb"></tbody></table>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">Grant / revoke permission</div>
+          <div class="panel-b">
+            <div class="form-grid">
+              <div class="field"><label>Role</label><select class="inp" id="gRole"></select></div>
+              <div class="field"><label>Permission</label><select class="inp" id="gPerm"></select></div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-p" type="button" onclick="grant()">Grant</button>
+              <button class="btn" type="button" onclick="revoke()">Revoke</button>
+              <button class="btn" type="button" onclick="loadMatrix()">Refresh matrix</button>
+            </div>
+            <div id="msg2" class="hint"></div>
+          </div>
         </div>
       </div>
-      <p class="hint" style="margin-top:10px">
-        Sensitive posts (loan disburse/repay, EOD, approvals, ledger post/reverse, teller, KYC decide, payments, TD)
-        are gated by <code>requirePermission</code>. Missing permission → HTTP 403.
-      </p>
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-h">Permission matrix</div>
+        <div class="panel-b"><div class="matrix-wrap" id="matrixBox">Loading…</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -48,62 +71,81 @@
 <script src="js/api.js"></script>
 <script src="js/shell.js"></script>
 <script>
-(function () {
-  async function loadMe() {
-    try {
-      var me = await DigiFyntekAPI.request('/api/v1/rbac/me');
-      kRole.textContent = me.role || '—';
-      kPerms.textContent = me.is_super ? 'ALL' : (me.permissions || []).length;
-      kSuper.textContent = me.is_super ? 'yes' : 'no';
-      myPerms.textContent = me.is_super ? '* (full access)' : (me.permissions || []).join(', ');
-    } catch (e) {
-      myPerms.textContent = e.message;
-    }
-  }
-
-  async function loadMatrix() {
-    try {
-      var m = await DigiFyntekAPI.request('/api/v1/rbac/matrix');
-      var perms = m.permissions || [];
-      var roles = m.roles || [];
-      var matrix = m.matrix || {};
-      thead.innerHTML =
-        '<tr><th>Role</th>' +
-        perms.map(function (p) {
-          return '<th title="' + (p.description || '') + '" style="font-size:10px">' + p.perm_code + '</th>';
-        }).join('') +
-        '</tr>';
-      tb.innerHTML = roles
-        .map(function (r) {
-          var code = r.role_code;
-          var list = matrix[code] || [];
-          var all = list.indexOf('*') >= 0;
-          return (
-            '<tr><td><strong>' +
-            code +
-            '</strong></td>' +
-            perms
-              .map(function (p) {
-                var ok = all || list.indexOf(p.perm_code) >= 0;
-                return '<td class="num">' + (ok ? '✓' : '') + '</td>';
-              })
-              .join('') +
-            '</tr>'
-          );
-        })
-        .join('');
-    } catch (e) {
-      tb.innerHTML = '<tr><td class="empty">' + e.message + '</td></tr>';
-    }
-  }
-
-  btnReload.onclick = function () {
-    loadMe();
+async function loadMe(){
+  try{
+    var m=await DigiFyntekAPI.request("/api/v1/rbac/me");
+    document.getElementById("meBox").innerHTML="<strong>Signed in as</strong> <code>"+(m.userId||"")+"</code> · role <code>"+(m.role||"")+"</code>"+(m.is_super?" · <strong>full access (*)</strong>":"")+"<div style=\"margin-top:8px;font-size:11px;color:var(--ink-2,#64748b)\">"+(m.permissions||[]).join(", ")+"</div>";
+  }catch(e){document.getElementById("meBox").textContent=e.message||e;}
+}
+function fill(sel,items,val,lab){
+  sel.innerHTML=items.map(function(i){var v=i[val]||i.role_code||i.perm_code;var l=i[lab]||i.role_name||i.description||v;return "<option value=\""+v+"\">"+v+(l&&l!==v?" — "+l:"")+"</option>";}).join("");
+}
+async function loadRolesPerms(){
+  var roles=await DigiFyntekAPI.request("/api/v1/rbac/roles");
+  var perms=await DigiFyntekAPI.request("/api/v1/rbac/permissions");
+  if(!Array.isArray(roles))roles=[];
+  if(!Array.isArray(perms))perms=[];
+  fill(document.getElementById("rSel"),roles,"role_code","role_name");
+  fill(document.getElementById("gRole"),roles.filter(function(r){return r.role_code!=="superadmin";}),"role_code","role_name");
+  fill(document.getElementById("gPerm"),perms,"perm_code","description");
+}
+async function loadUsers(){
+  try{
+    var rows=await DigiFyntekAPI.request("/api/v1/rbac/users");
+    if(!Array.isArray(rows))rows=[];
+    document.getElementById("uSel").innerHTML=rows.map(function(u){return "<option value=\""+u.user_id+"\">"+u.user_id+" ("+(u.role||"")+")</option>";}).join("");
+    document.getElementById("uTb").innerHTML=rows.map(function(u){return "<tr><td>"+u.user_id+"</td><td>"+(u.full_name||"")+"</td><td>"+u.role+"</td><td>"+(u.is_active?"Y":"N")+"</td></tr>";}).join("")||"<tr><td colspan=4 class=empty>No users</td></tr>";
+  }catch(e){document.getElementById("msg").textContent=e.message||e;}
+}
+async function assignRole(){
+  var uid=document.getElementById("uSel").value, role=document.getElementById("rSel").value;
+  try{
+    await DigiFyntekAPI.request("/api/v1/rbac/users/"+encodeURIComponent(uid)+"/role",{method:"PATCH",body:JSON.stringify({role:role})});
+    document.getElementById("msg").textContent="Role updated: "+uid+" → "+role;
+    loadUsers();
+  }catch(e){document.getElementById("msg").textContent=e.message||e;}
+}
+async function grant(){
+  var role=document.getElementById("gRole").value, perm=document.getElementById("gPerm").value;
+  try{
+    await DigiFyntekAPI.request("/api/v1/rbac/roles/"+encodeURIComponent(role)+"/permissions",{method:"POST",body:JSON.stringify({perm_code:perm})});
+    document.getElementById("msg2").textContent="Granted "+perm+" to "+role;
     loadMatrix();
-  };
-  loadMe();
-  loadMatrix();
-})();
+  }catch(e){document.getElementById("msg2").textContent=e.message||e;}
+}
+async function revoke(){
+  var role=document.getElementById("gRole").value, perm=document.getElementById("gPerm").value;
+  try{
+    await DigiFyntekAPI.request("/api/v1/rbac/roles/"+encodeURIComponent(role)+"/permissions/"+encodeURIComponent(perm),{method:"DELETE"});
+    document.getElementById("msg2").textContent="Revoked "+perm+" from "+role;
+    loadMatrix();
+  }catch(e){document.getElementById("msg2").textContent=e.message||e;}
+}
+async function loadMatrix(){
+  try{
+    var MATRIX=await DigiFyntekAPI.request("/api/v1/rbac/matrix");
+    var roles=(MATRIX.roles||[]).map(function(r){return r.role_code;}).filter(function(c){return c!=="superadmin";});
+    var perms=MATRIX.permissions||[];
+    var m=MATRIX.matrix||{};
+    var html="<table class=matrix><thead><tr><th class=perm>Permission</th>";
+    roles.forEach(function(r){html+="<th>"+r+"</th>";});
+    html+="</tr></thead><tbody>";
+    perms.forEach(function(p){
+      var code=p.perm_code;
+      html+="<tr><td class=perm>"+code+"</td>";
+      roles.forEach(function(r){
+        var list=m[r]||[];
+        var ok=list.indexOf("*")>=0||list.indexOf(code)>=0||r==="admin";
+        html+="<td class="+(ok?"yes":"no")+">"+(ok?"✓":"·")+"</td>";
+      });
+      html+="</tr>";
+    });
+    html+="</tbody></table>";
+    document.getElementById("matrixBox").innerHTML=html;
+  }catch(e){document.getElementById("matrixBox").textContent=e.message||e;}
+}
+loadMe();
+loadRolesPerms().then(function(){loadUsers();loadMatrix();}).catch(function(e){document.getElementById("msg").textContent=e.message||e;});
 </script>
 </body>
 </html>
