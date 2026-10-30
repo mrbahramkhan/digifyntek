@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Role management — DigiFyntek</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+  <script>(function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();</script>
+  <style>
+    .role-badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;background:#e0e7ff;color:#3730a3}
+    .perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;max-height:280px;overflow:auto;border:1px solid var(--line,#e5e7eb);border-radius:8px;padding:10px}
+    .perm-grid label{display:flex;gap:6px;align-items:flex-start;font-size:11px;font-family:ui-monospace,monospace}
+    .row-sel{cursor:pointer}.row-sel:hover{background:#f8fafc}.row-sel.on{background:#eff6ff}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>Role management</h1>
+      <span class="meta">Create · edit · clone · delete roles</span>
+      <div class="spacer"></div>
+      <a class="btn" href="role-assignment.html">Assign to users</a>
+      <a class="btn" href="rbac.html">Matrix</a>
+    </header>
+    <div class="workspace">
+      <div class="layout-2">
+        <div class="panel">
+          <div class="panel-h">Roles <button class="btn btn-s" type="button" onclick="loadRoles()" style="margin-left:auto">Refresh</button></div>
+          <div class="panel-b table-wrap">
+            <table class="data">
+              <thead><tr><th>Code</th><th>Name</th><th>System</th><th></th></tr></thead>
+              <tbody id="rTb"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h" id="formTitle">Create role</div>
+          <div class="panel-b">
+            <div class="form-grid">
+              <div class="field"><label>Role code *</label><input class="inp" id="code" placeholder="e.g. branch_ops" /></div>
+              <div class="field"><label>Display name *</label><input class="inp" id="name" placeholder="Branch Ops" /></div>
+              <div class="field full"><label>Description</label><input class="inp" id="desc" /></div>
+            </div>
+            <div style="margin-top:12px;font-size:12px;font-weight:600">Permissions</div>
+            <div class="perm-grid" id="permGrid">Loading…</div>
+            <div class="form-actions" style="margin-top:14px">
+              <button class="btn btn-p" type="button" id="btnSave" onclick="saveRole()">Create role</button>
+              <button class="btn" type="button" onclick="resetForm()">New</button>
+              <button class="btn" type="button" id="btnClone" style="display:none" onclick="cloneRole()">Clone</button>
+              <button class="btn" type="button" id="btnDel" style="display:none" onclick="deleteRole()">Delete</button>
+            </div>
+            <div id="msg" class="hint" style="margin-top:10px"></div>
+            <div id="detail" class="hint" style="margin-top:8px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+var ALL_PERMS = [];
+var editCode = null;
+
+async function loadPerms() {
+  ALL_PERMS = await DigiFyntekAPI.request('/api/v1/rbac/permissions');
+  if (!Array.isArray(ALL_PERMS)) ALL_PERMS = [];
+  document.getElementById('permGrid').innerHTML = ALL_PERMS.map(function (p) {
+    return '<label><input type="checkbox" value="' + p.perm_code + '" /> ' + p.perm_code +
+      '<span style="color:#94a3b8;font-weight:400"> — ' + (p.description || p.module || '') + '</span></label>';
+  }).join('') || 'No permissions in catalogue';
+}
+
+function selectedPerms() {
+  return Array.prototype.slice.call(document.querySelectorAll('#permGrid input:checked')).map(function (c) { return c.value; });
+}
+
+function setPerms(list) {
+  var set = {};
+  (list || []).forEach(function (p) {
+    set[typeof p === 'string' ? p : p.perm_code] = true;
+  });
+  document.querySelectorAll('#permGrid input').forEach(function (c) {
+    c.checked = !!set[c.value] || list === '*' || (Array.isArray(list) && list[0] === '*');
+  });
+}
+
+async function loadRoles() {
+  var roles = await DigiFyntekAPI.request('/api/v1/rbac/roles');
+  if (!Array.isArray(roles)) roles = [];
+  document.getElementById('rTb').innerHTML = roles.map(function (r) {
+    return '<tr class="row-sel" onclick="editRole(\'' + r.role_code + '\')">' +
+      '<td><span class="role-badge">' + r.role_code + '</span></td>' +
+      '<td>' + (r.role_name || '') + '</td>' +
+      '<td>' + (Number(r.is_system) ? 'Y' : 'N') + '</td>' +
+      '<td><button type="button" class="btn btn-s" onclick="event.stopPropagation();editRole(\'' + r.role_code + '\')">Edit</button></td></tr>';
+  }).join('');
+}
+
+async function editRole(code) {
+  editCode = code;
+  document.getElementById('formTitle').textContent = 'Edit role: ' + code;
+  document.getElementById('btnSave').textContent = 'Save changes';
+  document.getElementById('btnClone').style.display = '';
+  document.getElementById('btnDel').style.display = (code === 'superadmin' || code === 'admin') ? 'none' : '';
+  document.getElementById('code').value = code;
+  document.getElementById('code').disabled = true;
+  try {
+    var d = await DigiFyntekAPI.request('/api/v1/rbac/roles/' + encodeURIComponent(code));
+    document.getElementById('name').value = d.role_name || '';
+    document.getElementById('desc').value = d.description || '';
+    if (d.permissions && d.permissions[0] === '*') {
+      document.querySelectorAll('#permGrid input').forEach(function (c) { c.checked = true; });
+    } else {
+      setPerms(d.permissions || []);
+    }
+    document.getElementById('detail').textContent = 'Users with this role: ' + (d.user_count || 0);
+    document.getElementById('msg').textContent = '';
+  } catch (e) {
+    document.getElementById('msg').textContent = e.message || e;
+  }
+}
+
+function resetForm() {
+  editCode = null;
+  document.getElementById('formTitle').textContent = 'Create role';
+  document.getElementById('btnSave').textContent = 'Create role';
+  document.getElementById('btnClone').style.display = 'none';
+  document.getElementById('btnDel').style.display = 'none';
+  document.getElementById('code').value = '';
+  document.getElementById('code').disabled = false;
+  document.getElementById('name').value = '';
+  document.getElementById('desc').value = '';
+  document.getElementById('detail').textContent = '';
+  document.getElementById('msg').textContent = '';
+  setPerms([]);
+}
+
+async function saveRole() {
+  var msg = document.getElementById('msg');
+  var body = {
+    role_code: document.getElementById('code').value.trim(),
+    role_name: document.getElementById('name').value.trim(),
+    description: document.getElementById('desc').value.trim(),
+    permissions: selectedPerms()
+  };
+  try {
+    if (editCode) {
+      await DigiFyntekAPI.request('/api/v1/rbac/roles/' + encodeURIComponent(editCode), {
+        method: 'PATCH',
+        body: JSON.stringify({ role_name: body.role_name, description: body.description })
+      });
+      if (editCode !== 'superadmin') {
+        await DigiFyntekAPI.request('/api/v1/rbac/roles/' + encodeURIComponent(editCode) + '/permissions', {
+          method: 'PUT',
+          body: JSON.stringify({ permissions: body.permissions })
+        });
+      }
+      msg.textContent = 'Role updated: ' + editCode;
+    } else {
+      await DigiFyntekAPI.request('/api/v1/rbac/roles', {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+      msg.textContent = 'Role created: ' + body.role_code;
+      resetForm();
+    }
+    loadRoles();
+  } catch (e) {
+    msg.textContent = e.message || e;
+  }
+}
+
+async function cloneRole() {
+  if (!editCode) return;
+  var code = prompt('New role code', editCode + '_copy');
+  if (!code) return;
+  var name = prompt('Display name', editCode + ' copy');
+  try {
+    await DigiFyntekAPI.request('/api/v1/rbac/roles/' + encodeURIComponent(editCode) + '/clone', {
+      method: 'POST',
+      body: JSON.stringify({ role_code: code, role_name: name || code })
+    });
+    document.getElementById('msg').textContent = 'Cloned to ' + code;
+    loadRoles();
+  } catch (e) {
+    document.getElementById('msg').textContent = e.message || e;
+  }
+}
+
+async function deleteRole() {
+  if (!editCode) return;
+  if (!confirm('Delete role ' + editCode + '?')) return;
+  try {
+    await DigiFyntekAPI.request('/api/v1/rbac/roles/' + encodeURIComponent(editCode), { method: 'DELETE' });
+    document.getElementById('msg').textContent = 'Deleted ' + editCode;
+    resetForm();
+    loadRoles();
+  } catch (e) {
+    document.getElementById('msg').textContent = e.message || e;
+  }
+}
+
+loadPerms().then(loadRoles).catch(function (e) {
+  document.getElementById('msg').textContent = e.message || e;
+});
+</script>
+</body>
+</html>

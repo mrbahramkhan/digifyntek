@@ -175,6 +175,7 @@
     items: [
       { href: 'rbac.html', label: 'Roles & permissions' },
       { href: 'role-assignment.html', label: 'Role assignment' },
+      { href: 'role-management.html', label: 'Role management' },
       { href: 'api-catalog.html', label: 'API catalog' },
       { href: 'checklist.html', label: 'Production checklist' },
       { href: 'setup.html', label: 'Institution setup' },
