@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NADRA verification — DigiFyntek</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+  <script>(function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();</script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar"><h1>NADRA verification</h1><span class="meta">CNIC · KYC mandatory identity check</span><div class="spacer"></div></header>
+    <div class="workspace">
+      <div class="panel" style="border-left:4px solid #b45309;margin-bottom:14px">
+        <div class="panel-b" style="padding:12px 14px;font-size:13px" id="cfg">Loading config…</div>
+      </div>
+      <div class="layout-2">
+        <div class="panel">
+          <div class="panel-h">Verify CNIC</div>
+          <div class="panel-b">
+            <div class="form-grid">
+              <div class="field"><label>CNIC (13 digits) *</label><input class="inp" id="cnic" placeholder="35202XXXXXXXX" maxlength="15" /></div>
+              <div class="field"><label>Full name</label><input class="inp" id="name" /></div>
+              <div class="field"><label>Father / husband name</label><input class="inp" id="father" /></div>
+              <div class="field"><label>Date of birth</label><input class="inp" type="date" id="dob" /></div>
+              <div class="field"><label>Customer ID (optional)</label><input class="inp" id="cust" /></div>
+              <div class="field"><label>KYC case ID (optional)</label><input class="inp" id="kyc" /></div>
+            </div>
+            <div class="form-actions"><button class="btn btn-p" type="button" onclick="verify()">Verify with NADRA</button></div>
+            <div id="msg" class="hint" style="margin-top:10px"></div>
+            <pre id="out" style="display:none;margin-top:12px;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-size:11px;max-height:320px;overflow:auto"></pre>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">Recent verifications</div>
+          <div class="panel-b table-wrap">
+            <table class="data"><thead><tr><th>ID</th><th>CNIC</th><th>Status</th><th>Score</th><th>Mode</th><th>When</th></tr></thead>
+            <tbody id="tb"><tr><td colspan="6" class="empty">—</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+async function loadCfg(){
+  try{
+    var c=await DigiFyntekAPI.request('/api/v1/nadra/config');
+    document.getElementById('cfg').innerHTML='<strong>NADRA</strong> · mode <code>'+c.mode+'</code> · mandatory KYC: '+(c.mandatory_for_kyc?'Yes':'No')+' · live configured: '+(c.live_configured?'Yes':'No')+'<br/><span class="hint">'+c.note+'</span>';
+  }catch(e){document.getElementById('cfg').textContent=e.message||e;}
+}
+async function loadHist(){
+  try{
+    var h=await DigiFyntekAPI.request('/api/v1/nadra/history');
+    var rows=h.rows||[];
+    document.getElementById('tb').innerHTML=rows.length?rows.map(function(r){
+      return '<tr><td>'+r.id+'</td><td>'+r.cnic+'</td><td>'+r.status+'</td><td>'+(r.match_score||'')+'</td><td>'+r.mode+'</td><td>'+String(r.created_at||'').slice(0,19)+'</td></tr>';
+    }).join(''):'<tr><td colspan="6" class="empty">No history</td></tr>';
+  }catch(e){}
+}
+async function verify(){
+  var msg=document.getElementById('msg');
+  var out=document.getElementById('out');
+  msg.textContent='Verifying…';
+  try{
+    var body={cnic:document.getElementById('cnic').value.trim(),full_name:document.getElementById('name').value.trim()||undefined,father_name:document.getElementById('father').value.trim()||undefined,date_of_birth:document.getElementById('dob').value||undefined};
+    var cust=document.getElementById('cust').value.trim();
+    var kyc=document.getElementById('kyc').value.trim();
+    if(cust)body.customer_id=Number(cust);
+    if(kyc)body.kyc_case_id=Number(kyc);
+    var r=await DigiFyntekAPI.request('/api/v1/nadra/verify',{method:'POST',body:JSON.stringify(body)});
+    msg.textContent=(r.verified?'Verified: ':'Not verified: ')+(r.message||r.status);
+    msg.className=r.verified?'ok':'err';
+    out.style.display='block';
+    out.textContent=JSON.stringify(r,null,2);
+    loadHist();
+  }catch(e){msg.textContent=e.message||e;msg.className='err';}
+}
+loadCfg();loadHist();
+</script>
+</body>
+</html>

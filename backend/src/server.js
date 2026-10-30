@@ -27,6 +27,7 @@ const reconRoutes = require('./routes/recon');
 const rbacRoutes = require('./routes/rbac');
 const openapiRoutes = require('./routes/openapi');
 const reportsRoutes = require('./routes/reports');
+const nadraRoutes = require('./routes/nadra');
 
 // --- Pack: Agri App (alias kisaan) ---
 let memberRoutes, sharesRoutes, savingsRoutes, vacsRoutes, cardRoutes, complianceRoutes, dashboardRoutes;
@@ -174,6 +175,8 @@ app.use('/api/v1/recon', reconRoutes);
 app.use('/api/recon', reconRoutes);
 app.use('/api/v1/rbac', rbacRoutes);
 app.use('/api/v1/reports', reportsRoutes);
+app.use('/api/v1/nadra', nadraRoutes);
+app.use('/api/nadra', nadraRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/rbac', rbacRoutes);
 

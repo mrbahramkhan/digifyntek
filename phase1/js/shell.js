@@ -68,6 +68,7 @@
           { href: 'conventional-dashboard.html', label: 'Conventional dashboard' },
           { href: 'cif.html', label: 'CIF / Customers' },
           { href: 'kyc.html', label: 'KYC cases' },
+          { href: 'nadra.html', label: 'NADRA verification' },
         ],
       },
       {
