@@ -63,123 +63,89 @@
     {
       sec: 'Home',
       items: [
-        { href: 'app.html', label: 'Dashboard' },
-        { href: 'app.html#packs', label: 'Product lines' },
+        { href: 'app.html', label: 'Workbench' },
+      ],
+    },
+    {
+      sec: 'Customers',
+      items: [
+        { href: 'cif.html', label: 'CIF register' },
+        { href: 'kyc.html', label: 'KYC cases' },
+        { href: 'nadra.html', label: 'NADRA verify' },
+      ],
+    },
+    {
+      sec: 'Accounts',
+      items: [
+        { href: 'accounts.html', label: 'CASA open / list' },
+        { href: 'casa.html', label: 'Cash deposit / withdraw' },
+        { href: 'term-deposits.html', label: 'Term deposits' },
+        { href: 'transfer.html', label: 'Internal transfer' },
+      ],
+    },
+    {
+      sec: 'Lending',
+      items: [
+        { href: 'products.html', label: 'Products' },
+        { href: 'financing.html', label: 'Disburse / contracts' },
+        { href: 'loans.html', label: 'Loan portfolio' },
+        { href: 'collateral.html', label: 'Collateral' },
+      ],
+    },
+    {
+      sec: 'Teller & instruments',
+      items: [
+        { href: 'teller.html', label: 'Teller / cash drawer' },
+        { href: 'instruments.html', label: 'Cheque books' },
+        { href: 'clearing.html', label: 'Cheque clearing' },
+      ],
+    },
+    {
+      sec: 'Ledger & day-end',
+      items: [
+        { href: 'ledger.html', label: 'Journal / trial balance' },
+        { href: 'recon.html', label: 'Reconciliation' },
+        { href: 'eod.html', label: 'End of day' },
+        { href: 'approvals.html', label: 'Maker-checker' },
+        { href: 'payments.html', label: 'Payments (sim)' },
+        { href: 'reports.html', label: 'Reports' },
+      ],
+    },
+    {
+      sec: 'Members (Agri / Coop)',
+      pack: 'agri',
+      items: [
+        { href: 'members.html', label: 'Member register' },
+        { href: 'member360.html', label: 'Member 360' },
+        { href: 'shares.html', label: 'Share capital' },
+        { href: 'savings.html', label: 'Member deposits' },
+        { href: 'cards.html', label: 'Membership cards' },
+      ],
+    },
+    {
+      sec: 'Risk & compliance',
+      items: [
+        { href: 'mfb.html', label: 'Prudential / capital' },
+        { href: 'compliance.html', label: 'Cooperative notes' },
+        { href: 'registration.html', label: 'Licensing checklist' },
+      ],
+    },
+    {
+      sec: 'Administration',
+      items: [
+        { href: 'role-assignment.html', label: 'Assign roles' },
+        { href: 'role-management.html', label: 'Manage roles' },
+        { href: 'rbac.html', label: 'Permission matrix' },
+        { href: 'setup.html', label: 'Institution setup' },
+        { href: 'api-catalog.html', label: 'API catalog' },
       ],
     },
   ];
 
-  // —— Conventional Banking ——
-  if (hasPack('conventional')) {
-    NAV.push(
-      {
-        sec: 'Conventional Banking',
-        pack: 'conventional',
-        items: [
-          { href: 'conventional-dashboard.html', label: 'Conventional dashboard' },
-          { href: 'cif.html', label: 'CIF / Customers' },
-          { href: 'kyc.html', label: 'KYC cases' },
-          { href: 'nadra.html', label: 'NADRA verification' },
-        ],
-      },
-      {
-        sec: 'Conventional · Accounts',
-        pack: 'conventional',
-        items: [
-          { href: 'accounts.html', label: 'CASA accounts' },
-          { href: 'term-deposits.html', label: 'Term deposits' },
-          { href: 'casa.html', label: 'Cash deposit / withdraw' },
-          { href: 'teller.html', label: 'Teller / cash drawer' },
-        ],
-      },
-      {
-        sec: 'Conventional · Lending',
-        pack: 'conventional',
-        items: [
-          { href: 'financing.html', label: 'Disburse financing' },
-          { href: 'products.html', label: 'Product catalogue' },
-        ],
-      },
-      {
-        sec: 'Conventional · Operations',
-        pack: 'conventional',
-        items: [
-          { href: 'ledger.html', label: 'Journal & trial balance' },
-          { href: 'transfer.html', label: 'Internal transfer' },
-          { href: 'instruments.html', label: 'Cheque books' },
-          { href: 'clearing.html', label: 'Cheque clearing' },
-          { href: 'recon.html', label: 'Reconciliation' },
-          { href: 'eod.html', label: 'End of day' },
-          { href: 'reports.html', label: 'Reports' },
-          { href: 'approvals.html', label: 'Maker-checker queue' },
-          { href: 'payments.html', label: 'Payments hub (sim)' },
-        ],
-      }
-    );
-  }
-
-  // —— Islamic Banking ——
-  if (hasPack('islamic')) {
-    NAV.push({
-      sec: 'Islamic Banking',
-      pack: 'islamic',
-      items: [
-        { href: 'islamic-dashboard.html', label: 'Islamic dashboard' },
-        { href: 'products.html', label: 'Islamic products' },
-        { href: 'accounts.html', label: 'Islamic deposits' },
-        { href: 'financing.html', label: 'Islamic financing' },
-        { href: 'term-deposits.html', label: 'Islamic TD' },
-        { href: 'murabaha.html', label: 'Murābaḥah' },
-        { href: 'islamic-ops.html', label: 'Other Islamic modes' },
-        { href: 'islamic.html', label: 'Shariah catalogue' },
-        { href: 'eod.html', label: 'EOD / profit accrual' },
-      ],
-    });
-  }
-
-  // —— Agri App (formerly Kisaan App) ——
-  if (hasPack('agri') || hasPack('kisaan')) {
-    NAV.push({
-      sec: 'Agri App',
-      pack: 'agri',
-      items: [
-        { href: 'agri-dashboard.html', label: 'Agri dashboard' },
-        { href: 'members.html', label: 'Member register' },
-        { href: 'member360.html', label: 'Member 360' },
-        { href: 'cards.html', label: 'Membership cards' },
-        { href: 'shares.html', label: 'Share capital' },
-        { href: 'savings.html', label: 'Member deposits' },
-        { href: 'setup.html', label: 'Branches / VAC' },
-        { href: 'compliance.html', label: 'Cooperative law' },
-        { href: 'registration.html', label: 'Licensing checklist' },
-      ],
-    });
-  }
-
-  // —— FMFB (optional) ——
-  if (hasPack('fmfb')) {
-    NAV.push({
-      sec: 'FMFB · Microfinance',
-      pack: 'fmfb',
-      items: [
-        { href: 'mfb.html', label: 'Asset quality & capital' },
-        { href: 'loans.html', label: 'Loan portfolio' },
-        { href: 'collateral.html', label: 'Collateral' },
-        { href: 'core-banking.html', label: 'GL / core tools' },
-      ],
-    });
-  }
-
-  NAV.push({
-    sec: 'Administration',
-    items: [
-      { href: 'rbac.html', label: 'Roles & permissions' },
-      { href: 'role-assignment.html', label: 'Role assignment' },
-      { href: 'role-management.html', label: 'Role management' },
-      { href: 'api-catalog.html', label: 'API catalog' },
-      { href: 'checklist.html', label: 'Production checklist' },
-      { href: 'setup.html', label: 'Institution setup' },
-    ],
+  // Hide pack-gated sections if packs restricted
+  NAV = NAV.filter(function (sec) {
+    if (!sec.pack) return true;
+    return hasPack(sec.pack);
   });
 
   function pageName() {

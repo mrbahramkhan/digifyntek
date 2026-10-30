@@ -3,28 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DigiFyntek — Application</title>
+  <title>DigiFyntek — Workbench</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/app.css" />
   <style>
     .mod-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px;
     }
     .mod-grid a {
-      display: block; background: #fff; border: 1px solid var(--line);
-      border-radius: 8px; padding: 12px; text-decoration: none;
+      display: block; background: var(--panel,#fff); border: 1px solid var(--line,#e5e7eb);
+      border-radius: 8px; padding: 12px; text-decoration: none; color: inherit;
     }
     .mod-grid a:hover { border-color: #67e8f9; background: #f0fdff; }
     .mod-grid .t { font-weight: 650; font-size: 13px; }
-    .mod-grid .d { color: var(--ink-2); font-size: 11px; margin-top: 3px; line-height: 1.35; }
+    .mod-grid .d { color: var(--ink-2,#64748b); font-size: 11px; margin-top: 3px; line-height: 1.35; }
     .sec-label {
       font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
-      color: var(--ink-3); margin: 16px 0 8px;
+      color: var(--ink-3,#94a3b8); margin: 16px 0 8px;
     }
   </style>
   <script>
-    (function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();
+    (function () {
+      var t = localStorage.getItem('DIGIFYNTEK_THEME');
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
   </script>
 </head>
 <body>
@@ -36,191 +39,89 @@
     <div class="main">
       <header class="topbar">
         <h1>Workbench</h1>
-        <span class="meta">Operational home</span>
+        <span class="meta">One application · customers · accounts · lending · ops</span>
       </header>
       <div class="workspace">
         <div class="kpis">
-          <div class="kpi" style="border-top-color:#059669"><div class="l">Agri members</div><div class="v" id="kMembers">—</div></div>
-          <div class="kpi"><div class="l">Active loans</div><div class="v" id="kLoans">—</div></div>
-          <div class="kpi"><div class="l">Portfolio OS</div><div class="v" id="kOs">—</div></div>
-          <div class="kpi"><div class="l">PAR / risk</div><div class="v" id="kPar">—</div></div>
+          <div class="kpi"><div class="l">Customers</div><div class="v" id="kCif">—</div></div>
+          <div class="kpi"><div class="l">Accounts</div><div class="v" id="kAcct">—</div></div>
+          <div class="kpi"><div class="l">Pending approvals</div><div class="v" id="kAppr">—</div></div>
+          <div class="kpi"><div class="l">EOD status</div><div class="v" id="kEod">—</div></div>
         </div>
 
-        
-        
-        <div class="sec-label">Product line dashboards</div>
-        <div class="mod-grid" style="margin-bottom:14px">
-          <a href="conventional-dashboard.html" style="border-top:3px solid #2563eb">
-            <div class="t">🏦 Conventional Banking</div>
-            <div class="d">CIF · CASA · loans · TD · teller · EOD</div>
-          </a>
-          <a href="islamic-dashboard.html" style="border-top:3px solid #0d9488">
-            <div class="t">🕌 Islamic Banking</div>
-            <div class="d">Deposits · Murabaha · TD · profit accrual</div>
-          </a>
-          <a href="agri-dashboard.html" style="border-top:3px solid #16a34a">
-            <div class="t">🌾 Agri App</div>
-            <div class="d">Members · shares · cards · compliance</div>
-          </a>
-        </div>
-
-<div class="sec-label" id="agriAppSection">🌾 Agri App</div>
-        <div class="mod-grid" style="margin-bottom:6px">
-          <a href="members.html" class="ka-card">
-            <div class="ka-icon">👥</div>
-            <div class="t">Member register</div>
-            <div class="d">Cooperative membership · join, status, profile</div>
-          </a>
-          <a href="member360.html" class="ka-card">
-            <div class="ka-icon">🧭</div>
-            <div class="t">Member 360</div>
-            <div class="d">Full view · shares, deposits, loans linked</div>
-          </a>
-          <a href="cards.html" class="ka-card">
-            <div class="ka-icon">🪪</div>
-            <div class="t">Membership cards</div>
-            <div class="d">Issue and manage member cards</div>
-          </a>
-          <a href="shares.html" class="ka-card">
-            <div class="ka-icon">📈</div>
-            <div class="t">Share capital</div>
-            <div class="d">Member equity · allotment & ledger</div>
-          </a>
-          <a href="savings.html" class="ka-card">
-            <div class="ka-icon">💰</div>
-            <div class="t">Member deposits</div>
-            <div class="d">Cooperative savings accounts</div>
-          </a>
-          <a href="setup.html" class="ka-card">
-            <div class="ka-icon">🏛️</div>
-            <div class="t">Branches / VAC</div>
-            <div class="d">Society branches and VAC setup</div>
-          </a>
-          <a href="compliance.html" class="ka-card">
-            <div class="ka-icon">📜</div>
-            <div class="t">Cooperative law</div>
-            <div class="d">Governance and compliance notes</div>
-          </a>
-          <a href="registration.html" class="ka-card">
-            <div class="ka-icon">✅</div>
-            <div class="t">Licensing checklist</div>
-            <div class="d">Registration and regulatory readiness</div>
-          </a>
-        </div>
-        <div class="panel" style="margin-bottom:14px;border-left:4px solid #059669">
-          <div class="panel-b" style="padding:10px 14px;font-size:12px;color:var(--ink-2)">
-            <strong style="color:#047857">Agri App</strong> — cooperative society operations (members, shares, deposits, cards, compliance).
-            Fintech CBS modules are listed under <em>Daily operations</em> below.
-          </div>
-        </div>
-
-<div class="sec-label">Daily operations</div>
+        <div class="sec-label">Daily entry (forms)</div>
         <div class="mod-grid">
-          <a href="cif.html"><div class="t">CIF / Customers</div><div class="d">CDD fields, risk, KYC status</div></a>
-          <a href="kyc.html"><div class="t">KYC cases</div><div class="d">Onboarding, screening, decisions</div></a>
-          <a href="members.html"><div class="t">Member register</div><div class="d">Legacy cooperative members</div></a>
-          <a href="accounts.html"><div class="t">Accounts (CASA)</div><div class="d">Open savings / current accounts</div></a>
-          <a href="casa.html"><div class="t">Cash deposit / withdraw</div><div class="d">Teller CASA posting to ledger</div></a>
-          <a href="teller.html"><div class="t">Teller / cash drawer</div><div class="d">Vault, float, customer cash, close</div></a>
-          <a href="term-deposits.html"><div class="t">Term deposits</div><div class="d">Place, mature, premature encash</div></a>
-          <a href="ledger.html"><div class="t">Journal & trial balance</div><div class="d">Double-entry posting engine</div></a>
-          <a href="transfer.html"><div class="t">Internal transfer</div><div class="d">Atomic balanced fund transfer</div></a>
-          <a href="financing.html"><div class="t">Disburse financing</div><div class="d">Loan/Murabaha with GL posting</div></a>
-          <a href="loans.html"><div class="t">Loan portfolio</div><div class="d">Legacy portfolio view</div></a>
-          <a href="savings.html"><div class="t">Deposit accounts</div><div class="d">Savings balances</div></a>
-          <a href="shares.html"><div class="t">Share capital</div><div class="d">Member equity</div></a>
-          <a href="core-banking.html"><div class="t">General ledger</div><div class="d">Posting, COA, day journals</div></a>
-          <a href="role-assignment.html"><div class="t">Roles & permissions</div><div class="d">RBAC matrix and your grants</div></a>
-          <a href="api-catalog.html"><div class="t">API catalog</div><div class="d">OpenAPI snapshot</div></a>
-          <a href="checklist.html"><div class="t">Production checklist</div><div class="d">Phase review & go-live gates</div></a>
-          <a href="reports.html"><div class="t">Reports</div><div class="d">TB, portfolio, cheques, EOD, accrual</div></a>
-          <a href="eod.html"><div class="t">End of day</div><div class="d">Cut-off, accrual, close day</div></a>
-          <a href="approvals.html"><div class="t">Maker-checker queue</div><div class="d">Dual control approve & execute</div></a>
-          <a href="payments.html"><div class="t">Payments hub</div><div class="d">Raast simulator · not live</div></a>
-          <a href="instruments.html"><div class="t">Cheque books</div><div class="d">Request, issue, stop payment</div></a>
-          <a href="clearing.html"><div class="t">Cheque clearing</div><div class="d">Inward/outward clear & bounce</div></a>
-          <a href="recon.html"><div class="t">Reconciliation</div><div class="d">Statement vs journal match</div></a>
+          <a href="cif.html"><div class="t">CIF register</div><div class="d">Open / edit customer</div></a>
+          <a href="nadra.html"><div class="t">NADRA verify</div><div class="d">CNIC → auto-fill CIF</div></a>
+          <a href="kyc.html"><div class="t">KYC case</div><div class="d">Documents & decision</div></a>
+          <a href="accounts.html"><div class="t">Open CASA</div><div class="d">Savings / current</div></a>
+          <a href="casa.html"><div class="t">Cash in / out</div><div class="d">Deposit & withdrawal</div></a>
+          <a href="transfer.html"><div class="t">Transfer</div><div class="d">Account to account</div></a>
+          <a href="financing.html"><div class="t">Disburse loan</div><div class="d">Conventional / Islamic</div></a>
+          <a href="term-deposits.html"><div class="t">Term deposit</div><div class="d">Place / mature</div></a>
+          <a href="teller.html"><div class="t">Teller drawer</div><div class="d">Vault & float</div></a>
+          <a href="instruments.html"><div class="t">Cheque book</div><div class="d">Issue / stop</div></a>
         </div>
 
-        <div class="sec-label">Credit · Islamic · risk</div>
+        <div class="sec-label">Control & close</div>
         <div class="mod-grid">
-          <a href="islamic-dashboard.html" style="border-top:3px solid #0d9488"><div class="t">Islamic banking dashboard</div><div class="d">Deposits · financing · TD · profit accrual</div></a>
-          <a href="collateral.html"><div class="t">Collateral</div><div class="d">Security register</div></a>
-          <a href="products.html"><div class="t">Islamic banking products</div><div class="d">Deposits · Murabaha · Ijarah · Salam · TD</div></a>
-          <a href="murabaha.html"><div class="t">Murābaḥah</div><div class="d">Cost-plus contracts</div></a>
-          <a href="islamic-ops.html"><div class="t">Other Islamic modes</div><div class="d">Salam · Ijārah · Qard</div></a>
-          <a href="mfb.html"><div class="t">Asset quality & capital</div><div class="d">Classification, provisions, CAR</div></a>
-          <a href="cbs.html"><div class="t">CIF & transfers</div><div class="d">Account open, fund transfer</div></a>
+          <a href="approvals.html"><div class="t">Maker-checker</div><div class="d">Approval queue</div></a>
+          <a href="ledger.html"><div class="t">Ledger</div><div class="d">Journal & TB</div></a>
+          <a href="eod.html"><div class="t">End of day</div><div class="d">Accrual & close</div></a>
+          <a href="reports.html"><div class="t">Reports</div><div class="d">Portfolio & MIS</div></a>
+          <a href="recon.html"><div class="t">Recon</div><div class="d">Clearing match</div></a>
+          <a href="payments.html"><div class="t">Payments</div><div class="d">Raast simulator</div></a>
         </div>
 
-        <div class="sec-label">Administration</div>
+        <div class="sec-label">Members (if Agri enabled)</div>
         <div class="mod-grid">
-          <a href="setup.html"><div class="t">Institution & branches</div><div class="d">Organisation setup</div></a>
-          <a href="registration.html"><div class="t">Licensing checklist</div><div class="d">Registration readiness</div></a>
-          <a href="compliance.html"><div class="t">Cooperative law</div><div class="d">Governance notes</div></a>
-          <a href="member360.html"><div class="t">Member 360</div><div class="d">Full member view</div></a>
+          <a href="members.html"><div class="t">Members</div><div class="d">Register form</div></a>
+          <a href="shares.html"><div class="t">Shares</div><div class="d">Capital allotment</div></a>
+          <a href="savings.html"><div class="t">Member savings</div><div class="d">Deposit form</div></a>
+          <a href="cards.html"><div class="t">Cards</div><div class="d">Issue card</div></a>
+        </div>
+
+        <div class="sec-label">Access control</div>
+        <div class="mod-grid">
+          <a href="role-assignment.html"><div class="t">Assign role</div><div class="d">User → role</div></a>
+          <a href="role-management.html"><div class="t">Manage roles</div><div class="d">Create / edit</div></a>
+          <a href="rbac.html"><div class="t">Permissions</div><div class="d">Matrix</div></a>
+          <a href="setup.html"><div class="t">Setup</div><div class="d">Branches / org</div></a>
         </div>
       </div>
     </div>
   </div>
-
-<script src="config.js"></script>
-<script src="js/api.js"></script>
-<script src="js/shell.js"></script>
-
-<script>
-(function () {
-  if (!window.DigiFyntekAPI || !DigiFyntekAPI.token()) {
-    location.replace('login.html?next=' + encodeURIComponent('app.html'));
-    return;
-  }
-  // show app if gated
-  var app = document.getElementById('appView');
-  if (app) app.style.display = '';
-})();
-</script>
-
-<script>
-  if (window.DigiFyntekAPI && !DigiFyntekAPI.token()) {
-    location.replace('login.html?next=' + encodeURIComponent(location.pathname.split('/').pop() || 'app.html'));
-  }
-</script>
-<script>
-(function () {
-  
-  
-  async function loadKpis() {
-    try {
-      const d = await DigiFyntekAPI.request('/api/dashboard/summary');
-      document.getElementById('kMembers').textContent = d.members ?? d.memberCount ?? '—';
-      document.getElementById('kLoans').textContent = d.activeLoans ?? d.loans ?? '—';
-      document.getElementById('kOs').textContent =
-        DigiFyntekAPI.fmtPKR ? DigiFyntekAPI.fmtPKR(d.portfolioOutstanding ?? d.outstanding ?? 0) : (d.portfolioOutstanding ?? '—');
-      document.getElementById('kPar').textContent = d.par30 != null ? d.par30 + '%' : (d.par ?? '—');
-    } catch (_) {}
-  }
-  
-  
-  }
-  var cur = packs();
-  defs.forEach(function(d){
-    var on = cur.indexOf(d.id) >= 0;
-    var el = document.createElement('label');
-    el.style.cssText = 'display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:200px;flex:1;background:var(--panel);cursor:pointer';
-    el.innerHTML = '<input type="checkbox" data-pack="'+d.id+'" '+(on?'checked':'')+' style="margin-top:3px"/>' +
-      '<span><strong>'+d.title+'</strong><br/><span class="hint">'+d.desc+'</span></span>';
-    box.appendChild(el);
-  });
-  box.addEventListener('change', function(e){
-    var t = e.target;
-    if (!t || !t.getAttribute('data-pack')) return;
-    var list = [];
-    box.querySelectorAll('input[data-pack]').forEach(function(i){ if (i.checked) list.push(i.getAttribute('data-pack')); });
-    if (list.indexOf('conventional') < 0 && list.indexOf('core') < 0) list.unshift('conventional');
-    save(list);
-  });
-})();
-</script>
-
+  <script src="config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/shell.js"></script>
+  <script>
+  (function () {
+    if (!window.DigiFyntekAPI || !DigiFyntekAPI.token()) {
+      location.replace('login.html?next=' + encodeURIComponent('app.html'));
+      return;
+    }
+    async function kpi() {
+      try {
+        var c = await DigiFyntekAPI.request('/api/v1/cif?limit=1');
+        document.getElementById('kCif').textContent =
+          c && c.total != null ? c.total : (Array.isArray(c) ? c.length : '—');
+      } catch (e) {}
+      try {
+        var a = await DigiFyntekAPI.request('/api/v1/reports/casa-balances');
+        document.getElementById('kAcct').textContent = a.count != null ? a.count : '—';
+      } catch (e) {}
+      try {
+        var p = await DigiFyntekAPI.request('/api/v1/approvals?status=pending&limit=1');
+        document.getElementById('kAppr').textContent =
+          p && p.total != null ? p.total : (Array.isArray(p) ? p.length : (p && p.rows ? p.rows.length : '—'));
+      } catch (e) {}
+      try {
+        var eod = await DigiFyntekAPI.request('/api/v1/eod/status');
+        document.getElementById('kEod').textContent = (eod && (eod.status || eod.state)) || '—';
+      } catch (e) {}
+    }
+    kpi();
+  })();
+  </script>
 </body>
 </html>
