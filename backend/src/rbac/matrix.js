@@ -7,20 +7,40 @@ const FALLBACK = {
   superadmin: ['*'],
   admin: ['*'],
   ops_manager: [
-    'cif.read', 'accounts.read', 'ledger.read', 'loan.read',
-    'approval.read', 'approval.decide', 'eod.run', 'teller.ops', 'clearing.ops', 'recon.ops',
+    'cif.read', 'kyc.read', 'accounts.read', 'casa.post', 'transfer.post', 'ledger.read',
+    'loan.read', 'td.read', 'approval.read', 'approval.decide', 'payments.read',
+    'teller.ops', 'clearing.ops', 'recon.ops', 'instruments.ops', 'eod.run', 'reports.read',
+    'agri.members',
   ],
-  teller: ['cif.read', 'accounts.read', 'casa.post', 'teller.ops', 'instruments.ops'],
+  branch_manager: [
+    'cif.read', 'cif.write', 'kyc.read', 'accounts.read', 'accounts.write', 'casa.post',
+    'transfer.post', 'ledger.read', 'loan.read', 'td.read', 'td.write',
+    'approval.read', 'approval.decide', 'teller.ops', 'instruments.ops', 'reports.read',
+  ],
+  teller: [
+    'cif.read', 'accounts.read', 'casa.post', 'transfer.post', 'teller.ops', 'instruments.ops', 'payments.read',
+  ],
   credit_officer: [
-    'cif.read', 'cif.write', 'kyc.read', 'accounts.read',
-    'loan.read', 'loan.disburse', 'loan.repay', 'td.read', 'td.write', 'nadra.verify',
+    'cif.read', 'cif.write', 'kyc.read', 'kyc.write', 'nadra.verify', 'accounts.read',
+    'loan.read', 'loan.disburse', 'loan.repay', 'td.read', 'td.write',
+    'approval.read', 'reports.read', 'islamic.read', 'islamic.write',
   ],
-  compliance: ['cif.read', 'kyc.read', 'kyc.write', 'kyc.decide', 'nadra.verify'],
+  compliance: [
+    'cif.read', 'kyc.read', 'kyc.write', 'kyc.decide', 'nadra.verify',
+    'accounts.read', 'loan.read', 'reports.read',
+  ],
   accountant: [
-    'ledger.read', 'ledger.post', 'ledger.reverse', 'accounts.read', 'eod.run', 'recon.ops', 'clearing.ops',
+    'cif.read', 'accounts.read', 'ledger.read', 'ledger.post', 'ledger.reverse',
+    'loan.read', 'td.read', 'clearing.ops', 'recon.ops', 'eod.run', 'reports.read', 'approval.read',
+  ],
+  islamic_officer: [
+    'cif.read', 'kyc.read', 'nadra.verify', 'accounts.read',
+    'loan.read', 'loan.disburse', 'loan.repay', 'td.read', 'td.write',
+    'islamic.read', 'islamic.write', 'reports.read',
   ],
   viewer: [
-    'cif.read', 'accounts.read', 'ledger.read', 'loan.read', 'td.read', 'payments.read', 'approval.read',
+    'cif.read', 'kyc.read', 'accounts.read', 'ledger.read', 'loan.read', 'td.read',
+    'payments.read', 'approval.read', 'reports.read', 'islamic.read', 'agri.members',
   ],
   user: ['cif.read', 'accounts.read', 'ledger.read'],
 };

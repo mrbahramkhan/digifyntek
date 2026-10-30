@@ -946,7 +946,16 @@ INSERT IGNORE INTO cbs_permissions (perm_code, module, description) VALUES
 ('recon.ops', 'Recon', 'Reconciliation'),
 ('eod.run', 'EOD', 'Run end of day'),
 ('admin.rbac', 'Admin', 'Manage roles'),
-('instruments.ops', 'Instruments', 'Cheque books');
+('instruments.ops', 'Instruments', 'Cheque books'),
+('nadra.verify', 'KYC', 'NADRA CNIC verification'),
+('reports.read', 'Reports', 'View operational reports'),
+('admin.setup', 'Admin', 'Institution setup'),
+('agri.members', 'Agri', 'Member register'),
+('agri.shares', 'Agri', 'Share capital'),
+('agri.cards', 'Agri', 'Membership cards'),
+('agri.savings', 'Agri', 'Member deposits'),
+('islamic.read', 'Islamic', 'View Islamic facilities'),
+('islamic.write', 'Islamic', 'Create/update Islamic facilities');
 
 INSERT IGNORE INTO cbs_role_permissions (role_code, perm_code)
 SELECT 'admin', perm_code FROM cbs_permissions;
