@@ -33,8 +33,8 @@
                 <div class="field full"><label>Full name <span class="req">*</span></label><input class="inp" id="f_name" required /></div>
                 <div class="field"><label>CNIC</label>
                   <div style="display:flex;gap:6px;align-items:center">
-                    <input class="inp" id="f_cnic" placeholder="xxxxx-xxxxxxx-x" style="flex:1" />
-                    <button type="button" class="btn btn-s" id="btnNadra" title="Verify with NADRA and auto-fill">NADRA</button>
+                    <input class="inp" id="f_cnic" placeholder="13-digit CNIC — auto-fills on complete" style="flex:1" />
+                    <button type="button" class="btn btn-s" id="btnNadra" title="Fetch from NADRA and fill form">Fetch NADRA</button>
                   </div>
                   <div class="hint" id="nadraHint" style="margin-top:4px"></div>
                 </div>
@@ -119,24 +119,24 @@
   
   function applyNadraCitizen(citizen, meta) {
     if (!citizen) return;
-    if (citizen.full_name) document.getElementById('f_name').value = citizen.full_name;
-    if (citizen.cnic) document.getElementById('f_cnic').value = citizen.cnic;
-    if (citizen.father_or_husband) document.getElementById('f_father').value = citizen.father_or_husband;
-    if (citizen.date_of_birth) {
-      var d = String(citizen.date_of_birth).slice(0, 10);
-      document.getElementById('f_dob').value = d;
+    function set(id, val) {
+      if (val == null || val === '') return;
+      var el = document.getElementById(id);
+      if (el) el.value = val;
     }
+    set('f_name', citizen.full_name || citizen.name);
+    var cnic = String(citizen.cnic || '').replace(/\D/g, '');
+    if (cnic) set('f_cnic', cnic);
+    set('f_father', citizen.father_or_husband || citizen.father_name || citizen.father);
+    var dob = citizen.date_of_birth || citizen.dob || citizen.birth_date;
+    if (dob) set('f_dob', String(dob).slice(0, 10));
     if (citizen.gender) {
       var g = String(citizen.gender).toUpperCase().charAt(0);
-      if (g === 'M' || g === 'F' || g === 'O') document.getElementById('f_gender').value = g;
+      if (g === 'M' || g === 'F' || g === 'O') set('f_gender', g);
     }
-    if (citizen.permanent_address || citizen.address) {
-      document.getElementById('f_addr').value = citizen.permanent_address || citizen.address;
-    }
-    if (citizen.city) document.getElementById('f_city').value = citizen.city;
-    if (meta && meta.verified) {
-      document.getElementById('f_kyc').value = 'verified';
-    }
+    set('f_addr', citizen.permanent_address || citizen.address || citizen.present_address);
+    set('f_city', citizen.city || citizen.district);
+    if (meta && meta.verified) set('f_kyc', 'verified');
   }
 
   async function verifyNadraFill() {
@@ -194,6 +194,26 @@
   } catch (e) {}
 
   document.getElementById('btnNadra').onclick = verifyNadraFill;
+
+  // Auto-fetch from NADRA when CNIC is complete (13 digits)
+  var nadraTimer = null;
+  var lastNadraCnic = '';
+  function scheduleNadraAuto() {
+    var raw = document.getElementById('f_cnic').value.replace(/\D/g, '');
+    if (raw.length !== 13) return;
+    if (raw === lastNadraCnic) return;
+    clearTimeout(nadraTimer);
+    nadraTimer = setTimeout(function () {
+      lastNadraCnic = raw;
+      document.getElementById('f_cnic').value = raw;
+      verifyNadraFill();
+    }, 500);
+  }
+  document.getElementById('f_cnic').addEventListener('blur', scheduleNadraAuto);
+  document.getElementById('f_cnic').addEventListener('input', function () {
+    var raw = this.value.replace(/\D/g, '');
+    if (raw.length === 13) scheduleNadraAuto();
+  });
 
   document.getElementById('btnNew').onclick=()=>fill(null);
   document.getElementById('btnClear').onclick=()=>fill(null);
