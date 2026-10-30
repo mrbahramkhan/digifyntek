@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Role assignment — DigiFyntek</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+  <script>(function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();</script>
+  <style>
+    .role-badge {
+      display: inline-block; padding: 2px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 600; background: #e0e7ff; color: #3730a3;
+    }
+    .role-badge.superadmin, .role-badge.admin { background: #fef3c7; color: #92400e; }
+    .role-badge.teller { background: #dbeafe; color: #1e40af; }
+    .role-badge.viewer { background: #f1f5f9; color: #475569; }
+    .role-badge.compliance { background: #fce7f3; color: #9d174d; }
+    .role-badge.credit_officer { background: #d1fae5; color: #065f46; }
+    .user-row { cursor: pointer; }
+    .user-row:hover { background: var(--bg, #f8fafc); }
+    .user-row.selected { background: #eff6ff; outline: 1px solid #93c5fd; }
+    .perm-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .perm-chips span {
+      font-size: 10px; padding: 2px 8px; border-radius: 6px;
+      background: #f1f5f9; color: #334155; font-family: ui-monospace, monospace;
+    }
+    .assign-box {
+      border: 1px solid var(--line, #e5e7eb); border-radius: 12px;
+      padding: 16px; background: var(--panel, #fff);
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar"><div class="side-brand"><span class="m">D</span> DigiFyntek</div><nav class="nav"></nav></aside>
+  <div class="main">
+    <header class="topbar">
+      <h1>Role assignment</h1>
+      <span class="meta">Assign user roles · preview permissions</span>
+      <div class="spacer"></div>
+      <a class="btn" href="rbac.html">Full RBAC matrix</a>
+    </header>
+    <div class="workspace">
+      <div class="layout-2">
+        <div class="panel">
+          <div class="panel-h">
+            Users
+            <button type="button" class="btn btn-s" onclick="loadUsers()" style="margin-left:auto">Refresh</button>
+          </div>
+          <div class="panel-b">
+            <div class="field" style="margin-bottom:10px">
+              <input class="inp" id="search" placeholder="Search user id or name…" oninput="filterUsers()" />
+            </div>
+            <div class="table-wrap">
+              <table class="data">
+                <thead><tr><th>User ID</th><th>Name</th><th>Current role</th><th>Active</th></tr></thead>
+                <tbody id="uTb"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h">Assign role</div>
+          <div class="panel-b">
+            <div class="assign-box">
+              <div class="hint" id="selHint">Select a user from the list</div>
+              <div id="selBlock" style="display:none">
+                <div style="margin-bottom:12px">
+                  <div style="font-size:12px;color:var(--ink-2,#64748b)">Selected user</div>
+                  <div style="font-size:16px;font-weight:700" id="selUser">—</div>
+                  <div style="margin-top:4px">Current: <span class="role-badge" id="selCur">—</span></div>
+                </div>
+                <div class="field">
+                  <label>New role</label>
+                  <select class="inp" id="roleSel" onchange="previewRole()"></select>
+                </div>
+                <div style="margin-top:12px">
+                  <div style="font-size:12px;font-weight:600">Permissions for selected role</div>
+                  <div class="perm-chips" id="permPreview"><span>—</span></div>
+                </div>
+                <div class="form-actions" style="margin-top:16px">
+                  <button type="button" class="btn btn-p" id="btnSave" onclick="saveRole()">Assign role</button>
+                </div>
+                <div id="msg" class="hint" style="margin-top:10px"></div>
+              </div>
+            </div>
+
+            <div style="margin-top:16px">
+              <div class="sec-label">Role catalogue</div>
+              <div class="table-wrap">
+                <table class="data">
+                  <thead><tr><th>Role</th><th>Name</th><th>Description</th></tr></thead>
+                  <tbody id="rTb"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script>
+var USERS = [];
+var ROLES = [];
+var MATRIX = {};
+var selectedId = null;
+
+function badgeClass(role) {
+  return 'role-badge ' + String(role || '').replace(/\s/g, '_');
+}
+
+async function boot() {
+  try {
+    ROLES = await DigiFyntekAPI.request('/api/v1/rbac/roles');
+    if (!Array.isArray(ROLES)) ROLES = [];
+    document.getElementById('roleSel').innerHTML = ROLES.map(function (r) {
+      return '<option value="' + r.role_code + '">' + r.role_code + ' — ' + (r.role_name || '') + '</option>';
+    }).join('');
+    document.getElementById('rTb').innerHTML = ROLES.map(function (r) {
+      return '<tr><td><span class="' + badgeClass(r.role_code) + '">' + r.role_code + '</span></td><td>' +
+        (r.role_name || '') + '</td><td>' + (r.description || '') + '</td></tr>';
+    }).join('');
+
+    try {
+      var m = await DigiFyntekAPI.request('/api/v1/rbac/matrix');
+      MATRIX = m.matrix || {};
+    } catch (e) { MATRIX = {}; }
+
+    await loadUsers();
+  } catch (e) {
+    document.getElementById('uTb').innerHTML = '<tr><td colspan="4" class="empty">' + (e.message || e) + '</td></tr>';
+  }
+}
+
+async function loadUsers() {
+  USERS = await DigiFyntekAPI.request('/api/v1/rbac/users');
+  if (!Array.isArray(USERS)) USERS = [];
+  renderUsers();
+}
+
+function renderUsers() {
+  var q = (document.getElementById('search').value || '').toLowerCase();
+  var rows = USERS.filter(function (u) {
+    if (!q) return true;
+    return String(u.user_id || '').toLowerCase().indexOf(q) >= 0 ||
+      String(u.full_name || '').toLowerCase().indexOf(q) >= 0 ||
+      String(u.role || '').toLowerCase().indexOf(q) >= 0;
+  });
+  document.getElementById('uTb').innerHTML = rows.length ? rows.map(function (u) {
+    var sel = selectedId === u.user_id ? ' selected' : '';
+    return '<tr class="user-row' + sel + '" onclick="selectUser(\'' + u.user_id + '\')">' +
+      '<td>' + u.user_id + '</td>' +
+      '<td>' + (u.full_name || '') + '</td>' +
+      '<td><span class="' + badgeClass(u.role) + '">' + (u.role || '') + '</span></td>' +
+      '<td>' + (Number(u.is_active) ? 'Y' : 'N') + '</td></tr>';
+  }).join('') : '<tr><td colspan="4" class="empty">No users</td></tr>';
+}
+
+function filterUsers() { renderUsers(); }
+
+function selectUser(uid) {
+  selectedId = uid;
+  var u = USERS.find(function (x) { return x.user_id === uid; });
+  if (!u) return;
+  document.getElementById('selHint').style.display = 'none';
+  document.getElementById('selBlock').style.display = 'block';
+  document.getElementById('selUser').textContent = u.user_id + (u.full_name ? ' · ' + u.full_name : '');
+  var cur = document.getElementById('selCur');
+  cur.className = badgeClass(u.role);
+  cur.textContent = u.role || '—';
+  document.getElementById('roleSel').value = u.role || 'viewer';
+  document.getElementById('msg').textContent = '';
+  previewRole();
+  renderUsers();
+}
+
+function previewRole() {
+  var role = document.getElementById('roleSel').value;
+  var list = MATRIX[role] || [];
+  if (role === 'superadmin' || role === 'admin') list = ['* (all permissions)'];
+  var el = document.getElementById('permPreview');
+  if (!list.length) {
+    el.innerHTML = '<span>No permissions mapped</span>';
+    return;
+  }
+  el.innerHTML = list.map(function (p) { return '<span>' + p + '</span>'; }).join('');
+}
+
+async function saveRole() {
+  if (!selectedId) return;
+  var role = document.getElementById('roleSel').value;
+  var msg = document.getElementById('msg');
+  var btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  try {
+    await DigiFyntekAPI.request('/api/v1/rbac/users/' + encodeURIComponent(selectedId) + '/role', {
+      method: 'PATCH',
+      body: JSON.stringify({ role: role })
+    });
+    msg.textContent = 'Assigned ' + role + ' to ' + selectedId + '. User must re-login for JWT role update.';
+    msg.className = 'hint';
+    await loadUsers();
+    selectUser(selectedId);
+  } catch (e) {
+    msg.textContent = e.message || String(e);
+    msg.className = 'err';
+  }
+  btn.disabled = false;
+}
+
+boot();
+</script>
+</body>
+</html>
