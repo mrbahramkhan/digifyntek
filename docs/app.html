@@ -8,16 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/app.css" />
   <style>
-    .login-wrap {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      background: var(--bg); padding: 24px;
-    }
-    .login-box {
-      width: 100%; max-width: 380px; background: #fff;
-      border: 1px solid var(--line); border-radius: 10px; padding: 28px 24px;
-    }
-    .login-box h2 { font-size: 18px; margin-bottom: 4px; }
-    .login-box .sub { color: var(--ink-2); margin-bottom: 18px; font-size: 13px; }
     .mod-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;
     }
@@ -38,28 +28,7 @@
   </script>
 </head>
 <body>
-  <div id="loginView" class="login-wrap">
-    <div class="login-box">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-        <span style="width:32px;height:32px;border-radius:8px;background:#06b6d4;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800">D</span>
-        <strong>DigiFyntek</strong>
-      </div>
-      <h2>Sign in</h2>
-      <p class="sub">Institution application login</p>
-      <div class="field" style="margin-bottom:10px">
-        <label>User ID</label>
-        <input class="inp" id="userId" autocomplete="username" />
-      </div>
-      <div class="field" style="margin-bottom:14px">
-        <label>Password</label>
-        <input class="inp" type="password" id="password" autocomplete="current-password" />
-      </div>
-      <button type="button" class="btn btn-p" style="width:100%;height:36px" id="btnLogin">Sign in</button>
-      <div id="loginErr" class="err" style="display:none"></div>
-    </div>
-  </div>
-
-  <div class="app" id="appView" style="display:none">
+  <div class="app" id="appView">
     <aside class="sidebar">
       <div class="side-brand"><span class="m">D</span> DigiFyntek</div>
       <nav class="nav"></nav>
@@ -198,6 +167,19 @@
 <script src="config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/shell.js"></script>
+
+<script>
+(function () {
+  if (!window.DigiFyntekAPI || !DigiFyntekAPI.token()) {
+    location.replace('login.html?next=' + encodeURIComponent('app.html'));
+    return;
+  }
+  // show app if gated
+  var app = document.getElementById('appView');
+  if (app) app.style.display = '';
+})();
+</script>
+
 <script>
   if (window.DigiFyntekAPI && !DigiFyntekAPI.token()) {
     location.replace('login.html?next=' + encodeURIComponent(location.pathname.split('/').pop() || 'app.html'));
@@ -205,15 +187,8 @@
 </script>
 <script>
 (function () {
-  function showApp() {
-    document.getElementById('loginView').style.display = 'none';
-    document.getElementById('appView').style.display = 'flex';
-    loadKpis();
-  }
-  function showLogin() {
-    document.getElementById('loginView').style.display = 'flex';
-    document.getElementById('appView').style.display = 'none';
-  }
+  
+  
   async function loadKpis() {
     try {
       const d = await DigiFyntekAPI.request('/api/dashboard/summary');
@@ -224,90 +199,8 @@
       document.getElementById('kPar').textContent = d.par30 != null ? d.par30 + '%' : (d.par ?? '—');
     } catch (_) {}
   }
-  async function doLogin() {
-    const err = document.getElementById('loginErr');
-    err.style.display = 'none';
-    try {
-      await DigiFyntekAPI.login(
-        document.getElementById('userId').value.trim(),
-        document.getElementById('password').value
-      );
-      showApp();
-    } catch (e) {
-      err.textContent = e.message || 'Login failed';
-      err.style.display = 'block';
-    }
-  }
-  document.getElementById('btnLogin').onclick = doLogin;
-  document.getElementById('password').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') doLogin();
-  });
-  if (window.DigiFyntekAPI && DigiFyntekAPI.getToken && DigiFyntekAPI.getToken()) showApp();
-  else showLogin();
-})();
-</script>
-
-<script>
-(function(){
-  var t=localStorage.getItem('DIGIFYNTEK_THEME');
-  if(t==='dark')document.documentElement.setAttribute('data-theme','dark');
-  var box=document.querySelector('.login-box');
-  if(box && !document.querySelector('.theme-toggle')){
-    var b=document.createElement('button');
-    b.type='button'; b.className='theme-toggle';
-    b.style.cssText='position:absolute;top:16px;right:16px';
-    b.textContent=document.documentElement.getAttribute('data-theme')==='dark'?'☀':'☾';
-    b.onclick=function(){
-      var d=document.documentElement.getAttribute('data-theme')==='dark';
-      if(d){document.documentElement.removeAttribute('data-theme');localStorage.setItem('DIGIFYNTEK_THEME','light');b.textContent='☾';}
-      else{document.documentElement.setAttribute('data-theme','dark');localStorage.setItem('DIGIFYNTEK_THEME','dark');b.textContent='☀';}
-    };
-    var wrap=document.getElementById('loginView');
-    if(wrap){wrap.style.position='relative'; wrap.appendChild(b);}
-  }
-})();
-</script>
-
-
-  <div id="packPanel" class="panel" style="margin-top:14px">
-    <div class="panel-h">Product lines (three apps)</div>
-    <div class="panel-b">
-      <p class="hint" style="margin-bottom:10px">Teen alag lines: Conventional Banking, Islamic Banking, Agri App. Toggle local; server env <code>PRODUCT_PACKS</code> API routes control karta hai.</p>
-      <div id="packToggles" style="display:flex;flex-wrap:wrap;gap:10px"></div>
-      <p class="hint" style="margin-top:10px">API: <code>GET /api/products</code></p>
-    </div>
-  </div>
-<script>
-(function(){
-  var defs = [
-    { id:'conventional', title:'Conventional Banking', desc:'CIF, CASA, loans, TD, teller, ledger, EOD, RBAC' },
-    { id:'agri', title:'Agri App', desc:'Members, shares, savings, cards, cooperative / agri compliance' },
-    { id:'islamic', title:'Islamic Banking', desc:'Islamic deposits, Murabaha, Ijarah, TD, profit accrual' },
-    { id:'fmfb', title:'FMFB / Microfinance', desc:'Prudential, portfolio, collateral, GL tools' }
-  ];
-  function packs(){
-    try {
-      var r = localStorage.getItem('DIGIFYNTEK_PACKS');
-      if (r) return r.split(',').map(function(s){return s.trim()}).filter(Boolean);
-    } catch(e){}
-    return ['conventional','islamic','agri','fmfb'];
-  }
-  function save(list){
-    localStorage.setItem('DIGIFYNTEK_PACKS', list.join(','));
-  }
-  var box = document.getElementById('packToggles');
-  if (!box) return;
-  if (window.DigiFyntekAPI && DigiFyntekAPI.loadProductConfig) {
-    DigiFyntekAPI.loadProductConfig().then(function(r){
-      if (r && r.single_pack) {
-        var panel = document.getElementById('packPanel');
-        if (panel) {
-          panel.querySelector('.panel-h').textContent = 'Client product line';
-          var b = panel.querySelector('.panel-b');
-          if (b) b.innerHTML = '<p><strong>' + (r.labels && r.labels[r.single_pack] || r.single_pack) + '</strong> · client <code>' + (r.client_id||'') + '</code></p><p class="hint">Is deploy pe sirf yeh line enabled hai. Multi-pack ke liye server PRODUCT_PACKS badlein.</p>';
-        }
-      }
-    });
+  
+  
   }
   var cur = packs();
   defs.forEach(function(d){
