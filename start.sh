@@ -22,6 +22,7 @@ DB_PASSWORD=
 DB_NAME=digifyntek
 JWT_SECRET=$JWT
 JWT_EXPIRES=8h
+MFA_ENFORCE_ADMIN=0
 CORS_ORIGINS=http://localhost:4000,http://127.0.0.1:4000,http://localhost:8080
 TRUST_PROXY=0
 ENV
@@ -62,14 +63,14 @@ start_mysql() {
 if start_mysql; then
   log "Initializing database"
   npm run db:init || true
-  log "Seeding admin (superadmin / ForgeAdmin123!)"
-  npm run db:seed-admin -- 'ForgeAdmin123!' || true
+  log "Seeding admin (superadmin / 12345678)"
+  npm run db:seed-admin -- '12345678' || true
 else
   warn "MySQL not available in this environment."
   warn "Install Docker or MySQL, then re-run: ./start.sh"
 fi
 
 log "Starting Forge on http://127.0.0.1:4000"
-echo "Login: superadmin / ForgeAdmin123!"
+echo "Login: superadmin / 12345678"
 echo "Press Ctrl+C to stop"
 exec node src/server.js

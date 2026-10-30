@@ -1,65 +1,80 @@
 # DigiFyntek
 
-**One system** to run a cooperative society or bank-style institution end to end.
+**Unified core banking / cooperative fintech application** — one workbench, form-first modules, SBP-oriented controls.
 
 ```
-Customers → Accounts → Lending → Operations → Risk → Admin
+Login → Workbench → Customers · Accounts · Lending · Teller · Ledger · Members · Admin
 ```
 
 | | |
 |--|--|
 | **Product** | DigiFyntek |
-| **Stack** | Node.js · Express · MySQL 8 |
-| **UI demo** | https://mrbahramkhan.github.io/digifyntek/ |
+| **Stack** | Node.js · Express · MySQL / MariaDB |
+| **UI** | Operational HTML workbench (`phase1/`) |
+| **Repo** | https://github.com/mrbahramkhan/digifyntek |
 
-## What it runs
+## Modules (full application)
 
-| Domain | Capability |
-|--------|------------|
-| Customers | Member register, 360 view, membership cards |
-| Accounts | Deposits, share capital, CIF / account open, transfers |
-| Lending | Loans & PAR, collateral, Murābaḥah and other Islamic modes |
-| Operations | General ledger, day-end, accrual, cheque books |
-| Risk | Classification, provisions, MCR/CAR, cooperative law checklist |
-| Admin | Institution & branches, product catalogue |
+| Domain | Screens / APIs |
+|--------|----------------|
+| **Auth** | `login.html` · JWT · MFA (TOTP) for admin roles |
+| **Customers** | CIF form · KYC cases · NADRA verify → auto-fill |
+| **Accounts** | CASA open · cash in/out · TD · internal transfer |
+| **Lending** | Products · disburse (conv. + Islamic) · portfolio · collateral |
+| **Teller** | Drawer / vault · cheque books · clearing |
+| **Ledger** | Double-entry journal · TB · recon · EOD + accrual |
+| **Controls** | Maker-checker · payments sim · reports |
+| **Members** | Register · 360 · shares · savings · cards |
+| **Risk** | MFB prudential · compliance notes |
+| **Admin** | Role assign · role manage · RBAC matrix · setup |
 
-## Start
+One home: **`app.html`**. No parallel product dashboards (old URLs redirect here).
+
+## Quick start
 
 ```bash
+git clone https://github.com/mrbahramkhan/digifyntek.git
+cd digifyntek
 ./start.sh
-# http://localhost:4000  ·  superadmin / ForgeAdmin123!
 ```
+
+Or manual:
 
 ```bash
-cd backend && npm install && npm run db:init
-npm run db:seed-admin -- 'YourPass!' && npm start
+cd backend
+cp .env.example .env   # set DB_* and JWT_SECRET
+npm install
+mysql -u root -p < sql/install-schema.sql
+# optional: sql/13_rbac_matrix_complete.sql  sql/14_mfa.sql
+npm start
 ```
 
-Health: `GET /health`
+Open: **http://localhost:4000/login.html**
 
-## Legacy Digital Kisaan DB
+| User | Password |
+|------|----------|
+| `superadmin` | `12345678` |
 
-```env
-DB_NAME=digifyntek
-DB_MODE=legacy
-```
+> Change password and enable MFA in production. Default demo may set `MFA_ENFORCE_ADMIN=0`.
 
-## Pakistan CBS (enterprise roadmap)
+## Architecture
 
-Requirements & architecture: [`docs-cbs/`](docs-cbs/)
+- **API:** `/api/*` and `/api/v1/*`
+- **Ledger:** balanced journals, paisa-safe money helpers
+- **RBAC:** `cbs_roles` · `cbs_permissions` · `requirePermission`
+- **Product packs:** `PRODUCT_PACKS=conventional,islamic,agri` (optional filter)
+- **NADRA:** simulator by default; live credentials via env
 
-| Phase | Status |
-|-------|--------|
-| P1 CIF + audit + schema | **Started** (`09_cbs_enterprise.sql`, `/api/v1/cif`) |
-| P2 Ledger + accounts + FT | **Started** (`/api/v1/ledger`, balanced post/reverse) |
-| P3–P7 | Roadmap in `docs-cbs/02_ROADMAP.md` |
+## Key docs
 
-Screens: `cif.html` · `accounts.html` · `ledger.html` · `transfer.html`
+| File | Topic |
+|------|--------|
+| `SYSTEM.md` | How the system works |
+| `docs-cbs/` | CBS / SBP / MFA / client deploy |
+| `LOCAL_DEPLOY.md` | Local install |
+| `PRODUCTION.md` | Production notes |
+| `docker-compose.yml` | Optional containers |
 
-## Docs
+## Health
 
-- [SYSTEM.md](SYSTEM.md) — domain architecture  
-- [PRODUCTION.md](PRODUCTION.md) — deploy  
-- [integration/](integration/) — legacy map, CBS, MFB toolkit  
-
-**Version 1.3.0** — unified bank/society information architecture.
+`GET /health` → `{ ok, db, modules }`
