@@ -30,7 +30,7 @@
 
   function requireAuth(redirect) {
     if (!token()) {
-      window.location.href = redirect || 'index.html';
+      window.location.href = redirect || 'login.html';
       return false;
     }
     return true;
@@ -82,7 +82,7 @@
 
     logout() {
       clearSession();
-      window.location.href = 'app.html';
+      window.location.href = 'login.html';
     },
 
     kpis() {

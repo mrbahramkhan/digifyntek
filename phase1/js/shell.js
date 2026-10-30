@@ -8,6 +8,17 @@
 
 /** DigiFyntek — Conventional Banking · Islamic Banking · Agri App */
 (function (g) {
+
+  // Auth gate — dedicated login page
+  try {
+    var path = (location.pathname || '').split('/').pop() || '';
+    if (path !== 'login.html' && path !== 'index.html' && typeof DigiFyntekAPI !== 'undefined') {
+      if (!DigiFyntekAPI.token()) {
+        location.replace('login.html?next=' + encodeURIComponent(path || 'app.html'));
+      }
+    }
+  } catch (e) {}
+
   /**
    * Information architecture
    * 1 Home · 2 Customers · 3 Accounts · 4 Lending · 5 Operations · 6 Risk · 7 Admin
@@ -191,7 +202,7 @@
       else {
         localStorage.removeItem('FORGE_TOKEN');
         localStorage.removeItem('DIGIFYNTEK_TOKEN');
-        location.href = 'app.html';
+        location.href = 'login.html';
       }
     };
     const av = top.querySelector('.av');

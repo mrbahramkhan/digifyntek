@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login — DigiFyntek</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+  <script>(function(){var t=localStorage.getItem('DIGIFYNTEK_THEME');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})();</script>
+  <style>
+    body.login-page {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(37, 99, 235, 0.12), transparent),
+        radial-gradient(ellipse 60% 50% at 90% 80%, rgba(13, 148, 136, 0.1), transparent),
+        var(--bg, #f8fafc);
+      font-family: Inter, system-ui, sans-serif;
+    }
+    .login-shell {
+      width: 100%;
+      max-width: 420px;
+      padding: 24px 16px;
+    }
+    .login-card {
+      background: var(--panel, #fff);
+      border: 1px solid var(--line, #e2e8f0);
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+      padding: 28px 28px 24px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .brand .mark {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1d4ed8, #0d9488);
+      color: #fff;
+      font-weight: 700;
+      font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--ink-2, #64748b);
+    }
+    .login-card h2 {
+      margin: 0 0 4px;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .login-card .sub {
+      margin: 0 0 20px;
+      font-size: 13px;
+      color: var(--ink-2, #64748b);
+    }
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--ink, #0f172a);
+    }
+    .field .inp {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line, #e2e8f0);
+      font-size: 14px;
+      background: var(--panel, #fff);
+      color: var(--ink, #0f172a);
+    }
+    .field .inp:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    .btn-login {
+      width: 100%;
+      margin-top: 6px;
+      padding: 11px 16px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #1d4ed8, #1e40af);
+      color: #fff;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-login:hover { filter: brightness(1.05); }
+    .btn-login:disabled { opacity: 0.65; cursor: not-allowed; }
+    .err {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #fef2f2;
+      color: #b91c1c;
+      font-size: 13px;
+      border: 1px solid #fecaca;
+    }
+    .hint-foot {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--ink-2, #64748b);
+    }
+    .lines {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .lines span {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #475569;
+    }
+    [data-theme="dark"] body.login-page,
+    [data-theme="dark"] .login-page {
+      background: #0f172a;
+    }
+  </style>
+</head>
+<body class="login-page">
+  <div class="login-shell">
+    <div class="login-card">
+      <div class="brand">
+        <div class="mark">D</div>
+        <div>
+          <h1>DigiFyntek</h1>
+          <p>Core banking · Islamic · Agri</p>
+        </div>
+      </div>
+      <h2>Sign in</h2>
+      <p class="sub">Enter your institution credentials to continue</p>
+      <form id="frm" autocomplete="on">
+        <div class="field">
+          <label for="userId">User ID</label>
+          <input class="inp" id="userId" name="username" autocomplete="username" required autofocus />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input class="inp" type="password" id="password" name="password" autocomplete="current-password" required />
+        </div>
+        <button class="btn-login" type="submit" id="btn">Sign in</button>
+        <div class="err" id="err"></div>
+      </form>
+      <p class="hint-foot">Demo: <code>superadmin</code> / <code>12345678</code></p>
+      <div class="lines">
+        <span>Conventional Banking</span>
+        <span>Islamic Banking</span>
+        <span>Agri App</span>
+      </div>
+    </div>
+  </div>
+  <script src="config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    (function () {
+      // Already logged in → dashboard
+      if (DigiFyntekAPI.token()) {
+        location.replace('app.html');
+        return;
+      }
+      var frm = document.getElementById('frm');
+      var err = document.getElementById('err');
+      var btn = document.getElementById('btn');
+      frm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        err.style.display = 'none';
+        btn.disabled = true;
+        btn.textContent = 'Signing in…';
+        try {
+          await DigiFyntekAPI.login(
+            document.getElementById('userId').value.trim(),
+            document.getElementById('password').value
+          );
+          var next = new URLSearchParams(location.search).get('next') || 'app.html';
+          location.replace(next);
+        } catch (ex) {
+          err.style.display = 'block';
+          err.textContent = (ex && ex.message) || 'Login failed';
+          btn.disabled = false;
+          btn.textContent = 'Sign in';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

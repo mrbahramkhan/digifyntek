@@ -199,6 +199,11 @@
 <script src="js/api.js"></script>
 <script src="js/shell.js"></script>
 <script>
+  if (window.DigiFyntekAPI && !DigiFyntekAPI.token()) {
+    location.replace('login.html?next=' + encodeURIComponent(location.pathname.split('/').pop() || 'app.html'));
+  }
+</script>
+<script>
 (function () {
   function showApp() {
     document.getElementById('loginView').style.display = 'none';
