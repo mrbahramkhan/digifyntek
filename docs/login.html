@@ -167,6 +167,22 @@
         <button class="btn-login" type="submit" id="btn">Sign in</button>
         <div class="err" id="err"></div>
       </form>
+      <div id="mfaPanel" style="display:none;margin-top:8px">
+        <h2 style="font-size:17px;margin:0 0 4px">Authenticator code</h2>
+        <p class="sub" id="mfaSub">Enter the 6-digit code from your app</p>
+        <div id="setupBox" style="display:none;margin-bottom:12px;padding:12px;border:1px solid var(--line,#e2e8f0);border-radius:10px;font-size:12px">
+          <div style="font-weight:600;margin-bottom:6px">Admin MFA setup required</div>
+          <div id="setupSecret" style="word-break:break-all;font-family:ui-monospace,monospace;margin-bottom:8px"></div>
+          <div class="hint">Add this secret in Google Authenticator / Authy, then enter a code below.</div>
+        </div>
+        <div class="field">
+          <label for="mfaCode">6-digit code</label>
+          <input class="inp" id="mfaCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" />
+        </div>
+        <button class="btn-login" type="button" id="btnMfa">Verify &amp; continue</button>
+        <button type="button" class="btn-login" id="btnSetup" style="display:none;margin-top:8px;background:#0f766e">Generate MFA secret</button>
+        <div class="err" id="mfaErr"></div>
+      </div>
       <p class="hint-foot">Demo: <code>superadmin</code> / <code>12345678</code></p>
       <div class="lines">
         <span>Conventional Banking</span>
@@ -178,8 +194,7 @@
   <script src="config.js"></script>
   <script src="js/api.js"></script>
   <script>
-    (function () {
-      // Already logged in → dashboard
+(function () {
       if (DigiFyntekAPI.token()) {
         location.replace('app.html');
         return;
@@ -187,26 +202,95 @@
       var frm = document.getElementById('frm');
       var err = document.getElementById('err');
       var btn = document.getElementById('btn');
+      var mfaToken = null;
+      var setupRequired = false;
+
+      function showMfa(data) {
+        mfaToken = data.mfa_token;
+        setupRequired = !!data.mfa_setup_required;
+        frm.style.display = 'none';
+        document.getElementById('mfaPanel').style.display = 'block';
+        document.getElementById('mfaSub').textContent = data.message || 'Enter authenticator code';
+        document.getElementById('btnSetup').style.display = setupRequired ? 'block' : 'none';
+        document.getElementById('setupBox').style.display = 'none';
+        document.getElementById('mfaCode').focus();
+      }
+
+      function finish(data) {
+        DigiFyntekAPI.setSession(data.token, data.user);
+        try {
+          DigiFyntekAPI.request('/api/v1/rbac/me').then(function (me) {
+            localStorage.setItem('DIGIFYNTEK_PERMS', JSON.stringify(me.permissions || []));
+          }).catch(function () {});
+        } catch (e) {}
+        var next = new URLSearchParams(location.search).get('next') || 'app.html';
+        location.replace(next);
+      }
+
       frm.addEventListener('submit', async function (e) {
         e.preventDefault();
         err.style.display = 'none';
         btn.disabled = true;
         btn.textContent = 'Signing in…';
         try {
-          await DigiFyntekAPI.login(
-            document.getElementById('userId').value.trim(),
-            document.getElementById('password').value
-          );
-          var next = new URLSearchParams(location.search).get('next') || 'app.html';
-          location.replace(next);
+          var data = await DigiFyntekAPI.request('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({
+              userId: document.getElementById('userId').value.trim(),
+              password: document.getElementById('password').value
+            })
+          });
+          if (data.mfa_required) {
+            showMfa(data);
+          } else {
+            finish(data);
+          }
         } catch (ex) {
           err.style.display = 'block';
           err.textContent = (ex && ex.message) || 'Login failed';
-          btn.disabled = false;
-          btn.textContent = 'Sign in';
         }
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
       });
+
+      document.getElementById('btnSetup').onclick = async function () {
+        var mfaErr = document.getElementById('mfaErr');
+        mfaErr.style.display = 'none';
+        try {
+          var r = await DigiFyntekAPI.request('/api/auth/mfa/setup/begin', {
+            method: 'POST',
+            body: JSON.stringify({ mfa_token: mfaToken })
+          });
+          document.getElementById('setupBox').style.display = 'block';
+          document.getElementById('setupSecret').textContent = 'Secret: ' + r.secret;
+          setupRequired = true;
+        } catch (ex) {
+          mfaErr.style.display = 'block';
+          mfaErr.textContent = ex.message || ex;
+        }
+      };
+
+      document.getElementById('btnMfa').onclick = async function () {
+        var mfaErr = document.getElementById('mfaErr');
+        var code = document.getElementById('mfaCode').value.trim();
+        mfaErr.style.display = 'none';
+        try {
+          var path = setupRequired ? '/api/auth/mfa/setup/confirm' : '/api/auth/mfa/verify';
+          var data = await DigiFyntekAPI.request(path, {
+            method: 'POST',
+            body: JSON.stringify({ mfa_token: mfaToken, code: code })
+          });
+          if (data.token) finish(data);
+          else {
+            mfaErr.style.display = 'block';
+            mfaErr.textContent = data.message || 'MFA enabled — login again';
+          }
+        } catch (ex) {
+          mfaErr.style.display = 'block';
+          mfaErr.textContent = ex.message || ex;
+        }
+      };
     })();
-  </script>
+</script>
 </body>
 </html>
