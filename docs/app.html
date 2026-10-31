@@ -60,6 +60,7 @@
       <button type="button" data-view="ledger">Ledger</button>
       <button type="button" data-view="eod">End of day</button>
       <button type="button" data-view="approvals">Approvals</button>
+      <button type="button" data-view="ai-report">AI Reports</button>
       <div class="grp">Admin</div>
       <button type="button" data-view="roles">Roles</button>
     </nav>
@@ -87,6 +88,7 @@
           <button type="button" class="btn" data-go="account">Open account</button>
           <button type="button" class="btn" data-go="cash">Cash transaction</button>
           <button type="button" class="btn" data-go="loan">Disburse</button>
+          <button type="button" class="btn" data-go="ai-report">AI Report</button>
         </div>
       </div>
 
@@ -257,6 +259,30 @@
         </div>
       </div>
 
+      
+      <!-- AI REPORTS -->
+      <div class="panel-view" id="view-ai-report">
+        <div class="panel">
+          <div class="panel-h">AI Reports — order in plain language</div>
+          <div class="panel-b">
+            <p class="hint" style="margin-bottom:10px">
+              Example: <code>customer list</code> · <code>account balances</code> · <code>trial balance</code> ·
+              <code>loan portfolio</code> · <code>pending approvals</code> · <code>NADRA history</code> ·
+              <code>term deposits top 20</code> · <code>EOD status</code>
+            </p>
+            <div class="toolbar">
+              <input class="inp" id="aiPrompt" placeholder="Jo report chahiye, yahan likho…" style="flex:1;min-width:200px" />
+              <button type="button" class="btn btn-p" id="btnAiRun">Generate</button>
+            </div>
+            <div class="toolbar" id="aiChips" style="margin-top:4px"></div>
+            <div class="hint" id="aiMeta" style="margin:10px 0"></div>
+            <div class="table-wrap">
+              <table class="data"><thead id="aiHead"></thead><tbody id="aiBody"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ROLES -->
       <div class="panel-view" id="view-roles">
         <div class="panel">
@@ -301,7 +327,8 @@
     ledger: ['Ledger', 'Trial balance'],
     eod: ['End of day', 'Close'],
     approvals: ['Approvals', 'Queue'],
-    roles: ['Roles', 'Access']
+    roles: ['Roles', 'Access'],
+    'ai-report': ['AI Reports', 'NL → database']
   };
 
   function show(name) {
@@ -320,6 +347,7 @@
     if (name === 'approvals') loadApprovals();
     if (name === 'eod') loadEod();
     if (name === 'roles') loadRoles();
+    if (name === 'ai-report') initAiReports();
   }
 
   document.getElementById('sideNav').onclick = function (e) {
@@ -668,6 +696,90 @@
       document.getElementById('roleBox').textContent = e.message || e;
     }
   }
+
+
+  var aiInited = false;
+  function initAiReports() {
+    if (aiInited) return;
+    aiInited = true;
+    var chips = [
+      'customer list',
+      'account balances',
+      'trial balance',
+      'loan portfolio',
+      'term deposits',
+      'pending approvals',
+      'NADRA history',
+      'EOD status',
+      'KYC cases'
+    ];
+    document.getElementById('aiChips').innerHTML = chips.map(function (c) {
+      return '<button type="button" class="btn btn-s ai-chip" data-q="' + c + '">' + c + '</button>';
+    }).join('');
+    document.getElementById('aiChips').onclick = function (e) {
+      var b = e.target.closest('.ai-chip');
+      if (!b) return;
+      document.getElementById('aiPrompt').value = b.getAttribute('data-q');
+      runAiReport();
+    };
+    document.getElementById('btnAiRun').onclick = runAiReport;
+    document.getElementById('aiPrompt').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); runAiReport(); }
+    });
+  }
+  async function runAiReport() {
+    var prompt = document.getElementById('aiPrompt').value.trim();
+    var meta = document.getElementById('aiMeta');
+    if (!prompt) {
+      meta.textContent = 'Prompt likho';
+      meta.className = 'hint err';
+      return;
+    }
+    meta.textContent = 'Generating from database…';
+    meta.className = 'hint';
+    document.getElementById('aiHead').innerHTML = '';
+    document.getElementById('aiBody').innerHTML = '<tr><td>Working…</td></tr>';
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/reports/ai', {
+        method: 'POST',
+        body: JSON.stringify({ prompt: prompt })
+      });
+      if (!r.ok && !r.rows) {
+        meta.textContent = r.message || 'Could not map request';
+        meta.className = 'hint err';
+        document.getElementById('aiBody').innerHTML = '';
+        if (r.intents) {
+          document.getElementById('aiBody').innerHTML = r.intents.map(function (i) {
+            return '<tr><td>' + i.id + '</td><td>' + i.title + '</td></tr>';
+          }).join('');
+          document.getElementById('aiHead').innerHTML = '<tr><th>Intent</th><th>Title</th></tr>';
+        }
+        return;
+      }
+      meta.innerHTML = '<strong>' + (r.title || r.intent || 'Report') + '</strong> · ' +
+        (r.summary || '') + ' · ' + (r.row_count || 0) + ' rows · ' + (r.engine || '') +
+        ' · ' + (r.duration_ms || 0) + 'ms';
+      meta.className = 'hint ok';
+      var cols = r.columns || [];
+      if (!cols.length && r.rows && r.rows[0]) cols = Object.keys(r.rows[0]);
+      document.getElementById('aiHead').innerHTML = '<tr>' + cols.map(function (c) {
+        return '<th>' + c + '</th>';
+      }).join('') + '</tr>';
+      var rows = r.rows || [];
+      document.getElementById('aiBody').innerHTML = rows.length ? rows.map(function (row) {
+        return '<tr>' + cols.map(function (c) {
+          var v = row[c];
+          if (v == null) v = '';
+          return '<td>' + v + '</td>';
+        }).join('') + '</tr>';
+      }).join('') : '<tr><td colspan="' + (cols.length || 1) + '" class="empty">No rows</td></tr>';
+    } catch (e) {
+      meta.textContent = e.message || e;
+      meta.className = 'hint err';
+      document.getElementById('aiBody').innerHTML = '';
+    }
+  }
+
 
   loadHome();
 })();
