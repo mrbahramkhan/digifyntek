@@ -60,86 +60,14 @@
   }
 
   var NAV = [
-    {
-      sec: 'Home',
-      items: [
-        { href: 'app.html', label: 'Workbench' },
-      ],
-    },
-    {
-      sec: 'Customers',
-      items: [
-        { href: 'cif.html', label: 'CIF register' },
-        { href: 'kyc.html', label: 'KYC cases' },
-        { href: 'nadra.html', label: 'NADRA verify' },
-      ],
-    },
-    {
-      sec: 'Accounts',
-      items: [
-        { href: 'accounts.html', label: 'CASA open / list' },
-        { href: 'casa.html', label: 'Cash deposit / withdraw' },
-        { href: 'term-deposits.html', label: 'Term deposits' },
-        { href: 'transfer.html', label: 'Internal transfer' },
-      ],
-    },
-    {
-      sec: 'Lending',
-      items: [
-        { href: 'products.html', label: 'Products' },
-        { href: 'financing.html', label: 'Disburse / contracts' },
-        { href: 'loans.html', label: 'Loan portfolio' },
-        { href: 'collateral.html', label: 'Collateral' },
-      ],
-    },
-    {
-      sec: 'Teller & instruments',
-      items: [
-        { href: 'teller.html', label: 'Teller / cash drawer' },
-        { href: 'instruments.html', label: 'Cheque books' },
-        { href: 'clearing.html', label: 'Cheque clearing' },
-      ],
-    },
-    {
-      sec: 'Ledger & day-end',
-      items: [
-        { href: 'ledger.html', label: 'Journal / trial balance' },
-        { href: 'recon.html', label: 'Reconciliation' },
-        { href: 'eod.html', label: 'End of day' },
-        { href: 'approvals.html', label: 'Maker-checker' },
-        { href: 'payments.html', label: 'Payments (sim)' },
-        { href: 'reports.html', label: 'Reports' },
-      ],
-    },
-    {
-      sec: 'Members (Agri / Coop)',
-      pack: 'agri',
-      items: [
-        { href: 'members.html', label: 'Member register' },
-        { href: 'member360.html', label: 'Member 360' },
-        { href: 'shares.html', label: 'Share capital' },
-        { href: 'savings.html', label: 'Member deposits' },
-        { href: 'cards.html', label: 'Membership cards' },
-      ],
-    },
-    {
-      sec: 'Risk & compliance',
-      items: [
-        { href: 'mfb.html', label: 'Prudential / capital' },
-        { href: 'compliance.html', label: 'Cooperative notes' },
-        { href: 'registration.html', label: 'Licensing checklist' },
-      ],
-    },
-    {
-      sec: 'Administration',
-      items: [
-        { href: 'role-assignment.html', label: 'Assign roles' },
-        { href: 'role-management.html', label: 'Manage roles' },
-        { href: 'rbac.html', label: 'Permission matrix' },
-        { href: 'setup.html', label: 'Institution setup' },
-        { href: 'api-catalog.html', label: 'API catalog' },
-      ],
-    },
+    { sec: 'App', items: [ { href: 'app.html', label: '← Workbench' } ] },
+    { sec: 'Extra forms', items: [
+      { href: 'instruments.html', label: 'Cheque books' },
+      { href: 'members.html', label: 'Members' },
+      { href: 'reports.html', label: 'Reports' },
+      { href: 'products.html', label: 'Products' },
+      { href: 'role-assignment.html', label: 'Roles' },
+    ]},
   ];
 
   // Hide pack-gated sections if packs restricted
