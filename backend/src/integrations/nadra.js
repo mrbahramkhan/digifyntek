@@ -16,11 +16,28 @@ function validCnicFormat(cnic) {
   return normalizeCnic(cnic).length === 13;
 }
 
-async function verifySimulator({ cnic, fullName, dateOfBirth, fatherName }) {
+async function verifySimulator({ cnic, fullName, dateOfBirth, fatherName, biometricOk, biometricTemplate }) {
   const n = normalizeCnic(cnic);
   if (!validCnicFormat(n)) {
     return { provider: 'NADRA', mode: 'simulator', status: 'invalid_cnic', verified: false, match_score: 0, message: 'CNIC must be 13 digits', reference: `SIM-INV-${Date.now()}`, citizen: null, raw: null };
   }
+
+  const bioMode = process.env.NADRA_BIOMETRIC !== '0';
+  if (bioMode && !biometricOk) {
+    return {
+      provider: 'NADRA',
+      mode: 'simulator',
+      status: 'biometric_required',
+      verified: false,
+      match_score: 0,
+      message: 'Biometric capture required before NADRA data fetch',
+      biometric_required: true,
+      reference: `SIM-BIO-${Date.now()}`,
+      citizen: null,
+      raw: null,
+    };
+  }
+
   if (n.endsWith('0000')) {
     return { provider: 'NADRA', mode: 'simulator', status: 'not_found', verified: false, match_score: 0, message: 'CNIC not found (simulated)', citizen: null, reference: `SIM-NF-${n.slice(-6)}`, raw: null };
   }
@@ -29,13 +46,20 @@ async function verifySimulator({ cnic, fullName, dateOfBirth, fatherName }) {
   }
   const citizen = {
     cnic: n,
-    full_name: fullName || 'SIMULATED CITIZEN',
+    full_name: fullName || 'SIMULATED CITIZEN ' + n.slice(-4),
     father_or_husband: fatherName || 'SIMULATED FATHER',
     date_of_birth: dateOfBirth || '1990-01-01',
-    gender: 'M',
-    permanent_address: 'Simulated address, Pakistan',
+    gender: Number(n.slice(-2)) % 2 === 0 ? 'F' : 'M',
+    permanent_address: 'House ' + n.slice(-3) + ', Block A, Simulated Town, Pakistan',
+    present_address: 'Same as permanent',
+    city: 'Lahore',
+    district: 'Lahore',
+    province: 'Punjab',
+    cnic_issue: '2015-06-15',
     cnic_expiry: '2030-12-31',
     status: 'active',
+    biometric_matched: true,
+    biometric_score: biometricTemplate ? 92 : 88,
   };
   let matchScore = 100;
   if (fullName && fullName.trim()) {
@@ -44,7 +68,7 @@ async function verifySimulator({ cnic, fullName, dateOfBirth, fatherName }) {
   }
   return {
     provider: 'NADRA', mode: 'simulator', status: 'verified', verified: true, match_score: matchScore,
-    message: 'CNIC verified against NADRA simulator', citizen,
+    message: 'Biometric matched — CNIC data fetched from NADRA (simulator)', citizen,
     reference: `SIM-OK-${crypto.randomBytes(4).toString('hex')}`, raw: null,
   };
 }
@@ -99,6 +123,8 @@ async function verifyIdentity(input) {
     fullName: input.full_name || input.fullName,
     dateOfBirth: input.date_of_birth || input.dateOfBirth || input.dob,
     fatherName: input.father_name || input.fatherName || input.father_or_husband,
+    biometricOk: !!(input.biometric_ok || input.biometricOk),
+    biometricTemplate: input.biometric_template || input.biometricTemplate || null,
   };
   if (mode() === 'live') return verifyLive(payload);
   return verifySimulator(payload);

@@ -33,8 +33,8 @@
                 <div class="field full"><label>Full name <span class="req">*</span></label><input class="inp" id="f_name" required /></div>
                 <div class="field"><label>CNIC</label>
                   <div style="display:flex;gap:6px;align-items:center">
-                    <input class="inp" id="f_cnic" placeholder="13-digit CNIC — auto-fills on complete" style="flex:1" />
-                    <button type="button" class="btn btn-s" id="btnNadra" title="Fetch from NADRA and fill form">Fetch NADRA</button>
+                    <input class="inp" id="f_cnic" placeholder="13-digit CNIC → biometric → auto-fill" style="flex:1" />
+                    <button type="button" class="btn btn-s" id="btnNadra" title="Fetch from NADRA and fill form">CNIC + Biometric</button>
                   </div>
                   <div class="hint" id="nadraHint" style="margin-top:4px"></div>
                 </div>
@@ -74,6 +74,23 @@
     </div>
   </div>
 </div>
+
+<div class="bio-overlay" id="bioOverlay" role="dialog" aria-modal="true">
+  <div class="bio-modal">
+    <h3>Biometric verification</h3>
+    <p>CNIC <strong id="bioCnic">—</strong> — place finger on scanner (or simulate capture)</p>
+    <div class="bio-scan" id="bioScan">
+      <span style="font-size:32px">👆</span>
+      <span id="bioScanText">Waiting for fingerprint…</span>
+    </div>
+    <div class="bio-actions">
+      <button type="button" class="btn btn-p" id="btnBioCapture">Capture fingerprint</button>
+      <button type="button" class="btn" id="btnBioCancel">Cancel</button>
+    </div>
+    <div class="hint" id="bioMsg" style="margin-top:10px"></div>
+  </div>
+</div>
+
 <script src="config.js"></script><script src="js/api.js"></script><script src="js/shell.js"></script>
 <script>
 (function(){
@@ -139,15 +156,43 @@
     if (meta && meta.verified) set('f_kyc', 'verified');
   }
 
-  async function verifyNadraFill() {
+
+  var pendingBioCnic = null;
+  var bioTemplate = null;
+
+  function openBioModal(cnic) {
+    pendingBioCnic = cnic;
+    bioTemplate = null;
+    document.getElementById('bioCnic').textContent = cnic;
+    document.getElementById('bioScan').className = 'bio-scan';
+    document.getElementById('bioScanText').textContent = 'Waiting for fingerprint…';
+    document.getElementById('bioMsg').textContent = '';
+    document.getElementById('bioOverlay').classList.add('open');
+  }
+  function closeBioModal() {
+    document.getElementById('bioOverlay').classList.remove('open');
+  }
+
+  async function verifyNadraFill(opts) {
+    opts = opts || {};
     var hint = document.getElementById('nadraHint');
-    var cnic = document.getElementById('f_cnic').value.trim();
-    if (!cnic) {
-      hint.textContent = 'Enter CNIC first';
+    var cnic = (document.getElementById('f_cnic').value || '').replace(/\D/g, '');
+    if (cnic.length !== 13) {
+      hint.textContent = 'Enter complete 13-digit CNIC';
       hint.className = 'hint err';
       return;
     }
-    hint.textContent = 'Calling NADRA…';
+    document.getElementById('f_cnic').value = cnic;
+
+    // Step 1: biometric required unless already captured for this CNIC
+    if (!opts.biometric_ok) {
+      openBioModal(cnic);
+      hint.textContent = 'Biometric required — complete fingerprint capture';
+      hint.className = 'hint';
+      return;
+    }
+
+    hint.textContent = 'Fetching data from NADRA…';
     hint.className = 'hint';
     try {
       var body = {
@@ -155,18 +200,25 @@
         full_name: document.getElementById('f_name').value.trim() || undefined,
         father_name: document.getElementById('f_father').value.trim() || undefined,
         date_of_birth: document.getElementById('f_dob').value || undefined,
-        customer_id: document.getElementById('f_id').value ? Number(document.getElementById('f_id').value) : undefined
+        customer_id: document.getElementById('f_id').value ? Number(document.getElementById('f_id').value) : undefined,
+        biometric_ok: true,
+        biometric_template: bioTemplate || 'SIM-FINGERPRINT'
       };
       var r = await DigiFyntekAPI.request('/api/v1/nadra/verify', {
         method: 'POST',
         body: JSON.stringify(body)
       });
+      if (r.biometric_required) {
+        openBioModal(cnic);
+        hint.textContent = r.message || 'Biometric required';
+        return;
+      }
       if (r.verified && r.citizen) {
         applyNadraCitizen(r.citizen, r);
-        hint.textContent = 'NADRA verified — CIF fields filled (score ' + (r.match_score || '') + '). Review & Save.';
+        hint.textContent = 'Biometric OK · NADRA data loaded — review & Save. Ref: ' + (r.reference || '');
         hint.className = 'hint ok';
       } else {
-        hint.textContent = (r.message || r.status || 'Not verified') + ' — fields not overwritten';
+        hint.textContent = (r.message || r.status || 'Not verified');
         hint.className = 'hint err';
         if (r.status === 'not_found' || r.status === 'blocked') {
           document.getElementById('f_kyc').value = r.status === 'blocked' ? 'rejected' : 'pending';
@@ -178,7 +230,29 @@
     }
   }
 
-  // Apply payload from NADRA page (sessionStorage)
+  document.getElementById('btnBioCapture').onclick = function () {
+    var scan = document.getElementById('bioScan');
+    var msg = document.getElementById('bioMsg');
+    scan.className = 'bio-scan scanning';
+    document.getElementById('bioScanText').textContent = 'Scanning…';
+    msg.textContent = 'Reading fingerprint template…';
+    // Simulate device capture (replace with real NADRA Verisys / device SDK)
+    setTimeout(function () {
+      bioTemplate = 'BIO-' + pendingBioCnic + '-' + Date.now();
+      scan.className = 'bio-scan ok';
+      document.getElementById('bioScanText').textContent = 'Fingerprint captured';
+      msg.textContent = 'Match pending with NADRA…';
+      setTimeout(function () {
+        closeBioModal();
+        verifyNadraFill({ biometric_ok: true });
+      }, 600);
+    }, 1200);
+  };
+  document.getElementById('btnBioCancel').onclick = closeBioModal;
+  document.getElementById('bioOverlay').addEventListener('click', function (e) {
+    if (e.target === this) closeBioModal();
+  });
+
   try {
     var pending = sessionStorage.getItem('DIGIFYNTEK_NADRA_CIF');
     if (pending) {
@@ -193,9 +267,8 @@
     }
   } catch (e) {}
 
-  document.getElementById('btnNadra').onclick = verifyNadraFill;
+  document.getElementById('btnNadra').onclick = function () { verifyNadraFill(); };
 
-  // Auto-fetch from NADRA when CNIC is complete (13 digits)
   var nadraTimer = null;
   var lastNadraCnic = '';
   function scheduleNadraAuto() {
@@ -207,7 +280,7 @@
       lastNadraCnic = raw;
       document.getElementById('f_cnic').value = raw;
       verifyNadraFill();
-    }, 500);
+    }, 400);
   }
   document.getElementById('f_cnic').addEventListener('blur', scheduleNadraAuto);
   document.getElementById('f_cnic').addEventListener('input', function () {
