@@ -3,42 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DigiFyntek</title>
+  <title>DigiFyntek — SBP Workbench</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/app.css" />
   <style>
+
+    :root {
+      --bg: #f4f6f9;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --ink-2: #475569;
+      --line: #e2e8f0;
+      --brand: #1d4ed8;
+      --brand-soft: #eff6ff;
+      --side: 240px;
+      --ok: #059669;
+      --bad: #dc2626;
+    }
+    [data-theme="dark"] {
+      --bg: #0b1120;
+      --panel: #111827;
+      --ink: #e5e7eb;
+      --ink-2: #94a3b8;
+      --line: #1f2937;
+      --brand: #60a5fa;
+      --brand-soft: #1e3a5f;
+    }
+    body { background: var(--bg); color: var(--ink); }
+    .sidebar {
+      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+    }
+    [data-theme="dark"] .sidebar {
+      background: linear-gradient(180deg, #020617 0%, #0f172a 100%) !important;
+    }
+    .side-nav button { color: #94a3b8; }
+    .side-nav button.active { background: rgba(59,130,246,.2); color: #93c5fd; }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+    .panel-h { border-bottom: 1px solid var(--line); padding: 12px 14px; font-weight: 650; }
+    .panel-b { padding: 14px; }
+    .inp, select.inp {
+      width: 100%; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line);
+      background: var(--panel); color: var(--ink); font-size: 13px;
+    }
+    .btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line);
+      background: var(--panel); color: var(--ink); cursor: pointer; font-weight: 600; font-size: 13px; }
+    .btn-p { background: var(--brand); color: #fff; border-color: transparent; }
+    .btn-s { font-size: 12px; padding: 6px 10px; }
+    .theme-btn { border-radius: 999px; width: 36px; height: 36px; }
+    .form-sec { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      color: var(--ink-2); margin: 12px 0 8px; grid-column: 1 / -1; }
+    .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+    .kpi .v { font-size: 20px; font-weight: 700; color: var(--brand); }
+    .msg { font-size: 12px; margin-top: 8px; }
+    .msg.ok { color: var(--ok); } .msg.err { color: var(--bad); }
+
     .app { min-height: 100vh; }
     .side-nav button {
-      display: block; width: 100%; text-align: left; border: 0; background: transparent;
-      padding: 9px 14px; font-size: 13px; font-weight: 500; color: var(--ink-2, #64748b);
-      cursor: pointer; border-radius: 8px; margin: 2px 8px; width: calc(100% - 16px);
-      font-family: inherit;
+      display: block; width: calc(100% - 16px); margin: 2px 8px; text-align: left; border: 0;
+      background: transparent; padding: 9px 12px; font-size: 13px; font-weight: 500;
+      cursor: pointer; border-radius: 8px; font-family: inherit;
     }
-    .side-nav button:hover { background: rgba(6,182,212,.08); color: var(--ink, #0f172a); }
-    .side-nav button.active { background: #ecfeff; color: #0e7490; font-weight: 650; }
-    .side-nav .grp { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
-      color: #94a3b8; padding: 14px 16px 4px; }
+    .side-nav .grp { font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: #64748b; padding: 14px 16px 4px; }
     .panel-view { display: none; }
     .panel-view.active { display: block; }
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
     .form-grid .full { grid-column: 1 / -1; }
-    .field label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; }
-    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
-    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
-    .bio-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.5); z-index: 50;
+    .field label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--ink-2); }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; align-items: center; }
+    .split { display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px; }
+    @media (max-width: 960px) { .split { grid-template-columns: 1fr; } }
+    .bio-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.55); z-index: 50;
       align-items: center; justify-content: center; padding: 16px; }
     .bio-overlay.open { display: flex; }
-    .bio-modal { background: #fff; border-radius: 12px; padding: 20px; max-width: 380px; width: 100%; }
-    .bio-scan { height: 100px; border: 2px dashed #94a3b8; border-radius: 10px; display: flex;
-      align-items: center; justify-content: center; margin: 12px 0; background: #f8fafc; }
-    .bio-scan.ok { border-color: #16a34a; background: #f0fdf4; }
-    .hint.ok { color: #15803d; } .hint.err { color: #b91c1c; }
+    .bio-modal { background: var(--panel); border-radius: 14px; padding: 20px; max-width: 380px; width: 100%;
+      border: 1px solid var(--line); }
+    .bio-scan { height: 90px; border: 2px dashed var(--line); border-radius: 10px; display: flex;
+      align-items: center; justify-content: center; margin: 12px 0; }
+    .bio-scan.ok { border-color: var(--ok); }
+    table.data { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table.data th, table.data td { border-bottom: 1px solid var(--line); padding: 8px; text-align: left; }
+    table.data th { font-size: 11px; color: var(--ink-2); }
   </style>
   <script>
     (function () {
-      var t = localStorage.getItem('DIGIFYNTEK_THEME');
+      var t = localStorage.getItem('DIGIFYNTEK_THEME') || 'light';
       if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
     })();
   </script>
@@ -50,17 +100,22 @@
     <nav class="side-nav" id="sideNav">
       <div class="grp">Main</div>
       <button type="button" data-view="home" class="active">Home</button>
-      <div class="grp">Business</div>
-      <button type="button" data-view="customer">Customer (CIF)</button>
-      <button type="button" data-view="account">Accounts</button>
-      <button type="button" data-view="cash">Cash &amp; teller</button>
-      <button type="button" data-view="loan">Lending</button>
-      <button type="button" data-view="td">Term deposits</button>
-      <div class="grp">Operations</div>
-      <button type="button" data-view="ledger">Ledger</button>
-      <button type="button" data-view="eod">End of day</button>
-      <button type="button" data-view="approvals">Approvals</button>
+      <div class="grp">CDD / Customers (SBP)</div>
+      <button type="button" data-view="customer">CIF &amp; NADRA</button>
+      <button type="button" data-view="kyc">KYC / Screening</button>
+      <div class="grp">Accounts</div>
+      <button type="button" data-view="account">CASA</button>
+      <button type="button" data-view="cash">Cash post</button>
+      <button type="button" data-view="transfer">Transfer</button>
+      <button type="button" data-view="td">Term deposit</button>
+      <div class="grp">Credit</div>
+      <button type="button" data-view="loan">Disburse / repay</button>
+      <div class="grp">Controls</div>
+      <button type="button" data-view="ledger">Ledger / TB</button>
+      <button type="button" data-view="eod">EOD</button>
+      <button type="button" data-view="approvals">Maker-checker</button>
       <button type="button" data-view="ai-report">AI Reports</button>
+      <button type="button" data-view="sbp">SBP checklist</button>
       <div class="grp">Admin</div>
       <button type="button" data-view="roles">Roles</button>
     </nav>
@@ -68,13 +123,13 @@
   <div class="main">
     <header class="topbar">
       <h1 id="pageTitle">Home</h1>
-      <span class="meta" id="pageMeta">Unified fintech workbench</span>
+      <span class="meta" id="pageMeta">SBP-aligned workbench</span>
       <div class="spacer"></div>
+      <button type="button" class="btn theme-btn" id="btnTheme" title="Theme">☾</button>
       <button type="button" class="btn" id="btnLogout">Logout</button>
     </header>
     <div class="workspace">
 
-      <!-- HOME -->
       <div class="panel-view active" id="view-home">
         <div class="kpis">
           <div class="kpi"><div class="l">Customers</div><div class="v" id="kCif">—</div></div>
@@ -82,200 +137,248 @@
           <div class="kpi"><div class="l">Approvals</div><div class="v" id="kAppr">—</div></div>
           <div class="kpi"><div class="l">EOD</div><div class="v" id="kEod">—</div></div>
         </div>
-        <p class="hint">Ek app · customer onboard → account → cash / loan → ledger → day-end. Sidebar se module kholo — alag websites nahi.</p>
+        <p class="hint" style="margin:12px 0">Forms API-linked · CDD fields · NADRA biometric · ledger / EOD · AI reports</p>
         <div class="toolbar">
-          <button type="button" class="btn btn-p" data-go="customer">New customer</button>
-          <button type="button" class="btn" data-go="account">Open account</button>
-          <button type="button" class="btn" data-go="cash">Cash transaction</button>
-          <button type="button" class="btn" data-go="loan">Disburse</button>
+          <button type="button" class="btn btn-p" data-go="customer">New CIF</button>
+          <button type="button" class="btn" data-go="account">Open CASA</button>
+          <button type="button" class="btn" data-go="cash">Cash</button>
+          <button type="button" class="btn" data-go="loan">Lending</button>
           <button type="button" class="btn" data-go="ai-report">AI Report</button>
         </div>
       </div>
 
-      <!-- CUSTOMER / CIF + NADRA -->
       <div class="panel-view" id="view-customer">
         <div class="split">
           <div class="panel">
-            <div class="panel-h">Customers</div>
+            <div class="panel-h">Customer list</div>
             <div class="panel-b">
-              <input class="inp" id="custQ" placeholder="Search…" style="margin-bottom:8px" />
-              <div class="table-wrap">
-                <table class="data"><thead><tr><th>No</th><th>Name</th><th>CNIC</th></tr></thead>
+              <input class="inp" id="custQ" placeholder="Search name / CNIC…" />
+              <div class="table-wrap" style="margin-top:8px;max-height:420px;overflow:auto">
+                <table class="data"><thead><tr><th>ID</th><th>Name</th><th>CNIC</th><th>KYC</th></tr></thead>
                 <tbody id="custTb"></tbody></table>
               </div>
             </div>
           </div>
           <div class="panel">
-            <div class="panel-h">CIF form · NADRA biometric</div>
+            <div class="panel-h">CIF form (SBP CDD minimum)</div>
             <div class="panel-b">
               <form id="frmCust">
                 <input type="hidden" id="c_id" />
                 <div class="form-grid">
+                  <div class="form-sec">Identity</div>
                   <div class="field full"><label>Full name *</label><input class="inp" id="c_name" required /></div>
-                  <div class="field full"><label>CNIC (13 digits)</label>
-                    <input class="inp" id="c_cnic" placeholder="Complete CNIC → biometric → auto-fill" />
-                  </div>
+                  <div class="field full"><label>CNIC (13) — biometric + NADRA</label>
+                    <input class="inp" id="c_cnic" placeholder="xxxxxxxxxxxxx" /></div>
                   <div class="field"><label>Father / husband</label><input class="inp" id="c_father" /></div>
-                  <div class="field"><label>DOB</label><input class="inp" type="date" id="c_dob" /></div>
+                  <div class="field"><label>Date of birth</label><input class="inp" type="date" id="c_dob" /></div>
                   <div class="field"><label>Gender</label>
-                    <select class="inp" id="c_gender"><option value="M">Male</option><option value="F">Female</option></select>
-                  </div>
-                  <div class="field"><label>Mobile</label><input class="inp" id="c_phone" /></div>
-                  <div class="field full"><label>Address</label><input class="inp" id="c_addr" /></div>
+                    <select class="inp" id="c_gender"><option value="M">Male</option><option value="F">Female</option><option value="O">Other</option></select></div>
+                  <div class="field"><label>Mobile *</label><input class="inp" id="c_phone" /></div>
+                  <div class="form-sec">Address &amp; profile</div>
+                  <div class="field full"><label>Permanent address</label><input class="inp" id="c_addr" /></div>
                   <div class="field"><label>City</label><input class="inp" id="c_city" /></div>
-                  <div class="field"><label>KYC</label>
-                    <select class="inp" id="c_kyc"><option value="pending">Pending</option><option value="verified">Verified</option></select>
-                  </div>
+                  <div class="field"><label>Occupation</label><input class="inp" id="c_occ" /></div>
+                  <div class="field"><label>Source of funds</label><input class="inp" id="c_sof" placeholder="Salary / business / agri…" /></div>
+                  <div class="field"><label>Branch code</label><input class="inp" id="c_br" value="001" /></div>
+                  <div class="form-sec">Risk (SBP)</div>
+                  <div class="field"><label>Risk rating</label>
+                    <select class="inp" id="c_risk"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+                  <div class="field"><label>PEP</label>
+                    <select class="inp" id="c_pep"><option value="0">No</option><option value="1">Yes</option></select></div>
+                  <div class="field"><label>KYC status</label>
+                    <select class="inp" id="c_kyc"><option value="pending">Pending</option><option value="verified">Verified</option><option value="rejected">Rejected</option><option value="manual_review">Manual review</option></select></div>
+                  <div class="field"><label>Status</label>
+                    <select class="inp" id="c_status"><option value="active">Active</option><option value="pending">Pending</option><option value="restricted">Restricted</option></select></div>
                 </div>
-                <div class="toolbar" style="margin-top:12px">
-                  <button type="submit" class="btn btn-p">Save customer</button>
-                  <button type="button" class="btn" id="btnCustNew">Clear</button>
+                <div class="toolbar">
+                  <button type="submit" class="btn btn-p">Save CIF</button>
+                  <button type="button" class="btn" id="btnCustNew">New</button>
+                  <button type="button" class="btn" id="btnNadra">NADRA + Bio</button>
                 </div>
-                <div class="hint" id="custMsg"></div>
+                <div class="msg" id="custMsg"></div>
               </form>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ACCOUNTS -->
+      <div class="panel-view" id="view-kyc">
+        <div class="panel">
+          <div class="panel-h">KYC cases</div>
+          <div class="panel-b">
+            <button type="button" class="btn" id="btnKycLoad">Refresh</button>
+            <div class="table-wrap" style="margin-top:10px">
+              <table class="data"><thead><tr><th>ID</th><th>Customer</th><th>Status</th><th>Risk</th></tr></thead>
+              <tbody id="kycTb"></tbody></table>
+            </div>
+            <div class="msg" id="kycMsg"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="panel-view" id="view-account">
         <div class="panel">
-          <div class="panel-h">Open CASA account</div>
+          <div class="panel-h">Open CASA (product + customer)</div>
           <div class="panel-b">
             <form id="frmAcct" class="form-grid">
               <div class="field"><label>Customer ID *</label><input class="inp" id="a_cust" required /></div>
-              <div class="field"><label>Product</label>
-                <select class="inp" id="a_prod"><option value="SAV">Savings</option><option value="CUR">Current</option></select>
+              <div class="field"><label>Product code *</label>
+                <select class="inp" id="a_prod">
+                  <option value="SAV-STD">SAV-STD Savings</option>
+                  <option value="CUR-STD">CUR-STD Current</option>
+                  <option value="SAV-ISL">SAV-ISL Islamic savings</option>
+                </select>
               </div>
               <div class="field"><label>Branch</label><input class="inp" id="a_br" value="001" /></div>
-              <div class="field full">
-                <button type="submit" class="btn btn-p">Open account</button>
-                <span class="hint" id="acctMsg"></span>
-              </div>
+              <div class="field full"><button type="submit" class="btn btn-p">Open account</button></div>
             </form>
+            <div class="msg" id="acctMsg"></div>
             <div class="table-wrap" style="margin-top:12px">
-              <table class="data"><thead><tr><th>Account</th><th>Customer</th><th>Type</th><th>Balance</th></tr></thead>
+              <table class="data"><thead><tr><th>ID</th><th>Account</th><th>Customer</th><th>Product</th><th>Balance</th></tr></thead>
               <tbody id="acctTb"></tbody></table>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- CASH -->
       <div class="panel-view" id="view-cash">
         <div class="panel">
-          <div class="panel-h">Cash deposit / withdrawal</div>
+          <div class="panel-h">Cash deposit / withdrawal (account ID)</div>
           <div class="panel-b">
             <form id="frmCash" class="form-grid">
-              <div class="field"><label>Account no *</label><input class="inp" id="x_acct" required /></div>
+              <div class="field"><label>Account ID *</label><input class="inp" id="x_id" required placeholder="Numeric ID from CASA list" /></div>
               <div class="field"><label>Type</label>
-                <select class="inp" id="x_type"><option value="deposit">Deposit</option><option value="withdraw">Withdraw</option></select>
-              </div>
-              <div class="field"><label>Amount *</label><input class="inp" id="x_amt" type="number" step="0.01" required /></div>
-              <div class="field"><label>Narration</label><input class="inp" id="x_nar" value="Cash" /></div>
-              <div class="field full">
-                <button type="submit" class="btn btn-p">Post</button>
-                <span class="hint" id="cashMsg"></span>
-              </div>
+                <select class="inp" id="x_type"><option value="deposit">Deposit</option><option value="withdraw">Withdraw</option></select></div>
+              <div class="field"><label>Amount *</label><input class="inp" id="x_amt" type="number" step="0.01" min="0.01" required /></div>
+              <div class="field"><label>Narrative</label><input class="inp" id="x_nar" value="Cash" /></div>
+              <div class="field full"><button type="submit" class="btn btn-p">Post to ledger</button></div>
             </form>
+            <div class="msg" id="cashMsg"></div>
           </div>
         </div>
       </div>
 
-      <!-- LOAN -->
-      <div class="panel-view" id="view-loan">
+      <div class="panel-view" id="view-transfer">
         <div class="panel">
-          <div class="panel-h">Disburse financing</div>
+          <div class="panel-h">Internal transfer</div>
           <div class="panel-b">
-            <form id="frmLoan" class="form-grid">
-              <div class="field"><label>Customer ID *</label><input class="inp" id="l_cust" required /></div>
-              <div class="field"><label>Product code</label><input class="inp" id="l_prod" value="MUR-GOODS" /></div>
-              <div class="field"><label>Amount *</label><input class="inp" id="l_amt" type="number" step="0.01" required /></div>
-              <div class="field"><label>Tenor (months)</label><input class="inp" id="l_tenor" type="number" value="12" /></div>
-              <div class="field full">
-                <button type="submit" class="btn btn-p">Disburse</button>
-                <span class="hint" id="loanMsg"></span>
-              </div>
+            <form id="frmXfer" class="form-grid">
+              <div class="field"><label>From account ID *</label><input class="inp" id="xf_from" required /></div>
+              <div class="field"><label>To account ID *</label><input class="inp" id="xf_to" required /></div>
+              <div class="field"><label>Amount *</label><input class="inp" id="xf_amt" type="number" step="0.01" required /></div>
+              <div class="field"><label>Narrative</label><input class="inp" id="xf_nar" value="Transfer" /></div>
+              <div class="field full"><button type="submit" class="btn btn-p">Transfer</button></div>
             </form>
+            <div class="msg" id="xferMsg"></div>
           </div>
         </div>
       </div>
 
-      <!-- TD -->
       <div class="panel-view" id="view-td">
         <div class="panel">
-          <div class="panel-h">Place term deposit</div>
+          <div class="panel-h">Term deposit placement</div>
           <div class="panel-b">
             <form id="frmTd" class="form-grid">
               <div class="field"><label>Customer ID *</label><input class="inp" id="t_cust" required /></div>
-              <div class="field"><label>Amount *</label><input class="inp" id="t_amt" type="number" step="0.01" required /></div>
-              <div class="field"><label>Tenor (months)</label><input class="inp" id="t_tenor" type="number" value="6" /></div>
-              <div class="field"><label>Product</label><input class="inp" id="t_prod" value="TD-STD" /></div>
-              <div class="field full">
-                <button type="submit" class="btn btn-p">Place TD</button>
-                <span class="hint" id="tdMsg"></span>
+              <div class="field"><label>Principal *</label><input class="inp" id="t_amt" type="number" step="0.01" required /></div>
+              <div class="field"><label>Tenor (days)</label><input class="inp" id="t_days" type="number" value="180" /></div>
+              <div class="field"><label>Rate %</label><input class="inp" id="t_rate" type="number" step="0.01" value="12" /></div>
+              <div class="field"><label>Product</label>
+                <select class="inp" id="t_prod">
+                  <option value="TD-STD">TD-STD</option>
+                  <option value="TD-ISL">TD-ISL</option>
+                </select>
               </div>
+              <div class="field"><label>Funding account ID</label><input class="inp" id="t_fund" placeholder="optional" /></div>
+              <div class="field full"><button type="submit" class="btn btn-p">Place TD</button></div>
             </form>
+            <div class="msg" id="tdMsg"></div>
           </div>
         </div>
       </div>
 
-      <!-- LEDGER -->
+      <div class="panel-view" id="view-loan">
+        <div class="panel">
+          <div class="panel-h">Financing disburse / repay</div>
+          <div class="panel-b">
+            <form id="frmLoan" class="form-grid">
+              <div class="field"><label>Customer ID *</label><input class="inp" id="l_cust" required /></div>
+              <div class="field"><label>Product</label>
+                <select class="inp" id="l_prod">
+                  <option value="LON-AGRI">LON-AGRI</option>
+                  <option value="MUR-GOODS">MUR-GOODS</option>
+                  <option value="LON-PER">LON-PER</option>
+                </select>
+              </div>
+              <div class="field"><label>Principal *</label><input class="inp" id="l_amt" type="number" step="0.01" required /></div>
+              <div class="field"><label>Rate %</label><input class="inp" id="l_rate" type="number" step="0.01" value="18" /></div>
+              <div class="field"><label>Credit account ID</label><input class="inp" id="l_acct" placeholder="CASA to credit" /></div>
+              <div class="field"><label>Branch</label><input class="inp" id="l_br" value="001" /></div>
+              <div class="field full"><button type="submit" class="btn btn-p">Disburse</button></div>
+            </form>
+            <div class="msg" id="loanMsg"></div>
+            <hr style="border:0;border-top:1px solid var(--line);margin:16px 0" />
+            <form id="frmRepay" class="form-grid">
+              <div class="field"><label>Contract ID *</label><input class="inp" id="r_id" required /></div>
+              <div class="field"><label>Amount *</label><input class="inp" id="r_amt" type="number" step="0.01" required /></div>
+              <div class="field full"><button type="submit" class="btn">Post repayment</button></div>
+            </form>
+            <div class="msg" id="repayMsg"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="panel-view" id="view-ledger">
         <div class="panel">
-          <div class="panel-h">Trial balance snapshot</div>
+          <div class="panel-h">Trial balance</div>
           <div class="panel-b">
-            <button type="button" class="btn" id="btnTb">Load trial balance</button>
+            <button type="button" class="btn btn-p" id="btnTb">Load TB</button>
             <div class="table-wrap" style="margin-top:10px">
-              <table class="data"><thead><tr><th>Account</th><th>Debit</th><th>Credit</th></tr></thead>
+              <table class="data"><thead><tr><th>GL / Account</th><th>Debit</th><th>Credit</th></tr></thead>
               <tbody id="tbBody"></tbody></table>
             </div>
-            <div class="hint" id="tbMsg"></div>
+            <div class="msg" id="tbMsg"></div>
           </div>
         </div>
       </div>
 
-      <!-- EOD -->
       <div class="panel-view" id="view-eod">
         <div class="panel">
           <div class="panel-h">End of day</div>
           <div class="panel-b">
-            <p class="hint" id="eodStatus">—</p>
-            <button type="button" class="btn btn-p" id="btnEod">Run EOD</button>
-            <span class="hint" id="eodMsg"></span>
+            <pre class="hint" id="eodStatus" style="white-space:pre-wrap;font-size:12px">—</pre>
+            <div class="toolbar">
+              <button type="button" class="btn btn-p" id="btnEod">Run EOD</button>
+              <button type="button" class="btn" id="btnEodRef">Refresh status</button>
+            </div>
+            <div class="msg" id="eodMsg"></div>
           </div>
         </div>
       </div>
 
-      <!-- APPROVALS -->
       <div class="panel-view" id="view-approvals">
         <div class="panel">
-          <div class="panel-h">Maker-checker queue</div>
-          <div class="panel-b table-wrap">
-            <table class="data"><thead><tr><th>ID</th><th>Type</th><th>Status</th><th>By</th></tr></thead>
-            <tbody id="apprTb"></tbody></table>
+          <div class="panel-h">Maker-checker</div>
+          <div class="panel-b">
+            <button type="button" class="btn" id="btnAppr">Refresh</button>
+            <div class="table-wrap" style="margin-top:10px">
+              <table class="data"><thead><tr><th>ID</th><th>Type</th><th>Status</th><th>By</th></tr></thead>
+              <tbody id="apprTb"></tbody></table>
+            </div>
           </div>
         </div>
       </div>
 
-      
-      <!-- AI REPORTS -->
       <div class="panel-view" id="view-ai-report">
         <div class="panel">
-          <div class="panel-h">AI Reports — order in plain language</div>
+          <div class="panel-h">AI Reports</div>
           <div class="panel-b">
-            <p class="hint" style="margin-bottom:10px">
-              Example: <code>customer list</code> · <code>account balances</code> · <code>trial balance</code> ·
-              <code>loan portfolio</code> · <code>pending approvals</code> · <code>NADRA history</code> ·
-              <code>term deposits top 20</code> · <code>EOD status</code>
-            </p>
             <div class="toolbar">
-              <input class="inp" id="aiPrompt" placeholder="Jo report chahiye, yahan likho…" style="flex:1;min-width:200px" />
+              <input class="inp" id="aiPrompt" placeholder="e.g. customer list, trial balance, loan portfolio" style="flex:1" />
               <button type="button" class="btn btn-p" id="btnAiRun">Generate</button>
             </div>
-            <div class="toolbar" id="aiChips" style="margin-top:4px"></div>
-            <div class="hint" id="aiMeta" style="margin:10px 0"></div>
+            <div class="toolbar" id="aiChips"></div>
+            <div class="msg" id="aiMeta"></div>
             <div class="table-wrap">
               <table class="data"><thead id="aiHead"></thead><tbody id="aiBody"></tbody></table>
             </div>
@@ -283,13 +386,29 @@
         </div>
       </div>
 
-      <!-- ROLES -->
+      <div class="panel-view" id="view-sbp">
+        <div class="panel">
+          <div class="panel-h">SBP operational checklist (in-app)</div>
+          <div class="panel-b">
+            <ul class="hint" style="line-height:1.8;padding-left:18px">
+              <li>CDD: name, father, DOB, CNIC, address, mobile, occupation, SOF, PEP, risk</li>
+              <li>Identity: NADRA / biometric verification with audit trail</li>
+              <li>Account opening only after KYC path; high-risk enhanced due diligence</li>
+              <li>Double-entry ledger; EOD with accruals; maker-checker on sensitive posts</li>
+              <li>Financing: product, principal, rate/Islamic mode, disbursement to account</li>
+              <li>Reports: TB, portfolio, approvals — via AI Reports or fixed MIS</li>
+              <li>RBAC + optional MFA for admin roles</li>
+            </ul>
+            <p class="hint">Production: live NADRA keys, branch devices, policy docs, SBP returns separately.</p>
+          </div>
+        </div>
+      </div>
+
       <div class="panel-view" id="view-roles">
         <div class="panel">
-          <div class="panel-h">Your access</div>
-          <div class="panel-b">
-            <div id="roleBox" class="hint">Loading…</div>
-            <p class="hint" style="margin-top:12px">Detailed role admin: <a href="role-assignment.html">assign</a> · <a href="role-management.html">manage</a> · <a href="rbac.html">matrix</a></p>
+          <div class="panel-h">Access</div>
+          <div class="panel-b"><div id="roleBox" class="hint">—</div>
+            <p class="hint" style="margin-top:10px"><a href="role-assignment.html">Assign roles</a> · <a href="rbac.html">Matrix</a></p>
           </div>
         </div>
       </div>
@@ -300,10 +419,10 @@
 
 <div class="bio-overlay" id="bioOverlay">
   <div class="bio-modal">
-    <h3 style="margin:0 0 6px">Biometric</h3>
+    <h3 style="margin:0 0 6px">Biometric (SBP identity)</h3>
     <p class="hint" style="margin:0">CNIC <strong id="bioCnic">—</strong></p>
-    <div class="bio-scan" id="bioScan">👆 Place finger / capture</div>
-    <button type="button" class="btn btn-p" id="btnBio">Capture fingerprint</button>
+    <div class="bio-scan" id="bioScan">Fingerprint capture</div>
+    <button type="button" class="btn btn-p" id="btnBio">Capture</button>
     <button type="button" class="btn" id="btnBioX">Cancel</button>
   </div>
 </div>
@@ -317,25 +436,33 @@
     return;
   }
 
+  function msg(el, text, ok) {
+    el.textContent = text;
+    el.className = 'msg ' + (ok ? 'ok' : 'err');
+  }
+
   var titles = {
     home: ['Home', 'Overview'],
-    customer: ['Customer', 'CIF + NADRA'],
-    account: ['Accounts', 'CASA'],
+    customer: ['CIF & NADRA', 'SBP CDD'],
+    kyc: ['KYC', 'Cases'],
+    account: ['CASA', 'Open / list'],
     cash: ['Cash', 'Deposit / withdraw'],
-    loan: ['Lending', 'Disburse'],
-    td: ['Term deposits', 'Placement'],
+    transfer: ['Transfer', 'Internal'],
+    td: ['Term deposit', 'Placement'],
+    loan: ['Lending', 'Disburse / repay'],
     ledger: ['Ledger', 'Trial balance'],
-    eod: ['End of day', 'Close'],
-    approvals: ['Approvals', 'Queue'],
-    roles: ['Roles', 'Access'],
-    'ai-report': ['AI Reports', 'NL → database']
+    eod: ['EOD', 'Day close'],
+    approvals: ['Approvals', 'Maker-checker'],
+    'ai-report': ['AI Reports', 'NL → DB'],
+    sbp: ['SBP checklist', 'Controls'],
+    roles: ['Roles', 'Access']
   };
 
   function show(name) {
     document.querySelectorAll('.panel-view').forEach(function (el) {
       el.classList.toggle('active', el.id === 'view-' + name);
     });
-    document.querySelectorAll('.side-nav button').forEach(function (b) {
+    document.querySelectorAll('.side-nav button[data-view]').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-view') === name);
     });
     var t = titles[name] || [name, ''];
@@ -344,10 +471,11 @@
     if (name === 'home') loadHome();
     if (name === 'customer') loadCustomers();
     if (name === 'account') loadAccounts();
+    if (name === 'kyc') loadKyc();
     if (name === 'approvals') loadApprovals();
     if (name === 'eod') loadEod();
     if (name === 'roles') loadRoles();
-    if (name === 'ai-report') initAiReports();
+    if (name === 'ai-report') initAi();
   }
 
   document.getElementById('sideNav').onclick = function (e) {
@@ -357,23 +485,37 @@
   document.querySelectorAll('[data-go]').forEach(function (b) {
     b.onclick = function () { show(b.getAttribute('data-go')); };
   });
-  document.getElementById('btnLogout').onclick = function () {
-    DigiFyntekAPI.logout();
+  document.getElementById('btnLogout').onclick = function () { DigiFyntekAPI.logout(); };
+  document.getElementById('btnTheme').onclick = function () {
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (dark) {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('DIGIFYNTEK_THEME', 'light');
+      this.textContent = '☾';
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('DIGIFYNTEK_THEME', 'dark');
+      this.textContent = '☀';
+    }
   };
+  if (document.documentElement.getAttribute('data-theme') === 'dark') {
+    document.getElementById('btnTheme').textContent = '☀';
+  }
 
   async function loadHome() {
     try {
-      var c = await DigiFyntekAPI.request('/api/v1/cif?limit=1');
-      document.getElementById('kCif').textContent = c.total != null ? c.total : (Array.isArray(c) ? c.length : '—');
+      var c = await DigiFyntekAPI.request('/api/v1/cif?limit=500');
+      var arr = Array.isArray(c) ? c : (c.rows || []);
+      document.getElementById('kCif').textContent = arr.length;
     } catch (e) {}
     try {
-      var a = await DigiFyntekAPI.request('/api/v1/reports/casa-balances');
-      document.getElementById('kAcct').textContent = a.count != null ? a.count : '—';
+      var a = await DigiFyntekAPI.request('/api/v1/accounts?limit=500');
+      document.getElementById('kAcct').textContent = Array.isArray(a) ? a.length : '—';
     } catch (e) {}
     try {
-      var p = await DigiFyntekAPI.request('/api/v1/approvals?status=pending&limit=5');
-      var n = p.total != null ? p.total : (p.rows ? p.rows.length : (Array.isArray(p) ? p.length : '—'));
-      document.getElementById('kAppr').textContent = n;
+      var p = await DigiFyntekAPI.request('/api/v1/approvals?status=pending&limit=20');
+      var rows = p.rows || (Array.isArray(p) ? p : []);
+      document.getElementById('kAppr').textContent = rows.length;
     } catch (e) {}
     try {
       var eod = await DigiFyntekAPI.request('/api/v1/eod/status');
@@ -384,22 +526,22 @@
   var custRows = [];
   async function loadCustomers() {
     try {
-      custRows = await DigiFyntekAPI.request('/api/v1/cif?limit=200');
-      if (!Array.isArray(custRows)) custRows = custRows.rows || [];
+      var c = await DigiFyntekAPI.request('/api/v1/cif?limit=300');
+      custRows = Array.isArray(c) ? c : (c.rows || []);
       renderCust();
     } catch (e) {
-      document.getElementById('custTb').innerHTML = '<tr><td colspan="3">' + (e.message || e) + '</td></tr>';
+      document.getElementById('custTb').innerHTML = '<tr><td colspan="4">' + (e.message || e) + '</td></tr>';
     }
   }
   function renderCust() {
     var q = (document.getElementById('custQ').value || '').toLowerCase();
     var rows = custRows.filter(function (r) {
-      return !q || [r.full_name, r.cnic, r.customer_no].join(' ').toLowerCase().indexOf(q) >= 0;
+      return !q || [r.full_name, r.cnic, r.customer_no, r.id].join(' ').toLowerCase().indexOf(q) >= 0;
     });
     document.getElementById('custTb').innerHTML = rows.map(function (r) {
-      return '<tr data-id="' + r.id + '" style="cursor:pointer"><td>' + (r.customer_no || r.id) + '</td><td>' +
-        (r.full_name || '') + '</td><td>' + (r.cnic || '') + '</td></tr>';
-    }).join('') || '<tr><td colspan="3" class="empty">No customers</td></tr>';
+      return '<tr data-id="' + r.id + '" style="cursor:pointer"><td>' + r.id + '</td><td>' +
+        (r.full_name || '') + '</td><td>' + (r.cnic || '') + '</td><td>' + (r.kyc_status || '') + '</td></tr>';
+    }).join('') || '<tr><td colspan="4">No data</td></tr>';
   }
   document.getElementById('custQ').oninput = renderCust;
   document.getElementById('custTb').onclick = function (e) {
@@ -413,14 +555,21 @@
     document.getElementById('c_father').value = r.father_or_husband || '';
     document.getElementById('c_dob').value = r.dob ? String(r.dob).slice(0, 10) : '';
     document.getElementById('c_gender').value = r.gender || 'M';
-    document.getElementById('c_phone').value = r.phone || '';
+    document.getElementById('c_phone').value = r.phone || r.mobile || '';
     document.getElementById('c_addr').value = r.address || '';
     document.getElementById('c_city').value = r.city || '';
+    document.getElementById('c_occ').value = r.occupation || '';
+    document.getElementById('c_sof').value = r.source_of_funds || '';
+    document.getElementById('c_br').value = r.branch_code || '001';
+    document.getElementById('c_risk').value = r.risk_rating || 'low';
+    document.getElementById('c_pep').value = r.is_pep ? '1' : '0';
     document.getElementById('c_kyc').value = r.kyc_status || 'pending';
+    document.getElementById('c_status').value = r.status || 'active';
   };
   document.getElementById('btnCustNew').onclick = function () {
     document.getElementById('frmCust').reset();
     document.getElementById('c_id').value = '';
+    document.getElementById('c_br').value = '001';
   };
 
   function applyCitizen(c, meta) {
@@ -435,26 +584,17 @@
     if (meta && meta.verified) document.getElementById('c_kyc').value = 'verified';
   }
 
-  var bioCnic = null;
-  function openBio(cnic) {
-    bioCnic = cnic;
-    document.getElementById('bioCnic').textContent = cnic;
-    document.getElementById('bioScan').className = 'bio-scan';
-    document.getElementById('bioOverlay').classList.add('open');
-  }
   async function nadraFetch(bioOk) {
-    var msg = document.getElementById('custMsg');
+    var el = document.getElementById('custMsg');
     var cnic = (document.getElementById('c_cnic').value || '').replace(/\D/g, '');
-    if (cnic.length !== 13) {
-      msg.textContent = '13-digit CNIC required';
-      msg.className = 'hint err';
-      return;
-    }
+    if (cnic.length !== 13) return msg(el, '13-digit CNIC required', false);
     if (!bioOk) {
-      openBio(cnic);
+      document.getElementById('bioCnic').textContent = cnic;
+      document.getElementById('bioScan').className = 'bio-scan';
+      document.getElementById('bioOverlay').classList.add('open');
       return;
     }
-    msg.textContent = 'Fetching NADRA…';
+    msg(el, 'NADRA fetch…', true);
     try {
       var r = await DigiFyntekAPI.request('/api/v1/nadra/verify', {
         method: 'POST',
@@ -467,27 +607,19 @@
       });
       if (r.verified && r.citizen) {
         applyCitizen(r.citizen, r);
-        msg.textContent = 'NADRA + biometric OK — fields filled. Save to store.';
-        msg.className = 'hint ok';
-      } else {
-        msg.textContent = r.message || r.status || 'Failed';
-        msg.className = 'hint err';
-      }
-    } catch (e) {
-      msg.textContent = e.message || e;
-      msg.className = 'hint err';
-    }
+        msg(el, 'NADRA OK — review & Save CIF', true);
+      } else msg(el, r.message || r.status || 'Failed', false);
+    } catch (e) { msg(el, e.message || e, false); }
   }
-  var cnicTimer;
+  document.getElementById('btnNadra').onclick = function () { nadraFetch(false); };
+  var cnicT;
   document.getElementById('c_cnic').addEventListener('input', function () {
     var raw = this.value.replace(/\D/g, '');
-    clearTimeout(cnicTimer);
-    if (raw.length === 13) {
-      cnicTimer = setTimeout(function () {
-        document.getElementById('c_cnic').value = raw;
-        nadraFetch(false);
-      }, 400);
-    }
+    clearTimeout(cnicT);
+    if (raw.length === 13) cnicT = setTimeout(function () {
+      document.getElementById('c_cnic').value = raw;
+      nadraFetch(false);
+    }, 500);
   });
   document.getElementById('btnBio').onclick = function () {
     document.getElementById('bioScan').className = 'bio-scan ok';
@@ -495,7 +627,7 @@
     setTimeout(function () {
       document.getElementById('bioOverlay').classList.remove('open');
       nadraFetch(true);
-    }, 500);
+    }, 400);
   };
   document.getElementById('btnBioX').onclick = function () {
     document.getElementById('bioOverlay').classList.remove('open');
@@ -503,7 +635,7 @@
 
   document.getElementById('frmCust').onsubmit = async function (e) {
     e.preventDefault();
-    var msg = document.getElementById('custMsg');
+    var el = document.getElementById('custMsg');
     var body = {
       full_name: document.getElementById('c_name').value.trim(),
       cnic: document.getElementById('c_cnic').value.replace(/\D/g, ''),
@@ -511,40 +643,47 @@
       dob: document.getElementById('c_dob').value || null,
       gender: document.getElementById('c_gender').value,
       phone: document.getElementById('c_phone').value.trim(),
+      mobile: document.getElementById('c_phone').value.trim(),
       address: document.getElementById('c_addr').value.trim(),
       city: document.getElementById('c_city').value.trim(),
-      kyc_status: document.getElementById('c_kyc').value
+      occupation: document.getElementById('c_occ').value.trim(),
+      source_of_funds: document.getElementById('c_sof').value.trim(),
+      branch_code: document.getElementById('c_br').value.trim(),
+      risk_rating: document.getElementById('c_risk').value,
+      is_pep: document.getElementById('c_pep').value === '1',
+      kyc_status: document.getElementById('c_kyc').value,
+      status: document.getElementById('c_status').value
     };
     try {
       var id = document.getElementById('c_id').value;
       if (id) await DigiFyntekAPI.request('/api/v1/cif/' + id, { method: 'PUT', body: JSON.stringify(body) });
-      else await DigiFyntekAPI.request('/api/v1/cif', { method: 'POST', body: JSON.stringify(body) });
-      msg.textContent = 'Saved';
-      msg.className = 'hint ok';
+      else {
+        var created = await DigiFyntekAPI.request('/api/v1/cif', { method: 'POST', body: JSON.stringify(body) });
+        if (created && created.id) document.getElementById('c_id').value = created.id;
+      }
+      msg(el, 'CIF saved', true);
       loadCustomers();
-    } catch (err) {
-      msg.textContent = err.message || err;
-      msg.className = 'hint err';
-    }
+    } catch (err) { msg(el, err.message || err, false); }
   };
 
   async function loadAccounts() {
     try {
-      var r = await DigiFyntekAPI.request('/api/v1/accounts?limit=50');
-      var rows = Array.isArray(r) ? r : (r.rows || []);
-      document.getElementById('acctTb').innerHTML = rows.map(function (a) {
-        return '<tr><td>' + (a.account_no || a.id) + '</td><td>' + (a.customer_id || '') +
-          '</td><td>' + (a.product_code || a.account_type || '') + '</td><td>' + (a.balance != null ? a.balance : '') + '</td></tr>';
-      }).join('') || '<tr><td colspan="4" class="empty">—</td></tr>';
+      var a = await DigiFyntekAPI.request('/api/v1/accounts?limit=100');
+      var rows = Array.isArray(a) ? a : [];
+      document.getElementById('acctTb').innerHTML = rows.map(function (r) {
+        return '<tr><td>' + r.id + '</td><td>' + (r.account_no || '') + '</td><td>' +
+          (r.customer_id || '') + ' ' + (r.full_name || '') + '</td><td>' +
+          (r.product_code || '') + '</td><td>' + (r.ledger_balance != null ? r.ledger_balance : (r.balance || 0)) + '</td></tr>';
+      }).join('') || '<tr><td colspan="5">None</td></tr>';
     } catch (e) {
-      document.getElementById('acctTb').innerHTML = '<tr><td colspan="4">' + (e.message || '') + '</td></tr>';
+      document.getElementById('acctTb').innerHTML = '<tr><td colspan="5">' + (e.message || '') + '</td></tr>';
     }
   }
   document.getElementById('frmAcct').onsubmit = async function (e) {
     e.preventDefault();
-    var msg = document.getElementById('acctMsg');
+    var el = document.getElementById('acctMsg');
     try {
-      await DigiFyntekAPI.request('/api/v1/accounts', {
+      var row = await DigiFyntekAPI.request('/api/v1/accounts', {
         method: 'POST',
         body: JSON.stringify({
           customer_id: Number(document.getElementById('a_cust').value),
@@ -552,125 +691,144 @@
           branch_code: document.getElementById('a_br').value
         })
       });
-      msg.textContent = 'Account opened';
-      msg.className = 'hint ok';
+      msg(el, 'Opened account id ' + (row.id || '') + ' · ' + (row.account_no || ''), true);
       loadAccounts();
-    } catch (err) {
-      msg.textContent = err.message || err;
-      msg.className = 'hint err';
-    }
+    } catch (err) { msg(el, err.message || err, false); }
   };
 
   document.getElementById('frmCash').onsubmit = async function (e) {
     e.preventDefault();
-    var msg = document.getElementById('cashMsg');
+    var el = document.getElementById('cashMsg');
+    var id = document.getElementById('x_id').value.trim();
     var type = document.getElementById('x_type').value;
-    var path = type === 'deposit' ? '/api/v1/accounts/deposit' : '/api/v1/accounts/withdraw';
     try {
-      await DigiFyntekAPI.request(path, {
+      await DigiFyntekAPI.request('/api/v1/accounts/' + id + '/' + type, {
         method: 'POST',
         body: JSON.stringify({
-          account_no: document.getElementById('x_acct').value.trim(),
           amount: Number(document.getElementById('x_amt').value),
-          narration: document.getElementById('x_nar').value
+          narrative: document.getElementById('x_nar').value
         })
       });
-      msg.textContent = 'Posted';
-      msg.className = 'hint ok';
-    } catch (err) {
-      // fallback generic post
-      try {
-        await DigiFyntekAPI.request('/api/v1/casa/' + type, {
-          method: 'POST',
-          body: JSON.stringify({
-            account_no: document.getElementById('x_acct').value.trim(),
-            amount: Number(document.getElementById('x_amt').value),
-            narration: document.getElementById('x_nar').value
-          })
-        });
-        msg.textContent = 'Posted';
-        msg.className = 'hint ok';
-      } catch (e2) {
-        msg.textContent = e2.message || err.message || err;
-        msg.className = 'hint err';
-      }
-    }
+      msg(el, 'Posted ' + type, true);
+    } catch (err) { msg(el, err.message || err, false); }
   };
 
-  document.getElementById('frmLoan').onsubmit = async function (e) {
+  document.getElementById('frmXfer').onsubmit = async function (e) {
     e.preventDefault();
-    var msg = document.getElementById('loanMsg');
+    var el = document.getElementById('xferMsg');
     try {
-      await DigiFyntekAPI.request('/api/v1/financing/disburse', {
+      await DigiFyntekAPI.request('/api/v1/ledger/transfer', {
         method: 'POST',
         body: JSON.stringify({
-          customer_id: Number(document.getElementById('l_cust').value),
-          product_code: document.getElementById('l_prod').value,
-          amount: Number(document.getElementById('l_amt').value),
-          tenor_months: Number(document.getElementById('l_tenor').value)
+          from_account_id: Number(document.getElementById('xf_from').value),
+          to_account_id: Number(document.getElementById('xf_to').value),
+          amount: Number(document.getElementById('xf_amt').value),
+          narrative: document.getElementById('xf_nar').value
         })
       });
-      msg.textContent = 'Disbursed';
-      msg.className = 'hint ok';
+      msg(el, 'Transfer posted', true);
     } catch (err) {
-      msg.textContent = err.message || err;
-      msg.className = 'hint err';
+      try {
+        await DigiFyntekAPI.request('/api/v1/ledger/transfers', {
+          method: 'POST',
+          body: JSON.stringify({
+            from_account_id: Number(document.getElementById('xf_from').value),
+            to_account_id: Number(document.getElementById('xf_to').value),
+            amount: Number(document.getElementById('xf_amt').value),
+            narrative: document.getElementById('xf_nar').value
+          })
+        });
+        msg(el, 'Transfer posted', true);
+      } catch (e2) { msg(el, e2.message || err.message || err, false); }
     }
   };
 
   document.getElementById('frmTd').onsubmit = async function (e) {
     e.preventDefault();
-    var msg = document.getElementById('tdMsg');
+    var el = document.getElementById('tdMsg');
+    var body = {
+      customer_id: Number(document.getElementById('t_cust').value),
+      principal: Number(document.getElementById('t_amt').value),
+      tenor_days: Number(document.getElementById('t_days').value),
+      rate_pct: Number(document.getElementById('t_rate').value),
+      product_code: document.getElementById('t_prod').value
+    };
+    var fund = document.getElementById('t_fund').value.trim();
+    if (fund) body.funding_account_id = Number(fund);
     try {
-      await DigiFyntekAPI.request('/api/v1/term-deposits', {
+      var r = await DigiFyntekAPI.request('/api/v1/term-deposits', { method: 'POST', body: JSON.stringify(body) });
+      msg(el, 'TD placed ' + (r.td_no || r.id || ''), true);
+    } catch (err) { msg(el, err.message || err, false); }
+  };
+
+  document.getElementById('frmLoan').onsubmit = async function (e) {
+    e.preventDefault();
+    var el = document.getElementById('loanMsg');
+    var body = {
+      customer_id: Number(document.getElementById('l_cust').value),
+      product_code: document.getElementById('l_prod').value,
+      principal: Number(document.getElementById('l_amt').value),
+      rate_pct: Number(document.getElementById('l_rate').value),
+      branch_code: document.getElementById('l_br').value
+    };
+    var ca = document.getElementById('l_acct').value.trim();
+    if (ca) body.credit_account_id = Number(ca);
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/financing/disburse', { method: 'POST', body: JSON.stringify(body) });
+      msg(el, 'Disbursed ' + (r.contract_no || r.id || JSON.stringify(r).slice(0, 80)), true);
+    } catch (err) { msg(el, err.message || err, false); }
+  };
+  document.getElementById('frmRepay').onsubmit = async function (e) {
+    e.preventDefault();
+    var el = document.getElementById('repayMsg');
+    var id = document.getElementById('r_id').value.trim();
+    try {
+      await DigiFyntekAPI.request('/api/v1/financing/' + id + '/repay', {
         method: 'POST',
-        body: JSON.stringify({
-          customer_id: Number(document.getElementById('t_cust').value),
-          amount: Number(document.getElementById('t_amt').value),
-          tenor_months: Number(document.getElementById('t_tenor').value),
-          product_code: document.getElementById('t_prod').value
-        })
+        body: JSON.stringify({ amount: Number(document.getElementById('r_amt').value) })
       });
-      msg.textContent = 'TD placed';
-      msg.className = 'hint ok';
-    } catch (err) {
-      msg.textContent = err.message || err;
-      msg.className = 'hint err';
-    }
+      msg(el, 'Repayment posted', true);
+    } catch (err) { msg(el, err.message || err, false); }
   };
 
   document.getElementById('btnTb').onclick = async function () {
+    var el = document.getElementById('tbMsg');
     try {
-      var r = await DigiFyntekAPI.request('/api/v1/ledger/trial-balance');
+      var r = await DigiFyntekAPI.request('/api/v1/reports/trial-balance');
       var rows = r.rows || r.lines || (Array.isArray(r) ? r : []);
       document.getElementById('tbBody').innerHTML = rows.map(function (x) {
         return '<tr><td>' + (x.account_code || x.gl_code || x.account || '') + '</td><td>' +
           (x.debit || x.dr || '') + '</td><td>' + (x.credit || x.cr || '') + '</td></tr>';
       }).join('') || '<tr><td colspan="3">Empty</td></tr>';
+      msg(el, 'Loaded ' + rows.length + ' lines', true);
     } catch (e) {
-      document.getElementById('tbMsg').textContent = e.message || e;
+      try {
+        var r2 = await DigiFyntekAPI.request('/api/v1/ledger/trial-balance');
+        var rows2 = r2.rows || r2.lines || [];
+        document.getElementById('tbBody').innerHTML = rows2.map(function (x) {
+          return '<tr><td>' + (x.account_code || x.gl_code || '') + '</td><td>' + (x.debit || '') + '</td><td>' + (x.credit || '') + '</td></tr>';
+        }).join('');
+        msg(el, 'Loaded', true);
+      } catch (e2) { msg(el, e2.message || e.message, false); }
     }
   };
 
   async function loadEod() {
     try {
       var s = await DigiFyntekAPI.request('/api/v1/eod/status');
-      document.getElementById('eodStatus').textContent = JSON.stringify(s);
+      document.getElementById('eodStatus').textContent = JSON.stringify(s, null, 2);
     } catch (e) {
       document.getElementById('eodStatus').textContent = e.message || e;
     }
   }
+  document.getElementById('btnEodRef').onclick = loadEod;
   document.getElementById('btnEod').onclick = async function () {
-    var msg = document.getElementById('eodMsg');
+    var el = document.getElementById('eodMsg');
     try {
-      var r = await DigiFyntekAPI.request('/api/v1/eod/run', { method: 'POST', body: '{}' });
-      msg.textContent = 'EOD done';
-      msg.className = 'hint ok';
+      await DigiFyntekAPI.request('/api/v1/eod/run', { method: 'POST', body: '{}' });
+      msg(el, 'EOD completed', true);
       loadEod();
-    } catch (e) {
-      msg.textContent = e.message || e;
-      msg.className = 'hint err';
-    }
+    } catch (e) { msg(el, e.message || e, false); }
   };
 
   async function loadApprovals() {
@@ -680,106 +838,72 @@
       document.getElementById('apprTb').innerHTML = rows.map(function (x) {
         return '<tr><td>' + (x.id || '') + '</td><td>' + (x.request_type || x.type || '') +
           '</td><td>' + (x.status || '') + '</td><td>' + (x.created_by || '') + '</td></tr>';
-      }).join('') || '<tr><td colspan="4" class="empty">None</td></tr>';
+      }).join('') || '<tr><td colspan="4">None</td></tr>';
     } catch (e) {
       document.getElementById('apprTb').innerHTML = '<tr><td colspan="4">' + (e.message || '') + '</td></tr>';
     }
   }
+  document.getElementById('btnAppr').onclick = loadApprovals;
+
+  async function loadKyc() {
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/kyc?limit=50');
+      var rows = r.rows || (Array.isArray(r) ? r : []);
+      document.getElementById('kycTb').innerHTML = rows.map(function (x) {
+        return '<tr><td>' + (x.id || '') + '</td><td>' + (x.customer_id || '') +
+          '</td><td>' + (x.status || '') + '</td><td>' + (x.risk_rating || '') + '</td></tr>';
+      }).join('') || '<tr><td colspan="4">None</td></tr>';
+    } catch (e) {
+      document.getElementById('kycMsg').textContent = e.message || e;
+    }
+  }
+  document.getElementById('btnKycLoad').onclick = loadKyc;
 
   async function loadRoles() {
     try {
       var m = await DigiFyntekAPI.request('/api/v1/rbac/me');
-      document.getElementById('roleBox').innerHTML =
-        '<strong>' + (m.userId || '') + '</strong> · ' + (m.role || '') +
-        '<div style="margin-top:8px;font-size:11px">' + (m.permissions || []).join(', ') + '</div>';
-    } catch (e) {
-      document.getElementById('roleBox').textContent = e.message || e;
-    }
+      document.getElementById('roleBox').innerHTML = '<strong>' + (m.userId || '') + '</strong> · ' +
+        (m.role || '') + '<div style="margin-top:8px;font-size:11px">' + (m.permissions || []).join(', ') + '</div>';
+    } catch (e) { document.getElementById('roleBox').textContent = e.message || e; }
   }
 
-
-  var aiInited = false;
-  function initAiReports() {
-    if (aiInited) return;
-    aiInited = true;
-    var chips = [
-      'customer list',
-      'account balances',
-      'trial balance',
-      'loan portfolio',
-      'term deposits',
-      'pending approvals',
-      'NADRA history',
-      'EOD status',
-      'KYC cases'
-    ];
+  var aiReady = false;
+  function initAi() {
+    if (aiReady) return;
+    aiReady = true;
+    var chips = ['customer list', 'account balances', 'trial balance', 'loan portfolio', 'pending approvals', 'NADRA history', 'EOD status'];
     document.getElementById('aiChips').innerHTML = chips.map(function (c) {
-      return '<button type="button" class="btn btn-s ai-chip" data-q="' + c + '">' + c + '</button>';
+      return '<button type="button" class="btn btn-s" data-q="' + c + '">' + c + '</button>';
     }).join('');
     document.getElementById('aiChips').onclick = function (e) {
-      var b = e.target.closest('.ai-chip');
+      var b = e.target.closest('[data-q]');
       if (!b) return;
       document.getElementById('aiPrompt').value = b.getAttribute('data-q');
-      runAiReport();
+      runAi();
     };
-    document.getElementById('btnAiRun').onclick = runAiReport;
-    document.getElementById('aiPrompt').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); runAiReport(); }
-    });
+    document.getElementById('btnAiRun').onclick = runAi;
   }
-  async function runAiReport() {
+  async function runAi() {
     var prompt = document.getElementById('aiPrompt').value.trim();
-    var meta = document.getElementById('aiMeta');
-    if (!prompt) {
-      meta.textContent = 'Prompt likho';
-      meta.className = 'hint err';
-      return;
-    }
-    meta.textContent = 'Generating from database…';
-    meta.className = 'hint';
-    document.getElementById('aiHead').innerHTML = '';
-    document.getElementById('aiBody').innerHTML = '<tr><td>Working…</td></tr>';
+    var el = document.getElementById('aiMeta');
+    if (!prompt) return msg(el, 'Enter prompt', false);
+    msg(el, 'Generating…', true);
     try {
       var r = await DigiFyntekAPI.request('/api/v1/reports/ai', {
-        method: 'POST',
-        body: JSON.stringify({ prompt: prompt })
+        method: 'POST', body: JSON.stringify({ prompt: prompt })
       });
-      if (!r.ok && !r.rows) {
-        meta.textContent = r.message || 'Could not map request';
-        meta.className = 'hint err';
-        document.getElementById('aiBody').innerHTML = '';
-        if (r.intents) {
-          document.getElementById('aiBody').innerHTML = r.intents.map(function (i) {
-            return '<tr><td>' + i.id + '</td><td>' + i.title + '</td></tr>';
-          }).join('');
-          document.getElementById('aiHead').innerHTML = '<tr><th>Intent</th><th>Title</th></tr>';
-        }
+      if (!r.rows && r.message) {
+        msg(el, r.message, false);
         return;
       }
-      meta.innerHTML = '<strong>' + (r.title || r.intent || 'Report') + '</strong> · ' +
-        (r.summary || '') + ' · ' + (r.row_count || 0) + ' rows · ' + (r.engine || '') +
-        ' · ' + (r.duration_ms || 0) + 'ms';
-      meta.className = 'hint ok';
-      var cols = r.columns || [];
-      if (!cols.length && r.rows && r.rows[0]) cols = Object.keys(r.rows[0]);
-      document.getElementById('aiHead').innerHTML = '<tr>' + cols.map(function (c) {
-        return '<th>' + c + '</th>';
-      }).join('') + '</tr>';
-      var rows = r.rows || [];
-      document.getElementById('aiBody').innerHTML = rows.length ? rows.map(function (row) {
-        return '<tr>' + cols.map(function (c) {
-          var v = row[c];
-          if (v == null) v = '';
-          return '<td>' + v + '</td>';
-        }).join('') + '</tr>';
-      }).join('') : '<tr><td colspan="' + (cols.length || 1) + '" class="empty">No rows</td></tr>';
-    } catch (e) {
-      meta.textContent = e.message || e;
-      meta.className = 'hint err';
-      document.getElementById('aiBody').innerHTML = '';
-    }
+      msg(el, (r.title || '') + ' · ' + (r.summary || '') + ' · ' + (r.row_count || 0) + ' rows', true);
+      var cols = r.columns || (r.rows && r.rows[0] ? Object.keys(r.rows[0]) : []);
+      document.getElementById('aiHead').innerHTML = '<tr>' + cols.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr>';
+      document.getElementById('aiBody').innerHTML = (r.rows || []).map(function (row) {
+        return '<tr>' + cols.map(function (c) { return '<td>' + (row[c] != null ? row[c] : '') + '</td>'; }).join('') + '</tr>';
+      }).join('') || '<tr><td>No rows</td></tr>';
+    } catch (e) { msg(el, e.message || e, false); }
   }
-
 
   loadHome();
 })();
