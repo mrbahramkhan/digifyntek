@@ -1,8 +1,11 @@
 /**
- * RBAC matrix — DB-backed with in-memory fallback for boot without seed
+ * DigiFyntek RBAC — roles × permissions
+ * DB tables: cbs_roles, cbs_permissions, cbs_role_permissions
+ * Fallback used if DB empty / offline
  */
 const pool = require('../config/db');
 
+/** Default matrix when DB not seeded */
 const FALLBACK = {
   superadmin: ['*'],
   admin: ['*'],
@@ -18,7 +21,8 @@ const FALLBACK = {
     'approval.read', 'approval.decide', 'teller.ops', 'instruments.ops', 'reports.read',
   ],
   teller: [
-    'cif.read', 'accounts.read', 'casa.post', 'transfer.post', 'teller.ops', 'instruments.ops', 'payments.read',
+    'cif.read', 'accounts.read', 'casa.post', 'transfer.post', 'teller.ops',
+    'instruments.ops', 'payments.read',
   ],
   credit_officer: [
     'cif.read', 'cif.write', 'kyc.read', 'kyc.write', 'nadra.verify', 'accounts.read',
@@ -31,7 +35,8 @@ const FALLBACK = {
   ],
   accountant: [
     'cif.read', 'accounts.read', 'ledger.read', 'ledger.post', 'ledger.reverse',
-    'loan.read', 'td.read', 'clearing.ops', 'recon.ops', 'eod.run', 'reports.read', 'approval.read',
+    'loan.read', 'td.read', 'clearing.ops', 'recon.ops', 'eod.run', 'reports.read',
+    'approval.read',
   ],
   islamic_officer: [
     'cif.read', 'kyc.read', 'nadra.verify', 'accounts.read',
@@ -52,7 +57,9 @@ const TTL_MS = 60_000;
 async function loadMatrix() {
   if (cache && Date.now() - cacheAt < TTL_MS) return cache;
   try {
-    const [rows] = await pool.query(`SELECT role_code, perm_code FROM cbs_role_permissions`);
+    const [rows] = await pool.query(
+      `SELECT role_code, perm_code FROM cbs_role_permissions`
+    );
     const map = {};
     for (const r of rows) {
       if (!map[r.role_code]) map[r.role_code] = [];
@@ -97,12 +104,15 @@ async function listRoles() {
     role_code,
     role_name: role_code,
     description: 'fallback',
+    is_system: 1,
   }));
 }
 
 async function listPermissions() {
   try {
-    const [rows] = await pool.query(`SELECT * FROM cbs_permissions ORDER BY module, perm_code`);
+    const [rows] = await pool.query(
+      `SELECT * FROM cbs_permissions ORDER BY module, perm_code`
+    );
     if (rows.length) return rows;
   } catch (_) {}
   const out = [];
@@ -119,12 +129,13 @@ async function listPermissions() {
 
 async function getMatrixView() {
   const roles = await listRoles();
-  const perms = await listPermissions();
+  const permissions = await listPermissions();
   const matrix = await loadMatrix();
-  return { roles, permissions: perms, matrix };
+  return { roles, permissions, matrix };
 }
 
 module.exports = {
+  FALLBACK,
   loadMatrix,
   invalidate,
   permissionsForRole,
@@ -132,5 +143,4 @@ module.exports = {
   listRoles,
   listPermissions,
   getMatrixView,
-  FALLBACK,
 };
