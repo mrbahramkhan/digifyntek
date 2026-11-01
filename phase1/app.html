@@ -117,7 +117,7 @@
       <button type="button" data-view="ai-report">AI Reports</button>
       <button type="button" data-view="sbp">SBP checklist</button>
       <div class="grp">Admin</div>
-      <button type="button" data-view="roles">Roles</button>
+      <button type="button" data-view="roles">Users &amp; roles</button>
     </nav>
   </aside>
   <div class="main">
@@ -408,8 +408,30 @@
       <div class="panel-view" id="view-roles">
         <div class="split">
           <div class="panel">
-            <div class="panel-h">Users → assign role</div>
+            <div class="panel-h">User management</div>
             <div class="panel-b">
+              <div class="form-sec">Create user</div>
+              <form id="frmNewUser" class="form-grid">
+                <div class="field"><label>User ID *</label><input class="inp" id="nu_id" required placeholder="e.g. teller01" /></div>
+                <div class="field"><label>Full name</label><input class="inp" id="nu_name" /></div>
+                <div class="field"><label>Password *</label><input class="inp" type="password" id="nu_pass" required minlength="6" /></div>
+                <div class="field"><label>Role</label>
+                  <select class="inp" id="nu_role">
+                    <option value="viewer">viewer</option>
+                    <option value="teller">teller</option>
+                    <option value="credit_officer">credit_officer</option>
+                    <option value="compliance">compliance</option>
+                    <option value="accountant">accountant</option>
+                    <option value="branch_manager">branch_manager</option>
+                    <option value="ops_manager">ops_manager</option>
+                    <option value="islamic_officer">islamic_officer</option>
+                    <option value="admin">admin</option>
+                  </select>
+                </div>
+                <div class="field full"><button type="submit" class="btn btn-p">Create user</button></div>
+              </form>
+              <div class="msg" id="nuMsg"></div>
+              <div class="form-sec">Users</div>
               <input class="inp" id="rbacUserQ" placeholder="Filter users…" style="margin-bottom:8px" />
               <div class="table-wrap" style="max-height:320px;overflow:auto">
                 <table class="data"><thead><tr><th>User</th><th>Name</th><th>Role</th></tr></thead>
@@ -421,8 +443,12 @@
               </div>
               <div class="toolbar">
                 <button type="button" class="btn btn-p" id="btnRbacAssign">Save role</button>
-                <a class="btn" href="rbac.html">Full RBAC page</a>
+                <button type="button" class="btn" id="btnRbacToggle">Toggle active</button>
+                <button type="button" class="btn" id="btnRbacReset">Reset password</button>
+                <a class="btn" href="rbac.html">Full RBAC</a>
               </div>
+              <div class="field" style="margin-top:8px"><label>New password (for reset)</label>
+                <input class="inp" type="password" id="rbac_newpass" placeholder="min 6 chars" /></div>
               <div class="msg" id="rbacMsg"></div>
             </div>
           </div>
@@ -479,7 +505,7 @@
     approvals: ['Approvals', 'Maker-checker'],
     'ai-report': ['AI Reports', 'NL → DB'],
     sbp: ['SBP checklist', 'Controls'],
-    roles: ['Roles', 'Access']
+    roles: ['Users & roles', 'Management']
   };
 
   function show(name) {
@@ -912,7 +938,7 @@
       }).join(', ');
     } catch (e) {}
     try {
-      var users = await DigiFyntekAPI.request('/api/v1/rbac/users');
+      var users = await DigiFyntekAPI.request('/api/v1/users').catch(function(){ return DigiFyntekAPI.request('/api/v1/rbac/users'); });
       if (!Array.isArray(users)) users = [];
       window.__rbacUsers = users;
       function renderU() {
@@ -921,8 +947,10 @@
           return !q || [u.user_id, u.full_name, u.role].join(' ').toLowerCase().indexOf(q) >= 0;
         });
         document.getElementById('rbacUserTb').innerHTML = rows.map(function (u) {
-          return '<tr data-uid="' + (u.user_id || u.id) + '" style="cursor:pointer"><td>' +
-            (u.user_id || u.id) + '</td><td>' + (u.full_name || '') + '</td><td>' + (u.role || '') + '</td></tr>';
+          var active = u.is_active === 0 || u.is_active === false ? 'off' : 'on';
+          return '<tr data-uid="' + (u.user_id || u.id) + '" data-id="' + u.id + '" style="cursor:pointer"><td>' +
+            (u.user_id || u.id) + '</td><td>' + (u.full_name || '') + '</td><td>' + (u.role || '') +
+            ' <span class="hint">(' + active + ')</span></td></tr>';
         }).join('') || '<tr><td colspan="3">No users / need admin.rbac</td></tr>';
       }
       renderU();
@@ -997,6 +1025,57 @@
       }).join('') || '<tr><td>No rows</td></tr>';
     } catch (e) { msg(el, e.message || e, false); }
   }
+
+
+  document.getElementById('frmNewUser') && document.getElementById('frmNewUser').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var el = document.getElementById('nuMsg');
+    try {
+      var u = await DigiFyntekAPI.request('/api/v1/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          user_id: document.getElementById('nu_id').value.trim(),
+          full_name: document.getElementById('nu_name').value.trim(),
+          password: document.getElementById('nu_pass').value,
+          role: document.getElementById('nu_role').value
+        })
+      });
+      el.textContent = 'Created ' + u.user_id + ' (' + u.role + ')';
+      el.className = 'msg ok';
+      document.getElementById('frmNewUser').reset();
+      loadRoles();
+    } catch (err) {
+      el.textContent = err.message || err;
+      el.className = 'msg err';
+    }
+  });
+
+
+  document.getElementById('btnRbacToggle') && (document.getElementById('btnRbacToggle').onclick = async function () {
+    var uid = document.getElementById('rbac_uid').value.trim();
+    var el = document.getElementById('rbacMsg');
+    if (!uid) { el.textContent = 'Select user'; el.className = 'msg err'; return; }
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/users/' + encodeURIComponent(uid) + '/toggle-active', { method: 'POST', body: '{}' });
+      el.textContent = 'Active = ' + r.is_active;
+      el.className = 'msg ok';
+      loadRoles();
+    } catch (err) { el.textContent = err.message || err; el.className = 'msg err'; }
+  });
+  document.getElementById('btnRbacReset') && (document.getElementById('btnRbacReset').onclick = async function () {
+    var uid = document.getElementById('rbac_uid').value.trim();
+    var pw = document.getElementById('rbac_newpass').value;
+    var el = document.getElementById('rbacMsg');
+    if (!uid || !pw || pw.length < 6) { el.textContent = 'User + password (6+) required'; el.className = 'msg err'; return; }
+    try {
+      await DigiFyntekAPI.request('/api/v1/users/' + encodeURIComponent(uid) + '/reset-password', {
+        method: 'POST', body: JSON.stringify({ password: pw })
+      });
+      el.textContent = 'Password reset for ' + uid;
+      el.className = 'msg ok';
+      document.getElementById('rbac_newpass').value = '';
+    } catch (err) { el.textContent = err.message || err; el.className = 'msg err'; }
+  });
 
   loadHome();
 })();
