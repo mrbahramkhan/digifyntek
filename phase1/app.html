@@ -404,19 +404,43 @@
         </div>
       </div>
 
+      
       <div class="panel-view" id="view-roles">
-        <div class="panel">
-          <div class="panel-h">Access</div>
-          <div class="panel-b"><div id="roleBox" class="hint">—</div>
-            <p class="hint" style="margin-top:10px"><a href="role-assignment.html">Assign roles</a> · <a href="rbac.html">Matrix</a></p>
+        <div class="split">
+          <div class="panel">
+            <div class="panel-h">Users → assign role</div>
+            <div class="panel-b">
+              <input class="inp" id="rbacUserQ" placeholder="Filter users…" style="margin-bottom:8px" />
+              <div class="table-wrap" style="max-height:320px;overflow:auto">
+                <table class="data"><thead><tr><th>User</th><th>Name</th><th>Role</th></tr></thead>
+                <tbody id="rbacUserTb"></tbody></table>
+              </div>
+              <div class="form-grid" style="margin-top:12px">
+                <div class="field"><label>User ID</label><input class="inp" id="rbac_uid" readonly /></div>
+                <div class="field"><label>New role</label><select class="inp" id="rbac_role"></select></div>
+              </div>
+              <div class="toolbar">
+                <button type="button" class="btn btn-p" id="btnRbacAssign">Save role</button>
+                <a class="btn" href="rbac.html">Full RBAC page</a>
+              </div>
+              <div class="msg" id="rbacMsg"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">My access</div>
+            <div class="panel-b">
+              <div id="roleBox" class="hint">—</div>
+              <div class="form-sec" style="margin-top:14px">All roles</div>
+              <div class="table-wrap" style="max-height:200px;overflow:auto">
+                <table class="data"><thead><tr><th>Code</th><th>Name</th></tr></thead>
+                <tbody id="rbacRoleTb"></tbody></table>
+              </div>
+              <div class="form-sec">Permissions catalog</div>
+              <div id="rbacPermBox" class="hint" style="max-height:160px;overflow:auto;font-size:11px"></div>
+            </div>
           </div>
         </div>
       </div>
-
-    </div>
-  </div>
-</div>
-
 <div class="bio-overlay" id="bioOverlay">
   <div class="bio-modal">
     <h3 style="margin:0 0 6px">Biometric (SBP identity)</h3>
@@ -860,11 +884,80 @@
   document.getElementById('btnKycLoad').onclick = loadKyc;
 
   async function loadRoles() {
+    var el = document.getElementById('rbacMsg');
     try {
       var m = await DigiFyntekAPI.request('/api/v1/rbac/me');
-      document.getElementById('roleBox').innerHTML = '<strong>' + (m.userId || '') + '</strong> · ' +
-        (m.role || '') + '<div style="margin-top:8px;font-size:11px">' + (m.permissions || []).join(', ') + '</div>';
-    } catch (e) { document.getElementById('roleBox').textContent = e.message || e; }
+      document.getElementById('roleBox').innerHTML = '<strong>' + (m.userId || '') + '</strong> · <code>' +
+        (m.role || '') + '</code><div style="margin-top:8px;font-size:11px;word-break:break-word">' +
+        (m.permissions || []).join(', ') + '</div>';
+    } catch (e) {
+      document.getElementById('roleBox').textContent = e.message || e;
+    }
+    try {
+      var roles = await DigiFyntekAPI.request('/api/v1/rbac/roles');
+      if (!Array.isArray(roles)) roles = [];
+      document.getElementById('rbac_role').innerHTML = roles.map(function (r) {
+        var c = r.role_code || r;
+        return '<option value="' + c + '">' + (r.role_name || c) + ' (' + c + ')</option>';
+      }).join('');
+      document.getElementById('rbacRoleTb').innerHTML = roles.map(function (r) {
+        return '<tr><td>' + (r.role_code || '') + '</td><td>' + (r.role_name || '') + '</td></tr>';
+      }).join('');
+    } catch (e) {}
+    try {
+      var perms = await DigiFyntekAPI.request('/api/v1/rbac/permissions');
+      if (!Array.isArray(perms)) perms = [];
+      document.getElementById('rbacPermBox').textContent = perms.map(function (p) {
+        return p.perm_code || p;
+      }).join(', ');
+    } catch (e) {}
+    try {
+      var users = await DigiFyntekAPI.request('/api/v1/rbac/users');
+      if (!Array.isArray(users)) users = [];
+      window.__rbacUsers = users;
+      function renderU() {
+        var q = (document.getElementById('rbacUserQ').value || '').toLowerCase();
+        var rows = users.filter(function (u) {
+          return !q || [u.user_id, u.full_name, u.role].join(' ').toLowerCase().indexOf(q) >= 0;
+        });
+        document.getElementById('rbacUserTb').innerHTML = rows.map(function (u) {
+          return '<tr data-uid="' + (u.user_id || u.id) + '" style="cursor:pointer"><td>' +
+            (u.user_id || u.id) + '</td><td>' + (u.full_name || '') + '</td><td>' + (u.role || '') + '</td></tr>';
+        }).join('') || '<tr><td colspan="3">No users / need admin.rbac</td></tr>';
+      }
+      renderU();
+      document.getElementById('rbacUserQ').oninput = renderU;
+      document.getElementById('rbacUserTb').onclick = function (e) {
+        var tr = e.target.closest('tr[data-uid]');
+        if (!tr) return;
+        document.getElementById('rbac_uid').value = tr.dataset.uid;
+        var u = users.find(function (x) { return String(x.user_id || x.id) === tr.dataset.uid; });
+        if (u && u.role) document.getElementById('rbac_role').value = u.role;
+      };
+    } catch (e) {
+      document.getElementById('rbacUserTb').innerHTML = '<tr><td colspan="3">' + (e.message || e) + '</td></tr>';
+    }
+  }
+
+  if (!window.__rbacAssignBound) {
+    window.__rbacAssignBound = true;
+    document.getElementById('btnRbacAssign').onclick = async function () {
+      var uid = document.getElementById('rbac_uid').value.trim();
+      var role = document.getElementById('rbac_role').value;
+      var el = document.getElementById('rbacMsg');
+      if (!uid) { el.textContent = 'Select user'; el.className = 'msg err'; return; }
+      try {
+        var u = await DigiFyntekAPI.request('/api/v1/rbac/users/' + encodeURIComponent(uid) + '/role', {
+          method: 'PATCH', body: JSON.stringify({ role: role })
+        });
+        el.textContent = 'Saved: ' + (u.user_id || uid) + ' → ' + u.role;
+        el.className = 'msg ok';
+        loadRoles();
+      } catch (err) {
+        el.textContent = err.message || err;
+        el.className = 'msg err';
+      }
+    };
   }
 
   var aiReady = false;
