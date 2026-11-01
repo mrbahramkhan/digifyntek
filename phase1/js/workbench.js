@@ -128,26 +128,50 @@
     if (!r) return;
     fillCustomer(r);
   });
+  function setVal(id, v) { var el = $(id); if (el) el.value = v == null ? '' : v; }
   function fillCustomer(r) {
-    $('c_id').value = r ? r.id : '';
-    $('c_name').value = r ? (r.full_name || '') : '';
-    $('c_cnic').value = r ? (r.cnic || '') : '';
-    $('c_father').value = r ? (r.father_or_husband || '') : '';
-    $('c_dob').value = r && r.dob ? String(r.dob).slice(0, 10) : '';
-    $('c_gender').value = r ? (r.gender || 'M') : 'M';
-    $('c_phone').value = r ? (r.phone || r.mobile || '') : '';
-    $('c_email').value = r ? (r.email || '') : '';
-    $('c_addr').value = r ? (r.address || '') : '';
-    $('c_city').value = r ? (r.city || '') : '';
-    $('c_occ').value = r ? (r.occupation || '') : '';
-    $('c_sof').value = r ? (r.source_of_funds || '') : '';
-    $('c_br').value = r ? (r.branch_code || '001') : '001';
-    $('c_risk').value = r ? (r.risk_rating || 'low') : 'low';
-    $('c_pep').value = r && r.is_pep ? '1' : '0';
-    $('c_kyc').value = r ? (r.kyc_status || 'pending') : 'pending';
-    $('c_status').value = r ? (r.status || 'active') : 'active';
-    $('c_type').value = r ? (r.customer_type || 'individual') : 'individual';
-    $('c_notes').value = r ? (r.notes || '') : '';
+    setVal('c_id', r ? r.id : '');
+    setVal('c_name', r ? r.full_name : '');
+    setVal('c_idtype', r ? (r.id_type || 'CNIC') : 'CNIC');
+    setVal('c_cnic', r ? r.cnic : '');
+    setVal('c_cnic_issue', r && r.cnic_issue ? String(r.cnic_issue).slice(0, 10) : '');
+    setVal('c_cnic_exp', r && r.cnic_expiry ? String(r.cnic_expiry).slice(0, 10) : '');
+    setVal('c_father', r ? (r.father_or_husband || r.father_name) : '');
+    setVal('c_mother', r ? r.mother_name : '');
+    setVal('c_dob', r && r.dob ? String(r.dob).slice(0, 10) : '');
+    setVal('c_pob', r ? r.place_of_birth : '');
+    setVal('c_gender', r ? (r.gender || 'M') : 'M');
+    setVal('c_marital', r ? r.marital_status : '');
+    setVal('c_nationality', r ? (r.nationality || 'Pakistani') : 'Pakistani');
+    setVal('c_type', r ? (r.customer_type || 'individual') : 'individual');
+    setVal('c_phone', r ? (r.phone || r.mobile) : '');
+    setVal('c_landline', r ? r.landline : '');
+    setVal('c_email', r ? r.email : '');
+    setVal('c_addr', r ? r.address : '');
+    setVal('c_present', r ? r.present_address : '');
+    setVal('c_city', r ? r.city : '');
+    setVal('c_province', r ? r.province : '');
+    setVal('c_country', r ? (r.country || 'Pakistan') : 'Pakistan');
+    setVal('c_br', r ? (r.branch_code || '001') : '001');
+    setVal('c_occ', r ? r.occupation : '');
+    setVal('c_nob', r ? r.nature_of_business : '');
+    setVal('c_employer', r ? r.employer_name : '');
+    setVal('c_sof', r ? r.source_of_funds : '');
+    setVal('c_income', r ? r.monthly_income : '');
+    setVal('c_turnover', r ? r.expected_turnover : '');
+    setVal('c_purpose', r ? r.purpose_of_account : '');
+    setVal('c_ntn', r ? r.ntn : '');
+    setVal('c_tax', r && r.tax_resident === 0 ? '0' : '1');
+    setVal('c_kin_name', r ? r.next_of_kin_name : '');
+    setVal('c_kin_rel', r ? r.next_of_kin_relation : '');
+    setVal('c_kin_phone', r ? r.next_of_kin_phone : '');
+    setVal('c_bo', r ? r.beneficial_owner : '');
+    setVal('c_risk', r ? (r.risk_rating || 'low') : 'low');
+    setVal('c_aml', r ? (r.aml_risk || r.risk_rating || 'low') : 'low');
+    setVal('c_pep', r && (r.is_pep || r.pep_flag) ? '1' : '0');
+    setVal('c_kyc', r ? (r.kyc_status || 'pending') : 'pending');
+    setVal('c_status', r ? (r.status || 'active') : 'active');
+    setVal('c_notes', r ? r.notes : '');
   }
   $('btnCustNew') && ($('btnCustNew').onclick = function () { fillCustomer(null); });
 
@@ -208,26 +232,51 @@
 
   $('frmCust') && ($('frmCust').onsubmit = async function (e) {
     e.preventDefault();
+    function gv(id) { var el = $(id); return el ? el.value.trim() : ''; }
     var body = {
-      full_name: $('c_name').value.trim(),
-      cnic: $('c_cnic').value.replace(/\D/g, ''),
-      father_or_husband: $('c_father').value.trim(),
-      dob: $('c_dob').value || null,
-      gender: $('c_gender').value,
-      phone: $('c_phone').value.trim(),
-      mobile: $('c_phone').value.trim(),
-      email: $('c_email').value.trim(),
-      address: $('c_addr').value.trim(),
-      city: $('c_city').value.trim(),
-      occupation: $('c_occ').value.trim(),
-      source_of_funds: $('c_sof').value.trim(),
-      branch_code: $('c_br').value.trim(),
-      risk_rating: $('c_risk').value,
-      is_pep: $('c_pep').value === '1',
-      kyc_status: $('c_kyc').value,
-      status: $('c_status').value,
-      customer_type: $('c_type').value,
-      notes: $('c_notes').value.trim()
+      full_name: gv('c_name'),
+      id_type: gv('c_idtype') || 'CNIC',
+      cnic: gv('c_cnic').replace(/\D/g, ''),
+      cnic_issue: gv('c_cnic_issue') || null,
+      cnic_expiry: gv('c_cnic_exp') || null,
+      father_or_husband: gv('c_father'),
+      father_name: gv('c_father'),
+      mother_name: gv('c_mother'),
+      dob: gv('c_dob') || null,
+      place_of_birth: gv('c_pob'),
+      gender: gv('c_gender'),
+      marital_status: gv('c_marital') || null,
+      nationality: gv('c_nationality') || 'Pakistani',
+      customer_type: gv('c_type'),
+      phone: gv('c_phone'),
+      mobile: gv('c_phone'),
+      landline: gv('c_landline'),
+      email: gv('c_email'),
+      address: gv('c_addr'),
+      present_address: gv('c_present'),
+      city: gv('c_city'),
+      province: gv('c_province'),
+      country: gv('c_country') || 'Pakistan',
+      branch_code: gv('c_br'),
+      occupation: gv('c_occ'),
+      nature_of_business: gv('c_nob'),
+      employer_name: gv('c_employer'),
+      source_of_funds: gv('c_sof'),
+      monthly_income: gv('c_income') ? Number(gv('c_income')) : null,
+      expected_turnover: gv('c_turnover') ? Number(gv('c_turnover')) : null,
+      purpose_of_account: gv('c_purpose'),
+      ntn: gv('c_ntn'),
+      tax_resident: gv('c_tax') !== '0',
+      next_of_kin_name: gv('c_kin_name'),
+      next_of_kin_relation: gv('c_kin_rel'),
+      next_of_kin_phone: gv('c_kin_phone'),
+      beneficial_owner: gv('c_bo'),
+      risk_rating: gv('c_risk'),
+      aml_risk: gv('c_aml'),
+      is_pep: gv('c_pep') === '1',
+      kyc_status: gv('c_kyc'),
+      status: gv('c_status'),
+      notes: gv('c_notes')
     };
     try {
       var id = $('c_id').value;

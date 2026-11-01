@@ -127,26 +127,58 @@
               <form id="frmCust">
                 <input type="hidden" id="c_id" />
                 <div class="form-grid">
-                  <div class="form-sec">1 · Identity</div>
+                  <div class="form-sec">1 · Identity (SBP CDD)</div>
                   <div class="field full"><label>Full name (as per CNIC) *</label><input class="inp" id="c_name" required /></div>
-                  <div class="field full"><label>CNIC (13) — biometric + NADRA</label><input class="inp" id="c_cnic" placeholder="xxxxxxxxxxxxx" /></div>
-                  <div class="field"><label>Father / husband name</label><input class="inp" id="c_father" /></div>
+                  <div class="field"><label>ID type</label>
+                    <select class="inp" id="c_idtype"><option value="CNIC">CNIC</option><option value="NICOP">NICOP</option><option value="POC">POC</option><option value="Passport">Passport</option></select></div>
+                  <div class="field"><label>CNIC / ID number (13)</label><input class="inp" id="c_cnic" placeholder="xxxxxxxxxxxxx" /></div>
+                  <div class="field"><label>CNIC issue date</label><input class="inp" type="date" id="c_cnic_issue" /></div>
+                  <div class="field"><label>CNIC expiry</label><input class="inp" type="date" id="c_cnic_exp" /></div>
+                  <div class="field"><label>Father / husband</label><input class="inp" id="c_father" /></div>
+                  <div class="field"><label>Mother name</label><input class="inp" id="c_mother" /></div>
                   <div class="field"><label>Date of birth</label><input class="inp" type="date" id="c_dob" /></div>
+                  <div class="field"><label>Place of birth</label><input class="inp" id="c_pob" /></div>
                   <div class="field"><label>Gender</label><select class="inp" id="c_gender"><option value="M">Male</option><option value="F">Female</option><option value="O">Other</option></select></div>
+                  <div class="field"><label>Marital status</label>
+                    <select class="inp" id="c_marital"><option value="">—</option><option value="single">Single</option><option value="married">Married</option><option value="widowed">Widowed</option><option value="divorced">Divorced</option></select></div>
+                  <div class="field"><label>Nationality</label><input class="inp" id="c_nationality" value="Pakistani" /></div>
                   <div class="field"><label>Customer type</label><select class="inp" id="c_type"><option value="individual">Individual</option><option value="corporate">Corporate / entity</option></select></div>
+
                   <div class="form-sec">2 · Contact & address</div>
                   <div class="field"><label>Mobile *</label><input class="inp" id="c_phone" /></div>
+                  <div class="field"><label>Landline</label><input class="inp" id="c_landline" /></div>
                   <div class="field"><label>Email</label><input class="inp" id="c_email" type="email" /></div>
                   <div class="field full"><label>Permanent address</label><input class="inp" id="c_addr" /></div>
+                  <div class="field full"><label>Present / mailing address</label><input class="inp" id="c_present" /></div>
                   <div class="field"><label>City</label><input class="inp" id="c_city" /></div>
+                  <div class="field"><label>Province</label><input class="inp" id="c_province" /></div>
+                  <div class="field"><label>Country</label><input class="inp" id="c_country" value="Pakistan" /></div>
                   <div class="field"><label>Branch code</label><input class="inp" id="c_br" value="001" /></div>
-                  <div class="form-sec">3 · Profile & risk (EDD triggers)</div>
+
+                  <div class="form-sec">3 · Occupation, funds & tax</div>
                   <div class="field"><label>Occupation</label><input class="inp" id="c_occ" /></div>
+                  <div class="field"><label>Nature of business</label><input class="inp" id="c_nob" /></div>
+                  <div class="field"><label>Employer / business name</label><input class="inp" id="c_employer" /></div>
                   <div class="field"><label>Source of funds / income</label><input class="inp" id="c_sof" placeholder="Salary / business / agri / remittance" /></div>
+                  <div class="field"><label>Monthly income (PKR)</label><input class="inp" id="c_income" type="number" step="0.01" /></div>
+                  <div class="field"><label>Expected monthly turnover</label><input class="inp" id="c_turnover" type="number" step="0.01" /></div>
+                  <div class="field"><label>Purpose of account / relationship</label><input class="inp" id="c_purpose" placeholder="Savings / salary / business" /></div>
+                  <div class="field"><label>NTN</label><input class="inp" id="c_ntn" /></div>
+                  <div class="field"><label>Tax resident (Pakistan)</label>
+                    <select class="inp" id="c_tax"><option value="1">Yes</option><option value="0">No</option></select></div>
+
+                  <div class="form-sec">4 · Next of kin & beneficial ownership</div>
+                  <div class="field"><label>Next of kin name</label><input class="inp" id="c_kin_name" /></div>
+                  <div class="field"><label>Relation</label><input class="inp" id="c_kin_rel" /></div>
+                  <div class="field"><label>Next of kin phone</label><input class="inp" id="c_kin_phone" /></div>
+                  <div class="field full"><label>Beneficial owner (if different / entity)</label><input class="inp" id="c_bo" /></div>
+
+                  <div class="form-sec">5 · Risk, PEP & KYC decision</div>
                   <div class="field"><label>Risk rating</label><select class="inp" id="c_risk"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+                  <div class="field"><label>AML risk</label><select class="inp" id="c_aml"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
                   <div class="field"><label>PEP status</label><select class="inp" id="c_pep"><option value="0">Not PEP</option><option value="1">PEP / related</option></select></div>
                   <div class="field"><label>KYC status</label><select class="inp" id="c_kyc"><option value="pending">Pending</option><option value="verified">Verified</option><option value="manual_review">Manual review</option><option value="rejected">Rejected</option></select></div>
-                  <div class="field"><label>Account relationship status</label><select class="inp" id="c_status"><option value="active">Active</option><option value="pending">Pending</option><option value="restricted">Restricted</option><option value="dormant">Dormant</option></select></div>
+                  <div class="field"><label>Relationship status</label><select class="inp" id="c_status"><option value="active">Active</option><option value="pending">Pending</option><option value="restricted">Restricted</option><option value="dormant">Dormant</option></select></div>
                   <div class="field full"><label>Notes / EDD comments</label><textarea class="inp" id="c_notes" rows="2"></textarea></div>
                 </div>
                 <div class="toolbar">
