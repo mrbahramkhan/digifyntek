@@ -8,89 +8,43 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/app.css" />
   <style>
-
-    :root {
-      --bg: #f4f6f9;
-      --panel: #ffffff;
-      --ink: #0f172a;
-      --ink-2: #475569;
-      --line: #e2e8f0;
-      --brand: #1d4ed8;
-      --brand-soft: #eff6ff;
-      --side: 240px;
-      --ok: #059669;
-      --bad: #dc2626;
-    }
-    [data-theme="dark"] {
-      --bg: #0b1120;
-      --panel: #111827;
-      --ink: #e5e7eb;
-      --ink-2: #94a3b8;
-      --line: #1f2937;
-      --brand: #60a5fa;
-      --brand-soft: #1e3a5f;
-    }
+    :root { --bg:#f4f6f9; --panel:#fff; --ink:#0f172a; --ink-2:#475569; --line:#e2e8f0; --brand:#1d4ed8; --ok:#059669; --bad:#dc2626; }
+    [data-theme="dark"] { --bg:#0b1120; --panel:#111827; --ink:#e5e7eb; --ink-2:#94a3b8; --line:#1f2937; --brand:#60a5fa; }
     body { background: var(--bg); color: var(--ink); }
-    .sidebar {
-      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
-    }
-    [data-theme="dark"] .sidebar {
-      background: linear-gradient(180deg, #020617 0%, #0f172a 100%) !important;
-    }
-    .side-nav button { color: #94a3b8; }
-    .side-nav button.active { background: rgba(59,130,246,.2); color: #93c5fd; }
-    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
-    .panel-h { border-bottom: 1px solid var(--line); padding: 12px 14px; font-weight: 650; }
-    .panel-b { padding: 14px; }
-    .inp, select.inp {
-      width: 100%; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line);
-      background: var(--panel); color: var(--ink); font-size: 13px;
-    }
-    .btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line);
-      background: var(--panel); color: var(--ink); cursor: pointer; font-weight: 600; font-size: 13px; }
-    .btn-p { background: var(--brand); color: #fff; border-color: transparent; }
-    .btn-s { font-size: 12px; padding: 6px 10px; }
-    .theme-btn { border-radius: 999px; width: 36px; height: 36px; }
-    .form-sec { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
-      color: var(--ink-2); margin: 12px 0 8px; grid-column: 1 / -1; }
-    .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
-    .kpi .v { font-size: 20px; font-weight: 700; color: var(--brand); }
-    .msg { font-size: 12px; margin-top: 8px; }
-    .msg.ok { color: var(--ok); } .msg.err { color: var(--bad); }
-
-    .app { min-height: 100vh; }
-    .side-nav button {
-      display: block; width: calc(100% - 16px); margin: 2px 8px; text-align: left; border: 0;
-      background: transparent; padding: 9px 12px; font-size: 13px; font-weight: 500;
-      cursor: pointer; border-radius: 8px; font-family: inherit;
-    }
-    .side-nav .grp { font-size: 10px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .06em; color: #64748b; padding: 14px 16px 4px; }
-    .panel-view { display: none; }
-    .panel-view.active { display: block; }
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
-    .form-grid .full { grid-column: 1 / -1; }
-    .field label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--ink-2); }
-    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; align-items: center; }
-    .split { display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px; }
-    @media (max-width: 960px) { .split { grid-template-columns: 1fr; } }
-    .bio-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.55); z-index: 50;
-      align-items: center; justify-content: center; padding: 16px; }
-    .bio-overlay.open { display: flex; }
-    .bio-modal { background: var(--panel); border-radius: 14px; padding: 20px; max-width: 380px; width: 100%;
-      border: 1px solid var(--line); }
-    .bio-scan { height: 90px; border: 2px dashed var(--line); border-radius: 10px; display: flex;
-      align-items: center; justify-content: center; margin: 12px 0; }
-    .bio-scan.ok { border-color: var(--ok); }
-    table.data { width: 100%; border-collapse: collapse; font-size: 12px; }
-    table.data th, table.data td { border-bottom: 1px solid var(--line); padding: 8px; text-align: left; }
-    table.data th { font-size: 11px; color: var(--ink-2); }
+    .sidebar { background: linear-gradient(180deg,#0f172a,#1e293b) !important; }
+    .side-nav button { display:block; width:calc(100% - 16px); margin:2px 8px; text-align:left; border:0; background:transparent;
+      padding:8px 12px; font-size:12.5px; font-weight:500; color:#94a3b8; cursor:pointer; border-radius:8px; font-family:inherit; }
+    .side-nav button.active { background:rgba(59,130,246,.22); color:#93c5fd; }
+    .side-nav .grp { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#64748b; padding:12px 16px 4px; }
+    .panel-view { display:none; } .panel-view.active { display:block; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; margin-bottom:12px; }
+    .panel-h { padding:12px 14px; font-weight:650; border-bottom:1px solid var(--line); }
+    .panel-b { padding:14px; }
+    .form-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
+    .form-grid .full { grid-column:1/-1; }
+    .form-sec { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-2); margin:10px 0 6px; grid-column:1/-1; }
+    .field label { display:block; font-size:11px; font-weight:600; margin-bottom:4px; color:var(--ink-2); }
+    .inp, select.inp, textarea.inp { width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--ink); font-size:13px; }
+    .btn { padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer; font-weight:600; font-size:13px; }
+    .btn-p { background:var(--brand); color:#fff; border-color:transparent; }
+    .btn-s { font-size:12px; padding:6px 10px; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; align-items:center; }
+    .split { display:grid; grid-template-columns:1fr 1.15fr; gap:12px; }
+    @media(max-width:960px){ .split{ grid-template-columns:1fr; } }
+    .kpi { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; }
+    .kpi .v { font-size:20px; font-weight:700; color:var(--brand); }
+    .msg { font-size:12px; margin-top:8px; } .msg.ok{color:var(--ok);} .msg.err{color:var(--bad);}
+    table.data { width:100%; border-collapse:collapse; font-size:12px; }
+    table.data th, table.data td { border-bottom:1px solid var(--line); padding:7px 8px; text-align:left; }
+    .bio-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:50; align-items:center; justify-content:center; padding:16px; }
+    .bio-overlay.open { display:flex; }
+    .bio-modal { background:var(--panel); border-radius:14px; padding:20px; max-width:380px; width:100%; border:1px solid var(--line); }
+    .bio-scan { height:90px; border:2px dashed var(--line); border-radius:10px; display:flex; align-items:center; justify-content:center; margin:12px 0; }
+    .bio-scan.ok { border-color:var(--ok); }
+    .hint { color:var(--ink-2); font-size:12px; }
   </style>
   <script>
-    (function () {
-      var t = localStorage.getItem('DIGIFYNTEK_THEME') || 'light';
-      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-    })();
+    (function(){ var t=localStorage.getItem('DIGIFYNTEK_THEME')||'light'; if(t==='dark') document.documentElement.setAttribute('data-theme','dark'); })();
   </script>
 </head>
 <body>
@@ -100,32 +54,39 @@
     <nav class="side-nav" id="sideNav">
       <div class="grp">Main</div>
       <button type="button" data-view="home" class="active">Home</button>
-      <div class="grp">CDD / Customers (SBP)</div>
-      <button type="button" data-view="customer">CIF &amp; NADRA</button>
-      <button type="button" data-view="kyc">KYC / Screening</button>
-      <div class="grp">Accounts</div>
-      <button type="button" data-view="account">CASA</button>
-      <button type="button" data-view="cash">Cash post</button>
+      <div class="grp">SBP · CDD / KYC</div>
+      <button type="button" data-view="customer">CIF / CDD</button>
+      <button type="button" data-view="kyc">KYC / AML</button>
+      <div class="grp">Deposits</div>
+      <button type="button" data-view="account">Account opening</button>
+      <button type="button" data-view="cash">Cash</button>
       <button type="button" data-view="transfer">Transfer</button>
-      <button type="button" data-view="td">Term deposit</button>
+      <button type="button" data-view="td">Term deposits</button>
       <div class="grp">Credit</div>
-      <button type="button" data-view="loan">Disburse / repay</button>
-      <div class="grp">Controls</div>
-      <button type="button" data-view="ledger">Ledger / TB</button>
-      <button type="button" data-view="eod">EOD</button>
+      <button type="button" data-view="loan">Financing</button>
+      <button type="button" data-view="collateral">Collateral</button>
+      <div class="grp">Branch ops</div>
+      <button type="button" data-view="teller">Teller</button>
+      <button type="button" data-view="instruments">Cheque books</button>
+      <button type="button" data-view="clearing">Clearing</button>
+      <div class="grp">Finance & control</div>
+      <button type="button" data-view="ledger">General ledger</button>
+      <button type="button" data-view="eod">End of day</button>
       <button type="button" data-view="approvals">Maker-checker</button>
-      <button type="button" data-view="ai-report">AI Reports</button>
+      <button type="button" data-view="ai-report">AI / MIS reports</button>
+      <div class="grp">Coop / Agri</div>
+      <button type="button" data-view="members">Members</button>
+      <div class="grp">Governance</div>
       <button type="button" data-view="sbp">SBP checklist</button>
-      <div class="grp">Admin</div>
-      <button type="button" data-view="roles">Users &amp; roles</button>
+      <button type="button" data-view="roles">Users & roles</button>
     </nav>
   </aside>
   <div class="main">
     <header class="topbar">
       <h1 id="pageTitle">Home</h1>
-      <span class="meta" id="pageMeta">SBP-aligned workbench</span>
+      <span class="meta" id="pageMeta">SBP-aligned core banking</span>
       <div class="spacer"></div>
-      <button type="button" class="btn theme-btn" id="btnTheme" title="Theme">☾</button>
+      <button type="button" class="btn" id="btnTheme" title="Theme">☾</button>
       <button type="button" class="btn" id="btnLogout">Logout</button>
     </header>
     <div class="workspace">
@@ -134,66 +95,64 @@
         <div class="kpis">
           <div class="kpi"><div class="l">Customers</div><div class="v" id="kCif">—</div></div>
           <div class="kpi"><div class="l">Accounts</div><div class="v" id="kAcct">—</div></div>
-          <div class="kpi"><div class="l">Approvals</div><div class="v" id="kAppr">—</div></div>
+          <div class="kpi"><div class="l">Pending approvals</div><div class="v" id="kAppr">—</div></div>
           <div class="kpi"><div class="l">EOD</div><div class="v" id="kEod">—</div></div>
         </div>
-        <p class="hint" style="margin:12px 0">Forms API-linked · CDD fields · NADRA biometric · ledger / EOD · AI reports</p>
+        <p class="hint" style="margin:12px 0">SBP-style ops: CDD → KYC → account → transactions → credit → GL → EOD. Use sidebar modules.</p>
         <div class="toolbar">
           <button type="button" class="btn btn-p" data-go="customer">New CIF</button>
-          <button type="button" class="btn" data-go="account">Open CASA</button>
-          <button type="button" class="btn" data-go="cash">Cash</button>
-          <button type="button" class="btn" data-go="loan">Lending</button>
-          <button type="button" class="btn" data-go="ai-report">AI Report</button>
+          <button type="button" class="btn" data-go="account">Open account</button>
+          <button type="button" class="btn" data-go="loan">Financing</button>
+          <button type="button" class="btn" data-go="eod">EOD</button>
+          <button type="button" class="btn" data-go="ai-report">Reports</button>
         </div>
       </div>
 
+      <!-- CIF CDD -->
       <div class="panel-view" id="view-customer">
         <div class="split">
           <div class="panel">
-            <div class="panel-h">Customer list</div>
+            <div class="panel-h">Customer register</div>
             <div class="panel-b">
-              <input class="inp" id="custQ" placeholder="Search name / CNIC…" />
-              <div class="table-wrap" style="margin-top:8px;max-height:420px;overflow:auto">
-                <table class="data"><thead><tr><th>ID</th><th>Name</th><th>CNIC</th><th>KYC</th></tr></thead>
+              <input class="inp" id="custQ" placeholder="Search name / CNIC / risk…" />
+              <div class="table-wrap" style="margin-top:8px;max-height:480px;overflow:auto">
+                <table class="data"><thead><tr><th>ID</th><th>Name</th><th>CNIC</th><th>Risk</th><th>KYC</th></tr></thead>
                 <tbody id="custTb"></tbody></table>
               </div>
             </div>
           </div>
           <div class="panel">
-            <div class="panel-h">CIF form (SBP CDD minimum)</div>
+            <div class="panel-h">CDD form (SBP minimum identity & risk)</div>
             <div class="panel-b">
               <form id="frmCust">
                 <input type="hidden" id="c_id" />
                 <div class="form-grid">
-                  <div class="form-sec">Identity</div>
-                  <div class="field full"><label>Full name *</label><input class="inp" id="c_name" required /></div>
-                  <div class="field full"><label>CNIC (13) — biometric + NADRA</label>
-                    <input class="inp" id="c_cnic" placeholder="xxxxxxxxxxxxx" /></div>
-                  <div class="field"><label>Father / husband</label><input class="inp" id="c_father" /></div>
+                  <div class="form-sec">1 · Identity</div>
+                  <div class="field full"><label>Full name (as per CNIC) *</label><input class="inp" id="c_name" required /></div>
+                  <div class="field full"><label>CNIC (13) — biometric + NADRA</label><input class="inp" id="c_cnic" placeholder="xxxxxxxxxxxxx" /></div>
+                  <div class="field"><label>Father / husband name</label><input class="inp" id="c_father" /></div>
                   <div class="field"><label>Date of birth</label><input class="inp" type="date" id="c_dob" /></div>
-                  <div class="field"><label>Gender</label>
-                    <select class="inp" id="c_gender"><option value="M">Male</option><option value="F">Female</option><option value="O">Other</option></select></div>
+                  <div class="field"><label>Gender</label><select class="inp" id="c_gender"><option value="M">Male</option><option value="F">Female</option><option value="O">Other</option></select></div>
+                  <div class="field"><label>Customer type</label><select class="inp" id="c_type"><option value="individual">Individual</option><option value="corporate">Corporate / entity</option></select></div>
+                  <div class="form-sec">2 · Contact & address</div>
                   <div class="field"><label>Mobile *</label><input class="inp" id="c_phone" /></div>
-                  <div class="form-sec">Address &amp; profile</div>
+                  <div class="field"><label>Email</label><input class="inp" id="c_email" type="email" /></div>
                   <div class="field full"><label>Permanent address</label><input class="inp" id="c_addr" /></div>
                   <div class="field"><label>City</label><input class="inp" id="c_city" /></div>
-                  <div class="field"><label>Occupation</label><input class="inp" id="c_occ" /></div>
-                  <div class="field"><label>Source of funds</label><input class="inp" id="c_sof" placeholder="Salary / business / agri…" /></div>
                   <div class="field"><label>Branch code</label><input class="inp" id="c_br" value="001" /></div>
-                  <div class="form-sec">Risk (SBP)</div>
-                  <div class="field"><label>Risk rating</label>
-                    <select class="inp" id="c_risk"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
-                  <div class="field"><label>PEP</label>
-                    <select class="inp" id="c_pep"><option value="0">No</option><option value="1">Yes</option></select></div>
-                  <div class="field"><label>KYC status</label>
-                    <select class="inp" id="c_kyc"><option value="pending">Pending</option><option value="verified">Verified</option><option value="rejected">Rejected</option><option value="manual_review">Manual review</option></select></div>
-                  <div class="field"><label>Status</label>
-                    <select class="inp" id="c_status"><option value="active">Active</option><option value="pending">Pending</option><option value="restricted">Restricted</option></select></div>
+                  <div class="form-sec">3 · Profile & risk (EDD triggers)</div>
+                  <div class="field"><label>Occupation</label><input class="inp" id="c_occ" /></div>
+                  <div class="field"><label>Source of funds / income</label><input class="inp" id="c_sof" placeholder="Salary / business / agri / remittance" /></div>
+                  <div class="field"><label>Risk rating</label><select class="inp" id="c_risk"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+                  <div class="field"><label>PEP status</label><select class="inp" id="c_pep"><option value="0">Not PEP</option><option value="1">PEP / related</option></select></div>
+                  <div class="field"><label>KYC status</label><select class="inp" id="c_kyc"><option value="pending">Pending</option><option value="verified">Verified</option><option value="manual_review">Manual review</option><option value="rejected">Rejected</option></select></div>
+                  <div class="field"><label>Account relationship status</label><select class="inp" id="c_status"><option value="active">Active</option><option value="pending">Pending</option><option value="restricted">Restricted</option><option value="dormant">Dormant</option></select></div>
+                  <div class="field full"><label>Notes / EDD comments</label><textarea class="inp" id="c_notes" rows="2"></textarea></div>
                 </div>
                 <div class="toolbar">
                   <button type="submit" class="btn btn-p">Save CIF</button>
                   <button type="button" class="btn" id="btnCustNew">New</button>
-                  <button type="button" class="btn" id="btnNadra">NADRA + Bio</button>
+                  <button type="button" class="btn" id="btnNadra">NADRA + biometric</button>
                 </div>
                 <div class="msg" id="custMsg"></div>
               </form>
@@ -204,8 +163,9 @@
 
       <div class="panel-view" id="view-kyc">
         <div class="panel">
-          <div class="panel-h">KYC cases</div>
+          <div class="panel-h">KYC / AML cases</div>
           <div class="panel-b">
+            <p class="hint">Link cases to CIF · high-risk / PEP → enhanced review before activation.</p>
             <button type="button" class="btn" id="btnKycLoad">Refresh</button>
             <div class="table-wrap" style="margin-top:10px">
               <table class="data"><thead><tr><th>ID</th><th>Customer</th><th>Status</th><th>Risk</th></tr></thead>
@@ -218,23 +178,27 @@
 
       <div class="panel-view" id="view-account">
         <div class="panel">
-          <div class="panel-h">Open CASA (product + customer)</div>
+          <div class="panel-h">CASA account opening</div>
           <div class="panel-b">
             <form id="frmAcct" class="form-grid">
-              <div class="field"><label>Customer ID *</label><input class="inp" id="a_cust" required /></div>
-              <div class="field"><label>Product code *</label>
+              <div class="field"><label>Customer ID (CIF) *</label><input class="inp" id="a_cust" required /></div>
+              <div class="field"><label>Product *</label>
                 <select class="inp" id="a_prod">
                   <option value="SAV-STD">SAV-STD Savings</option>
                   <option value="CUR-STD">CUR-STD Current</option>
                   <option value="SAV-ISL">SAV-ISL Islamic savings</option>
+                  <option value="CUR-ISL">CUR-ISL Islamic current</option>
                 </select>
               </div>
               <div class="field"><label>Branch</label><input class="inp" id="a_br" value="001" /></div>
+              <div class="field"><label>Initial status</label>
+                <select class="inp" id="a_status"><option value="active">Active</option><option value="pending">Pending KYC</option></select>
+              </div>
               <div class="field full"><button type="submit" class="btn btn-p">Open account</button></div>
             </form>
             <div class="msg" id="acctMsg"></div>
             <div class="table-wrap" style="margin-top:12px">
-              <table class="data"><thead><tr><th>ID</th><th>Account</th><th>Customer</th><th>Product</th><th>Balance</th></tr></thead>
+              <table class="data"><thead><tr><th>ID</th><th>Account</th><th>Customer</th><th>Product</th><th>Balance</th><th>Status</th></tr></thead>
               <tbody id="acctTb"></tbody></table>
             </div>
           </div>
@@ -243,15 +207,14 @@
 
       <div class="panel-view" id="view-cash">
         <div class="panel">
-          <div class="panel-h">Cash deposit / withdrawal (account ID)</div>
+          <div class="panel-h">Cash deposit / withdrawal</div>
           <div class="panel-b">
             <form id="frmCash" class="form-grid">
-              <div class="field"><label>Account ID *</label><input class="inp" id="x_id" required placeholder="Numeric ID from CASA list" /></div>
-              <div class="field"><label>Type</label>
-                <select class="inp" id="x_type"><option value="deposit">Deposit</option><option value="withdraw">Withdraw</option></select></div>
+              <div class="field"><label>Account ID *</label><input class="inp" id="x_id" required /></div>
+              <div class="field"><label>Type</label><select class="inp" id="x_type"><option value="deposit">Deposit</option><option value="withdraw">Withdraw</option></select></div>
               <div class="field"><label>Amount *</label><input class="inp" id="x_amt" type="number" step="0.01" min="0.01" required /></div>
               <div class="field"><label>Narrative</label><input class="inp" id="x_nar" value="Cash" /></div>
-              <div class="field full"><button type="submit" class="btn btn-p">Post to ledger</button></div>
+              <div class="field full"><button type="submit" class="btn btn-p">Post</button></div>
             </form>
             <div class="msg" id="cashMsg"></div>
           </div>
@@ -260,7 +223,7 @@
 
       <div class="panel-view" id="view-transfer">
         <div class="panel">
-          <div class="panel-h">Internal transfer</div>
+          <div class="panel-h">Internal fund transfer</div>
           <div class="panel-b">
             <form id="frmXfer" class="form-grid">
               <div class="field"><label>From account ID *</label><input class="inp" id="xf_from" required /></div>
@@ -284,12 +247,10 @@
               <div class="field"><label>Tenor (days)</label><input class="inp" id="t_days" type="number" value="180" /></div>
               <div class="field"><label>Rate %</label><input class="inp" id="t_rate" type="number" step="0.01" value="12" /></div>
               <div class="field"><label>Product</label>
-                <select class="inp" id="t_prod">
-                  <option value="TD-STD">TD-STD</option>
-                  <option value="TD-ISL">TD-ISL</option>
-                </select>
+                <select class="inp" id="t_prod"><option value="TD-STD">TD-STD</option><option value="TD-ISL">TD-ISL</option></select>
               </div>
-              <div class="field"><label>Funding account ID</label><input class="inp" id="t_fund" placeholder="optional" /></div>
+              <div class="field"><label>Branch</label><input class="inp" id="t_br" value="001" /></div>
+              <div class="field"><label>Funding account ID</label><input class="inp" id="t_fund" /></div>
               <div class="field full"><button type="submit" class="btn btn-p">Place TD</button></div>
             </form>
             <div class="msg" id="tdMsg"></div>
@@ -302,23 +263,31 @@
           <div class="panel-h">Financing disburse / repay</div>
           <div class="panel-b">
             <form id="frmLoan" class="form-grid">
+              <div class="form-sec">Facility</div>
               <div class="field"><label>Customer ID *</label><input class="inp" id="l_cust" required /></div>
               <div class="field"><label>Product</label>
                 <select class="inp" id="l_prod">
-                  <option value="LON-AGRI">LON-AGRI</option>
-                  <option value="MUR-GOODS">MUR-GOODS</option>
-                  <option value="LON-PER">LON-PER</option>
+                  <option value="LON-AGRI">LON-AGRI Agri</option>
+                  <option value="LON-PER">LON-PER Personal</option>
+                  <option value="MUR-GOODS">MUR-GOODS Murabaha</option>
                 </select>
               </div>
               <div class="field"><label>Principal *</label><input class="inp" id="l_amt" type="number" step="0.01" required /></div>
-              <div class="field"><label>Rate %</label><input class="inp" id="l_rate" type="number" step="0.01" value="18" /></div>
-              <div class="field"><label>Credit account ID</label><input class="inp" id="l_acct" placeholder="CASA to credit" /></div>
+              <div class="field"><label>Rate / profit %</label><input class="inp" id="l_rate" type="number" step="0.01" value="18" /></div>
+              <div class="field"><label>Islamic?</label><select class="inp" id="l_isl"><option value="0">Conventional</option><option value="1">Islamic</option></select></div>
+              <div class="field"><label>Islamic mode</label><select class="inp" id="l_mode"><option value="">—</option><option value="murabaha">Murabaha</option><option value="ijarah">Ijarah</option><option value="diminishing_musharakah">Diminishing musharakah</option></select></div>
+              <div class="field"><label>Credit account ID</label><input class="inp" id="l_acct" /></div>
               <div class="field"><label>Branch</label><input class="inp" id="l_br" value="001" /></div>
+              <div class="field full"><label>Narrative</label><input class="inp" id="l_nar" value="Disbursement" /></div>
               <div class="field full"><button type="submit" class="btn btn-p">Disburse</button></div>
             </form>
             <div class="msg" id="loanMsg"></div>
-            <hr style="border:0;border-top:1px solid var(--line);margin:16px 0" />
+            <div class="table-wrap" style="margin:12px 0">
+              <table class="data"><thead><tr><th>ID</th><th>Contract</th><th>Customer</th><th>Principal</th><th>Status</th></tr></thead>
+              <tbody id="loanTb"></tbody></table>
+            </div>
             <form id="frmRepay" class="form-grid">
+              <div class="form-sec">Repayment</div>
               <div class="field"><label>Contract ID *</label><input class="inp" id="r_id" required /></div>
               <div class="field"><label>Amount *</label><input class="inp" id="r_amt" type="number" step="0.01" required /></div>
               <div class="field full"><button type="submit" class="btn">Post repayment</button></div>
@@ -328,13 +297,87 @@
         </div>
       </div>
 
+      <div class="panel-view" id="view-collateral">
+        <div class="panel">
+          <div class="panel-h">Collateral / security</div>
+          <div class="panel-b">
+            <form id="frmCol" class="form-grid">
+              <div class="field"><label>Customer ID *</label><input class="inp" id="col_cust" required /></div>
+              <div class="field"><label>Type</label>
+                <select class="inp" id="col_type">
+                  <option value="property">Property</option>
+                  <option value="vehicle">Vehicle</option>
+                  <option value="gold">Gold</option>
+                  <option value="cash">Cash margin</option>
+                  <option value="guarantee">Guarantee</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="field"><label>Market value</label><input class="inp" id="col_val" type="number" step="0.01" /></div>
+              <div class="field"><label>Forced sale value</label><input class="inp" id="col_fsv" type="number" step="0.01" /></div>
+              <div class="field full"><label>Description</label><input class="inp" id="col_desc" /></div>
+              <div class="field full"><button type="submit" class="btn btn-p">Register collateral</button></div>
+            </form>
+            <div class="msg" id="colMsg"></div>
+            <div class="table-wrap" style="margin-top:12px">
+              <table class="data"><thead><tr><th>ID</th><th>Customer</th><th>Type</th><th>Value</th></tr></thead>
+              <tbody id="colTb"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-view" id="view-instruments">
+        <div class="panel">
+          <div class="panel-h">Cheque book issue</div>
+          <div class="panel-b">
+            <form id="frmInst" class="form-grid">
+              <div class="field"><label>Account no</label><input class="inp" id="inst_acct" /></div>
+              <div class="field"><label>Member / customer ref</label><input class="inp" id="inst_mem" /></div>
+              <div class="field"><label>Branch code</label><input class="inp" id="inst_br" value="001" /></div>
+              <div class="field"><label>Leaves</label><input class="inp" id="inst_leaves" type="number" value="25" /></div>
+              <div class="field full"><button type="submit" class="btn btn-p">Issue book</button></div>
+            </form>
+            <div class="msg" id="instMsg"></div>
+            <div class="table-wrap" style="margin-top:12px">
+              <table class="data"><thead><tr><th>ID</th><th>Book</th><th>Account</th><th>Status</th></tr></thead>
+              <tbody id="instTb"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-view" id="view-clearing">
+        <div class="panel">
+          <div class="panel-h">Cheque clearing queue</div>
+          <div class="panel-b">
+            <div class="table-wrap">
+              <table class="data"><thead><tr><th>ID</th><th>Cheque</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody id="clrTb"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-view" id="view-teller">
+        <div class="panel">
+          <div class="panel-h">Teller drawers</div>
+          <div class="panel-b">
+            <div class="table-wrap">
+              <table class="data"><thead><tr><th>ID</th><th>Code</th><th>Balance</th><th>Status</th></tr></thead>
+              <tbody id="telTb"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="panel-view" id="view-ledger">
         <div class="panel">
           <div class="panel-h">Trial balance</div>
           <div class="panel-b">
-            <button type="button" class="btn btn-p" id="btnTb">Load TB</button>
+            <button type="button" class="btn btn-p" id="btnTb">Load trial balance</button>
             <div class="table-wrap" style="margin-top:10px">
-              <table class="data"><thead><tr><th>GL / Account</th><th>Debit</th><th>Credit</th></tr></thead>
+              <table class="data"><thead><tr><th>GL</th><th>Debit</th><th>Credit</th></tr></thead>
               <tbody id="tbBody"></tbody></table>
             </div>
             <div class="msg" id="tbMsg"></div>
@@ -346,10 +389,10 @@
         <div class="panel">
           <div class="panel-h">End of day</div>
           <div class="panel-b">
-            <pre class="hint" id="eodStatus" style="white-space:pre-wrap;font-size:12px">—</pre>
+            <pre class="hint" id="eodStatus" style="white-space:pre-wrap">—</pre>
             <div class="toolbar">
               <button type="button" class="btn btn-p" id="btnEod">Run EOD</button>
-              <button type="button" class="btn" id="btnEodRef">Refresh status</button>
+              <button type="button" class="btn" id="btnEodRef">Refresh</button>
             </div>
             <div class="msg" id="eodMsg"></div>
           </div>
@@ -358,7 +401,7 @@
 
       <div class="panel-view" id="view-approvals">
         <div class="panel">
-          <div class="panel-h">Maker-checker</div>
+          <div class="panel-h">Maker-checker queue</div>
           <div class="panel-b">
             <button type="button" class="btn" id="btnAppr">Refresh</button>
             <div class="table-wrap" style="margin-top:10px">
@@ -371,16 +414,34 @@
 
       <div class="panel-view" id="view-ai-report">
         <div class="panel">
-          <div class="panel-h">AI Reports</div>
+          <div class="panel-h">AI / MIS reports</div>
           <div class="panel-b">
             <div class="toolbar">
-              <input class="inp" id="aiPrompt" placeholder="e.g. customer list, trial balance, loan portfolio" style="flex:1" />
+              <input class="inp" id="aiPrompt" placeholder="e.g. trial balance, loan portfolio" style="flex:1" />
               <button type="button" class="btn btn-p" id="btnAiRun">Generate</button>
             </div>
             <div class="toolbar" id="aiChips"></div>
             <div class="msg" id="aiMeta"></div>
-            <div class="table-wrap">
-              <table class="data"><thead id="aiHead"></thead><tbody id="aiBody"></tbody></table>
+            <div class="table-wrap"><table class="data"><thead id="aiHead"></thead><tbody id="aiBody"></tbody></table></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-view" id="view-members">
+        <div class="panel">
+          <div class="panel-h">Cooperative members</div>
+          <div class="panel-b">
+            <form id="frmMem" class="form-grid">
+              <div class="field"><label>Full name *</label><input class="inp" id="m_name" required /></div>
+              <div class="field"><label>CNIC</label><input class="inp" id="m_cnic" /></div>
+              <div class="field"><label>Phone</label><input class="inp" id="m_phone" /></div>
+              <div class="field"><label>Branch</label><input class="inp" id="m_br" value="001" /></div>
+              <div class="field full"><button type="submit" class="btn btn-p">Register member</button></div>
+            </form>
+            <div class="msg" id="memMsg"></div>
+            <div class="table-wrap" style="margin-top:12px">
+              <table class="data"><thead><tr><th>ID</th><th>No</th><th>Name</th><th>Status</th></tr></thead>
+              <tbody id="memTb"></tbody></table>
             </div>
           </div>
         </div>
@@ -388,90 +449,48 @@
 
       <div class="panel-view" id="view-sbp">
         <div class="panel">
-          <div class="panel-h">SBP operational checklist (in-app)</div>
+          <div class="panel-h">SBP control map (in-app)</div>
           <div class="panel-b">
-            <ul class="hint" style="line-height:1.8;padding-left:18px">
-              <li>CDD: name, father, DOB, CNIC, address, mobile, occupation, SOF, PEP, risk</li>
-              <li>Identity: NADRA / biometric verification with audit trail</li>
-              <li>Account opening only after KYC path; high-risk enhanced due diligence</li>
-              <li>Double-entry ledger; EOD with accruals; maker-checker on sensitive posts</li>
-              <li>Financing: product, principal, rate/Islamic mode, disbursement to account</li>
-              <li>Reports: TB, portfolio, approvals — via AI Reports or fixed MIS</li>
-              <li>RBAC + optional MFA for admin roles</li>
+            <ul class="hint" style="line-height:1.85;padding-left:18px">
+              <li><strong>CDD</strong> — name, father, DOB, CNIC, address, mobile, occupation, SOF, PEP, risk (CIF form)</li>
+              <li><strong>Identity</strong> — NADRA / biometric with reference retained</li>
+              <li><strong>KYC</strong> — case status before full banking relationship</li>
+              <li><strong>Accounts</strong> — product-based CASA; pending status if KYC open</li>
+              <li><strong>Credit</strong> — product, principal, rate/Islamic mode, collateral optional</li>
+              <li><strong>Instruments</strong> — cheque books; clearing queue</li>
+              <li><strong>Ledger</strong> — double-entry; trial balance; EOD accruals</li>
+              <li><strong>Maker-checker</strong> — approval queue for sensitive posts</li>
+              <li><strong>Access</strong> — users, roles, permissions, optional admin MFA</li>
+              <li><strong>MIS</strong> — AI reports + fixed TB / portfolio</li>
             </ul>
-            <p class="hint">Production: live NADRA keys, branch devices, policy docs, SBP returns separately.</p>
+            <p class="hint">Official SBP returns, live NADRA, and device certification are institution-side production steps.</p>
           </div>
         </div>
       </div>
 
-      
       <div class="panel-view" id="view-roles">
-        <div class="split">
-          <div class="panel">
-            <div class="panel-h">User management</div>
-            <div class="panel-b">
-              <div class="form-sec">Create user</div>
-              <form id="frmNewUser" class="form-grid">
-                <div class="field"><label>User ID *</label><input class="inp" id="nu_id" required placeholder="e.g. teller01" /></div>
-                <div class="field"><label>Full name</label><input class="inp" id="nu_name" /></div>
-                <div class="field"><label>Password *</label><input class="inp" type="password" id="nu_pass" required minlength="6" /></div>
-                <div class="field"><label>Role</label>
-                  <select class="inp" id="nu_role">
-                    <option value="viewer">viewer</option>
-                    <option value="teller">teller</option>
-                    <option value="credit_officer">credit_officer</option>
-                    <option value="compliance">compliance</option>
-                    <option value="accountant">accountant</option>
-                    <option value="branch_manager">branch_manager</option>
-                    <option value="ops_manager">ops_manager</option>
-                    <option value="islamic_officer">islamic_officer</option>
-                    <option value="admin">admin</option>
-                  </select>
-                </div>
-                <div class="field full"><button type="submit" class="btn btn-p">Create user</button></div>
-              </form>
-              <div class="msg" id="nuMsg"></div>
-              <div class="form-sec">Users</div>
-              <input class="inp" id="rbacUserQ" placeholder="Filter users…" style="margin-bottom:8px" />
-              <div class="table-wrap" style="max-height:320px;overflow:auto">
-                <table class="data"><thead><tr><th>User</th><th>Name</th><th>Role</th></tr></thead>
-                <tbody id="rbacUserTb"></tbody></table>
-              </div>
-              <div class="form-grid" style="margin-top:12px">
-                <div class="field"><label>User ID</label><input class="inp" id="rbac_uid" readonly /></div>
-                <div class="field"><label>New role</label><select class="inp" id="rbac_role"></select></div>
-              </div>
-              <div class="toolbar">
-                <button type="button" class="btn btn-p" id="btnRbacAssign">Save role</button>
-                <button type="button" class="btn" id="btnRbacToggle">Toggle active</button>
-                <button type="button" class="btn" id="btnRbacReset">Reset password</button>
-                <a class="btn" href="rbac.html">Full RBAC</a>
-              </div>
-              <div class="field" style="margin-top:8px"><label>New password (for reset)</label>
-                <input class="inp" type="password" id="rbac_newpass" placeholder="min 6 chars" /></div>
-              <div class="msg" id="rbacMsg"></div>
+        <div class="panel">
+          <div class="panel-h">Users & roles</div>
+          <div class="panel-b">
+            <div id="roleBox" class="hint">—</div>
+            <div class="table-wrap" style="margin-top:12px">
+              <table class="data"><thead><tr><th>User</th><th>Name</th><th>Role</th></tr></thead>
+              <tbody id="rbacUserTb"></tbody></table>
             </div>
-          </div>
-          <div class="panel">
-            <div class="panel-h">My access</div>
-            <div class="panel-b">
-              <div id="roleBox" class="hint">—</div>
-              <div class="form-sec" style="margin-top:14px">All roles</div>
-              <div class="table-wrap" style="max-height:200px;overflow:auto">
-                <table class="data"><thead><tr><th>Code</th><th>Name</th></tr></thead>
-                <tbody id="rbacRoleTb"></tbody></table>
-              </div>
-              <div class="form-sec">Permissions catalog</div>
-              <div id="rbacPermBox" class="hint" style="max-height:160px;overflow:auto;font-size:11px"></div>
-            </div>
+            <p class="hint" style="margin-top:10px"><a href="rbac.html">Full RBAC (assign / matrix / create role)</a></p>
           </div>
         </div>
       </div>
+
+    </div>
+  </div>
+</div>
+
 <div class="bio-overlay" id="bioOverlay">
   <div class="bio-modal">
-    <h3 style="margin:0 0 6px">Biometric (SBP identity)</h3>
+    <h3 style="margin:0 0 6px">Biometric verification</h3>
     <p class="hint" style="margin:0">CNIC <strong id="bioCnic">—</strong></p>
-    <div class="bio-scan" id="bioScan">Fingerprint capture</div>
+    <div class="bio-scan" id="bioScan">Fingerprint</div>
     <button type="button" class="btn btn-p" id="btnBio">Capture</button>
     <button type="button" class="btn" id="btnBioX">Cancel</button>
   </div>
@@ -479,606 +498,6 @@
 
 <script src="config.js"></script>
 <script src="js/api.js"></script>
-<script>
-(function () {
-  if (!window.DigiFyntekAPI || !DigiFyntekAPI.token()) {
-    location.replace('login.html?next=app.html');
-    return;
-  }
-
-  function msg(el, text, ok) {
-    el.textContent = text;
-    el.className = 'msg ' + (ok ? 'ok' : 'err');
-  }
-
-  var titles = {
-    home: ['Home', 'Overview'],
-    customer: ['CIF & NADRA', 'SBP CDD'],
-    kyc: ['KYC', 'Cases'],
-    account: ['CASA', 'Open / list'],
-    cash: ['Cash', 'Deposit / withdraw'],
-    transfer: ['Transfer', 'Internal'],
-    td: ['Term deposit', 'Placement'],
-    loan: ['Lending', 'Disburse / repay'],
-    ledger: ['Ledger', 'Trial balance'],
-    eod: ['EOD', 'Day close'],
-    approvals: ['Approvals', 'Maker-checker'],
-    'ai-report': ['AI Reports', 'NL → DB'],
-    sbp: ['SBP checklist', 'Controls'],
-    roles: ['Users & roles', 'Management']
-  };
-
-  function show(name) {
-    document.querySelectorAll('.panel-view').forEach(function (el) {
-      el.classList.toggle('active', el.id === 'view-' + name);
-    });
-    document.querySelectorAll('.side-nav button[data-view]').forEach(function (b) {
-      b.classList.toggle('active', b.getAttribute('data-view') === name);
-    });
-    var t = titles[name] || [name, ''];
-    document.getElementById('pageTitle').textContent = t[0];
-    document.getElementById('pageMeta').textContent = t[1];
-    if (name === 'home') loadHome();
-    if (name === 'customer') loadCustomers();
-    if (name === 'account') loadAccounts();
-    if (name === 'kyc') loadKyc();
-    if (name === 'approvals') loadApprovals();
-    if (name === 'eod') loadEod();
-    if (name === 'roles') loadRoles();
-    if (name === 'ai-report') initAi();
-  }
-
-  document.getElementById('sideNav').onclick = function (e) {
-    var b = e.target.closest('button[data-view]');
-    if (b) show(b.getAttribute('data-view'));
-  };
-  document.querySelectorAll('[data-go]').forEach(function (b) {
-    b.onclick = function () { show(b.getAttribute('data-go')); };
-  });
-  document.getElementById('btnLogout').onclick = function () { DigiFyntekAPI.logout(); };
-  document.getElementById('btnTheme').onclick = function () {
-    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    if (dark) {
-      document.documentElement.removeAttribute('data-theme');
-      localStorage.setItem('DIGIFYNTEK_THEME', 'light');
-      this.textContent = '☾';
-    } else {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      localStorage.setItem('DIGIFYNTEK_THEME', 'dark');
-      this.textContent = '☀';
-    }
-  };
-  if (document.documentElement.getAttribute('data-theme') === 'dark') {
-    document.getElementById('btnTheme').textContent = '☀';
-  }
-
-  async function loadHome() {
-    try {
-      var c = await DigiFyntekAPI.request('/api/v1/cif?limit=500');
-      var arr = Array.isArray(c) ? c : (c.rows || []);
-      document.getElementById('kCif').textContent = arr.length;
-    } catch (e) {}
-    try {
-      var a = await DigiFyntekAPI.request('/api/v1/accounts?limit=500');
-      document.getElementById('kAcct').textContent = Array.isArray(a) ? a.length : '—';
-    } catch (e) {}
-    try {
-      var p = await DigiFyntekAPI.request('/api/v1/approvals?status=pending&limit=20');
-      var rows = p.rows || (Array.isArray(p) ? p : []);
-      document.getElementById('kAppr').textContent = rows.length;
-    } catch (e) {}
-    try {
-      var eod = await DigiFyntekAPI.request('/api/v1/eod/status');
-      document.getElementById('kEod').textContent = (eod && (eod.status || eod.state)) || '—';
-    } catch (e) {}
-  }
-
-  var custRows = [];
-  async function loadCustomers() {
-    try {
-      var c = await DigiFyntekAPI.request('/api/v1/cif?limit=300');
-      custRows = Array.isArray(c) ? c : (c.rows || []);
-      renderCust();
-    } catch (e) {
-      document.getElementById('custTb').innerHTML = '<tr><td colspan="4">' + (e.message || e) + '</td></tr>';
-    }
-  }
-  function renderCust() {
-    var q = (document.getElementById('custQ').value || '').toLowerCase();
-    var rows = custRows.filter(function (r) {
-      return !q || [r.full_name, r.cnic, r.customer_no, r.id].join(' ').toLowerCase().indexOf(q) >= 0;
-    });
-    document.getElementById('custTb').innerHTML = rows.map(function (r) {
-      return '<tr data-id="' + r.id + '" style="cursor:pointer"><td>' + r.id + '</td><td>' +
-        (r.full_name || '') + '</td><td>' + (r.cnic || '') + '</td><td>' + (r.kyc_status || '') + '</td></tr>';
-    }).join('') || '<tr><td colspan="4">No data</td></tr>';
-  }
-  document.getElementById('custQ').oninput = renderCust;
-  document.getElementById('custTb').onclick = function (e) {
-    var tr = e.target.closest('tr[data-id]');
-    if (!tr) return;
-    var r = custRows.find(function (x) { return String(x.id) === tr.dataset.id; });
-    if (!r) return;
-    document.getElementById('c_id').value = r.id;
-    document.getElementById('c_name').value = r.full_name || '';
-    document.getElementById('c_cnic').value = r.cnic || '';
-    document.getElementById('c_father').value = r.father_or_husband || '';
-    document.getElementById('c_dob').value = r.dob ? String(r.dob).slice(0, 10) : '';
-    document.getElementById('c_gender').value = r.gender || 'M';
-    document.getElementById('c_phone').value = r.phone || r.mobile || '';
-    document.getElementById('c_addr').value = r.address || '';
-    document.getElementById('c_city').value = r.city || '';
-    document.getElementById('c_occ').value = r.occupation || '';
-    document.getElementById('c_sof').value = r.source_of_funds || '';
-    document.getElementById('c_br').value = r.branch_code || '001';
-    document.getElementById('c_risk').value = r.risk_rating || 'low';
-    document.getElementById('c_pep').value = r.is_pep ? '1' : '0';
-    document.getElementById('c_kyc').value = r.kyc_status || 'pending';
-    document.getElementById('c_status').value = r.status || 'active';
-  };
-  document.getElementById('btnCustNew').onclick = function () {
-    document.getElementById('frmCust').reset();
-    document.getElementById('c_id').value = '';
-    document.getElementById('c_br').value = '001';
-  };
-
-  function applyCitizen(c, meta) {
-    if (!c) return;
-    if (c.full_name) document.getElementById('c_name').value = c.full_name;
-    if (c.cnic) document.getElementById('c_cnic').value = String(c.cnic).replace(/\D/g, '');
-    if (c.father_or_husband) document.getElementById('c_father').value = c.father_or_husband;
-    if (c.date_of_birth) document.getElementById('c_dob').value = String(c.date_of_birth).slice(0, 10);
-    if (c.gender) document.getElementById('c_gender').value = String(c.gender).toUpperCase().charAt(0);
-    if (c.permanent_address || c.address) document.getElementById('c_addr').value = c.permanent_address || c.address;
-    if (c.city) document.getElementById('c_city').value = c.city;
-    if (meta && meta.verified) document.getElementById('c_kyc').value = 'verified';
-  }
-
-  async function nadraFetch(bioOk) {
-    var el = document.getElementById('custMsg');
-    var cnic = (document.getElementById('c_cnic').value || '').replace(/\D/g, '');
-    if (cnic.length !== 13) return msg(el, '13-digit CNIC required', false);
-    if (!bioOk) {
-      document.getElementById('bioCnic').textContent = cnic;
-      document.getElementById('bioScan').className = 'bio-scan';
-      document.getElementById('bioOverlay').classList.add('open');
-      return;
-    }
-    msg(el, 'NADRA fetch…', true);
-    try {
-      var r = await DigiFyntekAPI.request('/api/v1/nadra/verify', {
-        method: 'POST',
-        body: JSON.stringify({
-          cnic: cnic,
-          biometric_ok: true,
-          biometric_template: 'BIO-' + cnic,
-          customer_id: document.getElementById('c_id').value || undefined
-        })
-      });
-      if (r.verified && r.citizen) {
-        applyCitizen(r.citizen, r);
-        msg(el, 'NADRA OK — review & Save CIF', true);
-      } else msg(el, r.message || r.status || 'Failed', false);
-    } catch (e) { msg(el, e.message || e, false); }
-  }
-  document.getElementById('btnNadra').onclick = function () { nadraFetch(false); };
-  var cnicT;
-  document.getElementById('c_cnic').addEventListener('input', function () {
-    var raw = this.value.replace(/\D/g, '');
-    clearTimeout(cnicT);
-    if (raw.length === 13) cnicT = setTimeout(function () {
-      document.getElementById('c_cnic').value = raw;
-      nadraFetch(false);
-    }, 500);
-  });
-  document.getElementById('btnBio').onclick = function () {
-    document.getElementById('bioScan').className = 'bio-scan ok';
-    document.getElementById('bioScan').textContent = 'Captured';
-    setTimeout(function () {
-      document.getElementById('bioOverlay').classList.remove('open');
-      nadraFetch(true);
-    }, 400);
-  };
-  document.getElementById('btnBioX').onclick = function () {
-    document.getElementById('bioOverlay').classList.remove('open');
-  };
-
-  document.getElementById('frmCust').onsubmit = async function (e) {
-    e.preventDefault();
-    var el = document.getElementById('custMsg');
-    var body = {
-      full_name: document.getElementById('c_name').value.trim(),
-      cnic: document.getElementById('c_cnic').value.replace(/\D/g, ''),
-      father_or_husband: document.getElementById('c_father').value.trim(),
-      dob: document.getElementById('c_dob').value || null,
-      gender: document.getElementById('c_gender').value,
-      phone: document.getElementById('c_phone').value.trim(),
-      mobile: document.getElementById('c_phone').value.trim(),
-      address: document.getElementById('c_addr').value.trim(),
-      city: document.getElementById('c_city').value.trim(),
-      occupation: document.getElementById('c_occ').value.trim(),
-      source_of_funds: document.getElementById('c_sof').value.trim(),
-      branch_code: document.getElementById('c_br').value.trim(),
-      risk_rating: document.getElementById('c_risk').value,
-      is_pep: document.getElementById('c_pep').value === '1',
-      kyc_status: document.getElementById('c_kyc').value,
-      status: document.getElementById('c_status').value
-    };
-    try {
-      var id = document.getElementById('c_id').value;
-      if (id) await DigiFyntekAPI.request('/api/v1/cif/' + id, { method: 'PUT', body: JSON.stringify(body) });
-      else {
-        var created = await DigiFyntekAPI.request('/api/v1/cif', { method: 'POST', body: JSON.stringify(body) });
-        if (created && created.id) document.getElementById('c_id').value = created.id;
-      }
-      msg(el, 'CIF saved', true);
-      loadCustomers();
-    } catch (err) { msg(el, err.message || err, false); }
-  };
-
-  async function loadAccounts() {
-    try {
-      var a = await DigiFyntekAPI.request('/api/v1/accounts?limit=100');
-      var rows = Array.isArray(a) ? a : [];
-      document.getElementById('acctTb').innerHTML = rows.map(function (r) {
-        return '<tr><td>' + r.id + '</td><td>' + (r.account_no || '') + '</td><td>' +
-          (r.customer_id || '') + ' ' + (r.full_name || '') + '</td><td>' +
-          (r.product_code || '') + '</td><td>' + (r.ledger_balance != null ? r.ledger_balance : (r.balance || 0)) + '</td></tr>';
-      }).join('') || '<tr><td colspan="5">None</td></tr>';
-    } catch (e) {
-      document.getElementById('acctTb').innerHTML = '<tr><td colspan="5">' + (e.message || '') + '</td></tr>';
-    }
-  }
-  document.getElementById('frmAcct').onsubmit = async function (e) {
-    e.preventDefault();
-    var el = document.getElementById('acctMsg');
-    try {
-      var row = await DigiFyntekAPI.request('/api/v1/accounts', {
-        method: 'POST',
-        body: JSON.stringify({
-          customer_id: Number(document.getElementById('a_cust').value),
-          product_code: document.getElementById('a_prod').value,
-          branch_code: document.getElementById('a_br').value
-        })
-      });
-      msg(el, 'Opened account id ' + (row.id || '') + ' · ' + (row.account_no || ''), true);
-      loadAccounts();
-    } catch (err) { msg(el, err.message || err, false); }
-  };
-
-  document.getElementById('frmCash').onsubmit = async function (e) {
-    e.preventDefault();
-    var el = document.getElementById('cashMsg');
-    var id = document.getElementById('x_id').value.trim();
-    var type = document.getElementById('x_type').value;
-    try {
-      await DigiFyntekAPI.request('/api/v1/accounts/' + id + '/' + type, {
-        method: 'POST',
-        body: JSON.stringify({
-          amount: Number(document.getElementById('x_amt').value),
-          narrative: document.getElementById('x_nar').value
-        })
-      });
-      msg(el, 'Posted ' + type, true);
-    } catch (err) { msg(el, err.message || err, false); }
-  };
-
-  document.getElementById('frmXfer').onsubmit = async function (e) {
-    e.preventDefault();
-    var el = document.getElementById('xferMsg');
-    try {
-      await DigiFyntekAPI.request('/api/v1/ledger/transfer', {
-        method: 'POST',
-        body: JSON.stringify({
-          from_account_id: Number(document.getElementById('xf_from').value),
-          to_account_id: Number(document.getElementById('xf_to').value),
-          amount: Number(document.getElementById('xf_amt').value),
-          narrative: document.getElementById('xf_nar').value
-        })
-      });
-      msg(el, 'Transfer posted', true);
-    } catch (err) {
-      try {
-        await DigiFyntekAPI.request('/api/v1/ledger/transfers', {
-          method: 'POST',
-          body: JSON.stringify({
-            from_account_id: Number(document.getElementById('xf_from').value),
-            to_account_id: Number(document.getElementById('xf_to').value),
-            amount: Number(document.getElementById('xf_amt').value),
-            narrative: document.getElementById('xf_nar').value
-          })
-        });
-        msg(el, 'Transfer posted', true);
-      } catch (e2) { msg(el, e2.message || err.message || err, false); }
-    }
-  };
-
-  document.getElementById('frmTd').onsubmit = async function (e) {
-    e.preventDefault();
-    var el = document.getElementById('tdMsg');
-    var body = {
-      customer_id: Number(document.getElementById('t_cust').value),
-      principal: Number(document.getElementById('t_amt').value),
-      tenor_days: Number(document.getElementById('t_days').value),
-      rate_pct: Number(document.getElementById('t_rate').value),
-      product_code: document.getElementById('t_prod').value
-    };
-    var fund = document.getElementById('t_fund').value.trim();
-    if (fund) body.funding_account_id = Number(fund);
-    try {
-      var r = await DigiFyntekAPI.request('/api/v1/term-deposits', { method: 'POST', body: JSON.stringify(body) });
-      msg(el, 'TD placed ' + (r.td_no || r.id || ''), true);
-    } catch (err) { msg(el, err.message || err, false); }
-  };
-
-  document.getElementById('frmLoan').onsubmit = async function (e) {
-    e.preventDefault();
-    var el = document.getElementById('loanMsg');
-    var body = {
-      customer_id: Number(document.getElementById('l_cust').value),
-      product_code: document.getElementById('l_prod').value,
-      principal: Number(document.getElementById('l_amt').value),
-      rate_pct: Number(document.getElementById('l_rate').value),
-      branch_code: document.getElementById('l_br').value
-    };
-    var ca = document.getElementById('l_acct').value.trim();
-    if (ca) body.credit_account_id = Number(ca);
-    try {
-      var r = await DigiFyntekAPI.request('/api/v1/financing/disburse', { method: 'POST', body: JSON.stringify(body) });
-      msg(el, 'Disbursed ' + (r.contract_no || r.id || JSON.stringify(r).slice(0, 80)), true);
-    } catch (err) { msg(el, err.message || err, false); }
-  };
-  document.getElementById('frmRepay').onsubmit = async function (e) {
-    e.preventDefault();
-    var el = document.getElementById('repayMsg');
-    var id = document.getElementById('r_id').value.trim();
-    try {
-      await DigiFyntekAPI.request('/api/v1/financing/' + id + '/repay', {
-        method: 'POST',
-        body: JSON.stringify({ amount: Number(document.getElementById('r_amt').value) })
-      });
-      msg(el, 'Repayment posted', true);
-    } catch (err) { msg(el, err.message || err, false); }
-  };
-
-  document.getElementById('btnTb').onclick = async function () {
-    var el = document.getElementById('tbMsg');
-    try {
-      var r = await DigiFyntekAPI.request('/api/v1/reports/trial-balance');
-      var rows = r.rows || r.lines || (Array.isArray(r) ? r : []);
-      document.getElementById('tbBody').innerHTML = rows.map(function (x) {
-        return '<tr><td>' + (x.account_code || x.gl_code || x.account || '') + '</td><td>' +
-          (x.debit || x.dr || '') + '</td><td>' + (x.credit || x.cr || '') + '</td></tr>';
-      }).join('') || '<tr><td colspan="3">Empty</td></tr>';
-      msg(el, 'Loaded ' + rows.length + ' lines', true);
-    } catch (e) {
-      try {
-        var r2 = await DigiFyntekAPI.request('/api/v1/ledger/trial-balance');
-        var rows2 = r2.rows || r2.lines || [];
-        document.getElementById('tbBody').innerHTML = rows2.map(function (x) {
-          return '<tr><td>' + (x.account_code || x.gl_code || '') + '</td><td>' + (x.debit || '') + '</td><td>' + (x.credit || '') + '</td></tr>';
-        }).join('');
-        msg(el, 'Loaded', true);
-      } catch (e2) { msg(el, e2.message || e.message, false); }
-    }
-  };
-
-  async function loadEod() {
-    try {
-      var s = await DigiFyntekAPI.request('/api/v1/eod/status');
-      document.getElementById('eodStatus').textContent = JSON.stringify(s, null, 2);
-    } catch (e) {
-      document.getElementById('eodStatus').textContent = e.message || e;
-    }
-  }
-  document.getElementById('btnEodRef').onclick = loadEod;
-  document.getElementById('btnEod').onclick = async function () {
-    var el = document.getElementById('eodMsg');
-    try {
-      await DigiFyntekAPI.request('/api/v1/eod/run', { method: 'POST', body: '{}' });
-      msg(el, 'EOD completed', true);
-      loadEod();
-    } catch (e) { msg(el, e.message || e, false); }
-  };
-
-  async function loadApprovals() {
-    try {
-      var r = await DigiFyntekAPI.request('/api/v1/approvals?limit=50');
-      var rows = r.rows || (Array.isArray(r) ? r : []);
-      document.getElementById('apprTb').innerHTML = rows.map(function (x) {
-        return '<tr><td>' + (x.id || '') + '</td><td>' + (x.request_type || x.type || '') +
-          '</td><td>' + (x.status || '') + '</td><td>' + (x.created_by || '') + '</td></tr>';
-      }).join('') || '<tr><td colspan="4">None</td></tr>';
-    } catch (e) {
-      document.getElementById('apprTb').innerHTML = '<tr><td colspan="4">' + (e.message || '') + '</td></tr>';
-    }
-  }
-  document.getElementById('btnAppr').onclick = loadApprovals;
-
-  async function loadKyc() {
-    try {
-      var r = await DigiFyntekAPI.request('/api/v1/kyc?limit=50');
-      var rows = r.rows || (Array.isArray(r) ? r : []);
-      document.getElementById('kycTb').innerHTML = rows.map(function (x) {
-        return '<tr><td>' + (x.id || '') + '</td><td>' + (x.customer_id || '') +
-          '</td><td>' + (x.status || '') + '</td><td>' + (x.risk_rating || '') + '</td></tr>';
-      }).join('') || '<tr><td colspan="4">None</td></tr>';
-    } catch (e) {
-      document.getElementById('kycMsg').textContent = e.message || e;
-    }
-  }
-  document.getElementById('btnKycLoad').onclick = loadKyc;
-
-  async function loadRoles() {
-    var el = document.getElementById('rbacMsg');
-    try {
-      var m = await DigiFyntekAPI.request('/api/v1/rbac/me');
-      document.getElementById('roleBox').innerHTML = '<strong>' + (m.userId || '') + '</strong> · <code>' +
-        (m.role || '') + '</code><div style="margin-top:8px;font-size:11px;word-break:break-word">' +
-        (m.permissions || []).join(', ') + '</div>';
-    } catch (e) {
-      document.getElementById('roleBox').textContent = e.message || e;
-    }
-    try {
-      var roles = await DigiFyntekAPI.request('/api/v1/rbac/roles');
-      if (!Array.isArray(roles)) roles = [];
-      document.getElementById('rbac_role').innerHTML = roles.map(function (r) {
-        var c = r.role_code || r;
-        return '<option value="' + c + '">' + (r.role_name || c) + ' (' + c + ')</option>';
-      }).join('');
-      document.getElementById('rbacRoleTb').innerHTML = roles.map(function (r) {
-        return '<tr><td>' + (r.role_code || '') + '</td><td>' + (r.role_name || '') + '</td></tr>';
-      }).join('');
-    } catch (e) {}
-    try {
-      var perms = await DigiFyntekAPI.request('/api/v1/rbac/permissions');
-      if (!Array.isArray(perms)) perms = [];
-      document.getElementById('rbacPermBox').textContent = perms.map(function (p) {
-        return p.perm_code || p;
-      }).join(', ');
-    } catch (e) {}
-    try {
-      var users = await DigiFyntekAPI.request('/api/v1/users').catch(function(){ return DigiFyntekAPI.request('/api/v1/rbac/users'); });
-      if (!Array.isArray(users)) users = [];
-      window.__rbacUsers = users;
-      function renderU() {
-        var q = (document.getElementById('rbacUserQ').value || '').toLowerCase();
-        var rows = users.filter(function (u) {
-          return !q || [u.user_id, u.full_name, u.role].join(' ').toLowerCase().indexOf(q) >= 0;
-        });
-        document.getElementById('rbacUserTb').innerHTML = rows.map(function (u) {
-          var active = u.is_active === 0 || u.is_active === false ? 'off' : 'on';
-          return '<tr data-uid="' + (u.user_id || u.id) + '" data-id="' + u.id + '" style="cursor:pointer"><td>' +
-            (u.user_id || u.id) + '</td><td>' + (u.full_name || '') + '</td><td>' + (u.role || '') +
-            ' <span class="hint">(' + active + ')</span></td></tr>';
-        }).join('') || '<tr><td colspan="3">No users / need admin.rbac</td></tr>';
-      }
-      renderU();
-      document.getElementById('rbacUserQ').oninput = renderU;
-      document.getElementById('rbacUserTb').onclick = function (e) {
-        var tr = e.target.closest('tr[data-uid]');
-        if (!tr) return;
-        document.getElementById('rbac_uid').value = tr.dataset.uid;
-        var u = users.find(function (x) { return String(x.user_id || x.id) === tr.dataset.uid; });
-        if (u && u.role) document.getElementById('rbac_role').value = u.role;
-      };
-    } catch (e) {
-      document.getElementById('rbacUserTb').innerHTML = '<tr><td colspan="3">' + (e.message || e) + '</td></tr>';
-    }
-  }
-
-  if (!window.__rbacAssignBound) {
-    window.__rbacAssignBound = true;
-    document.getElementById('btnRbacAssign').onclick = async function () {
-      var uid = document.getElementById('rbac_uid').value.trim();
-      var role = document.getElementById('rbac_role').value;
-      var el = document.getElementById('rbacMsg');
-      if (!uid) { el.textContent = 'Select user'; el.className = 'msg err'; return; }
-      try {
-        var u = await DigiFyntekAPI.request('/api/v1/rbac/users/' + encodeURIComponent(uid) + '/role', {
-          method: 'PATCH', body: JSON.stringify({ role: role })
-        });
-        el.textContent = 'Saved: ' + (u.user_id || uid) + ' → ' + u.role;
-        el.className = 'msg ok';
-        loadRoles();
-      } catch (err) {
-        el.textContent = err.message || err;
-        el.className = 'msg err';
-      }
-    };
-  }
-
-  var aiReady = false;
-  function initAi() {
-    if (aiReady) return;
-    aiReady = true;
-    var chips = ['customer list', 'account balances', 'trial balance', 'loan portfolio', 'pending approvals', 'NADRA history', 'EOD status'];
-    document.getElementById('aiChips').innerHTML = chips.map(function (c) {
-      return '<button type="button" class="btn btn-s" data-q="' + c + '">' + c + '</button>';
-    }).join('');
-    document.getElementById('aiChips').onclick = function (e) {
-      var b = e.target.closest('[data-q]');
-      if (!b) return;
-      document.getElementById('aiPrompt').value = b.getAttribute('data-q');
-      runAi();
-    };
-    document.getElementById('btnAiRun').onclick = runAi;
-  }
-  async function runAi() {
-    var prompt = document.getElementById('aiPrompt').value.trim();
-    var el = document.getElementById('aiMeta');
-    if (!prompt) return msg(el, 'Enter prompt', false);
-    msg(el, 'Generating…', true);
-    try {
-      var r = await DigiFyntekAPI.request('/api/v1/reports/ai', {
-        method: 'POST', body: JSON.stringify({ prompt: prompt })
-      });
-      if (!r.rows && r.message) {
-        msg(el, r.message, false);
-        return;
-      }
-      msg(el, (r.title || '') + ' · ' + (r.summary || '') + ' · ' + (r.row_count || 0) + ' rows', true);
-      var cols = r.columns || (r.rows && r.rows[0] ? Object.keys(r.rows[0]) : []);
-      document.getElementById('aiHead').innerHTML = '<tr>' + cols.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr>';
-      document.getElementById('aiBody').innerHTML = (r.rows || []).map(function (row) {
-        return '<tr>' + cols.map(function (c) { return '<td>' + (row[c] != null ? row[c] : '') + '</td>'; }).join('') + '</tr>';
-      }).join('') || '<tr><td>No rows</td></tr>';
-    } catch (e) { msg(el, e.message || e, false); }
-  }
-
-
-  document.getElementById('frmNewUser') && document.getElementById('frmNewUser').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    var el = document.getElementById('nuMsg');
-    try {
-      var u = await DigiFyntekAPI.request('/api/v1/users', {
-        method: 'POST',
-        body: JSON.stringify({
-          user_id: document.getElementById('nu_id').value.trim(),
-          full_name: document.getElementById('nu_name').value.trim(),
-          password: document.getElementById('nu_pass').value,
-          role: document.getElementById('nu_role').value
-        })
-      });
-      el.textContent = 'Created ' + u.user_id + ' (' + u.role + ')';
-      el.className = 'msg ok';
-      document.getElementById('frmNewUser').reset();
-      loadRoles();
-    } catch (err) {
-      el.textContent = err.message || err;
-      el.className = 'msg err';
-    }
-  });
-
-
-  document.getElementById('btnRbacToggle') && (document.getElementById('btnRbacToggle').onclick = async function () {
-    var uid = document.getElementById('rbac_uid').value.trim();
-    var el = document.getElementById('rbacMsg');
-    if (!uid) { el.textContent = 'Select user'; el.className = 'msg err'; return; }
-    try {
-      var r = await DigiFyntekAPI.request('/api/v1/users/' + encodeURIComponent(uid) + '/toggle-active', { method: 'POST', body: '{}' });
-      el.textContent = 'Active = ' + r.is_active;
-      el.className = 'msg ok';
-      loadRoles();
-    } catch (err) { el.textContent = err.message || err; el.className = 'msg err'; }
-  });
-  document.getElementById('btnRbacReset') && (document.getElementById('btnRbacReset').onclick = async function () {
-    var uid = document.getElementById('rbac_uid').value.trim();
-    var pw = document.getElementById('rbac_newpass').value;
-    var el = document.getElementById('rbacMsg');
-    if (!uid || !pw || pw.length < 6) { el.textContent = 'User + password (6+) required'; el.className = 'msg err'; return; }
-    try {
-      await DigiFyntekAPI.request('/api/v1/users/' + encodeURIComponent(uid) + '/reset-password', {
-        method: 'POST', body: JSON.stringify({ password: pw })
-      });
-      el.textContent = 'Password reset for ' + uid;
-      el.className = 'msg ok';
-      document.getElementById('rbac_newpass').value = '';
-    } catch (err) { el.textContent = err.message || err; el.className = 'msg err'; }
-  });
-
-  loadHome();
-})();
-</script>
+<script src="js/workbench.js"></script>
 </body>
 </html>
