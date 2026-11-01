@@ -280,6 +280,33 @@ router.post('/roles/:roleCode/clone', auth(), requirePermission('admin.rbac'), a
 });
 
 
+
+/** Replace all permissions for a role */
+router.put('/roles/:roleCode/permissions/set', auth(), requirePermission('admin.rbac'), async (req, res, next) => {
+  try {
+    const code = String(req.params.roleCode).toLowerCase();
+    const list = req.body?.permissions || req.body?.perms || [];
+    if (!Array.isArray(list)) return res.status(400).json({ error: 'permissions array required' });
+    await pool.query(`DELETE FROM cbs_role_permissions WHERE role_code = ?`, [code]);
+    for (const perm of list) {
+      const pc = String(perm).trim();
+      if (!pc) continue;
+      await pool.query(
+        `INSERT IGNORE INTO cbs_role_permissions (role_code, perm_code) VALUES (?, ?)`,
+        [code, pc]
+      );
+    }
+    rbac.invalidate();
+    const [rows] = await pool.query(
+      `SELECT perm_code FROM cbs_role_permissions WHERE role_code = ?`,
+      [code]
+    );
+    res.json({ role_code: code, permissions: rows.map((r) => r.perm_code) });
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.post('/invalidate-cache', auth(), requirePermission('admin.rbac'), async (req, res) => {
   rbac.invalidate();
   res.json({ ok: true });
