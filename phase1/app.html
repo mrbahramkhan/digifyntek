@@ -142,7 +142,12 @@
                   <div class="field"><label>Marital status</label>
                     <select class="inp" id="c_marital"><option value="">—</option><option value="single">Single</option><option value="married">Married</option><option value="widowed">Widowed</option><option value="divorced">Divorced</option></select></div>
                   <div class="field"><label>Nationality</label><input class="inp" id="c_nationality" value="Pakistani" /></div>
-                  <div class="field"><label>Customer type</label><select class="inp" id="c_type"><option value="individual">Individual</option><option value="corporate">Corporate / entity</option></select></div>
+                  <div class="field"><label>Customer type</label><select class="inp" id="c_type">
+                    <option value="individual">Individual</option>
+                    <option value="sole_proprietorship">Sole proprietorship</option>
+                    <option value="partnership">Partnership</option>
+                    <option value="corporate">Company / corporate</option>
+                  </select></div>
 
                                     <div class="form-sec">1b · CNIC photos</div>
                   <div class="field"><label>CNIC front</label><input class="inp" type="file" id="c_cnic_front" accept="image/*" />
@@ -179,6 +184,16 @@
                   <div class="field"><label>Next of kin phone</label><input class="inp" id="c_kin_phone" /></div>
                   <div class="field full"><label>Beneficial owner (if different / entity)</label><input class="inp" id="c_bo" /></div>
 
+                                    <div class="form-sec">4b · Sole prop / business</div>
+                  <div class="field full"><label>Business name</label><input class="inp" id="c_biz_name" /></div>
+                  <div class="field"><label>Business NTN</label><input class="inp" id="c_biz_ntn" /></div>
+                  <div class="field"><label>Registration no</label><input class="inp" id="c_biz_reg" /></div>
+                  <div class="field"><label>Sales tax no</label><input class="inp" id="c_sales_tax" /></div>
+                  <div class="field"><label>Trade body</label><input class="inp" id="c_trade_body" /></div>
+                  <div class="field"><label>SP declaration on file</label>
+                    <select class="inp" id="c_sp_decl"><option value="0">No</option><option value="1">Yes</option></select></div>
+                  <div class="field"><label>A/c request letterhead</label>
+                    <select class="inp" id="c_sp_req"><option value="0">No</option><option value="1">Yes</option></select></div>
                   <div class="form-sec">5 · Risk, PEP & KYC decision</div>
                   <div class="field"><label>Risk rating</label><select class="inp" id="c_risk"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
                   <div class="field"><label>AML risk</label><select class="inp" id="c_aml"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>

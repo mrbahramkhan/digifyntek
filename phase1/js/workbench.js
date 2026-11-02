@@ -172,6 +172,13 @@
     setVal('c_kyc', r ? (r.kyc_status || 'pending') : 'pending');
     setVal('c_status', r ? (r.status || 'active') : 'active');
     setVal('c_notes', r ? r.notes : '');
+    setVal('c_biz_name', r ? r.business_name : '');
+    setVal('c_biz_ntn', r ? r.business_ntn : '');
+    setVal('c_biz_reg', r ? r.business_reg_no : '');
+    setVal('c_sales_tax', r ? r.sales_tax_no : '');
+    setVal('c_trade_body', r ? r.trade_body_membership : '');
+    setVal('c_sp_decl', r && Number(r.sole_prop_declaration) === 1 ? '1' : '0');
+    setVal('c_sp_req', r && Number(r.account_request_letterhead) === 1 ? '1' : '0');
     if ($('c_frontPrev')) {
       if (r && r.cnic_front_path) { $('c_frontPrev').src = r.cnic_front_path; $('c_frontPrev').style.display = 'block'; }
       else { $('c_frontPrev').style.display = 'none'; }
@@ -305,7 +312,14 @@
       is_pep: gv('c_pep') === '1',
       kyc_status: gv('c_kyc'),
       status: gv('c_status'),
-      notes: gv('c_notes')
+      notes: gv('c_notes'),
+      business_name: gv('c_biz_name'),
+      business_ntn: gv('c_biz_ntn'),
+      business_reg_no: gv('c_biz_reg'),
+      sales_tax_no: gv('c_sales_tax'),
+      trade_body_membership: gv('c_trade_body'),
+      sole_prop_declaration: gv('c_sp_decl') === '1',
+      account_request_letterhead: gv('c_sp_req') === '1'
     };
     try {
       var id = $('c_id').value;

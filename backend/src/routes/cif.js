@@ -31,6 +31,14 @@ const CDD_ALTERS = [
   "ALTER TABLE cbs_customers ADD COLUMN id_type VARCHAR(30) NULL DEFAULT 'CNIC'",
   "ALTER TABLE cbs_customers ADD COLUMN cnic_front_path VARCHAR(255) NULL",
   "ALTER TABLE cbs_customers ADD COLUMN cnic_back_path VARCHAR(255) NULL",
+  "ALTER TABLE cbs_customers ADD COLUMN business_name VARCHAR(160) NULL",
+  "ALTER TABLE cbs_customers ADD COLUMN business_ntn VARCHAR(30) NULL",
+  "ALTER TABLE cbs_customers ADD COLUMN business_reg_no VARCHAR(60) NULL",
+  "ALTER TABLE cbs_customers ADD COLUMN sales_tax_no VARCHAR(40) NULL",
+  "ALTER TABLE cbs_customers ADD COLUMN trade_body_membership VARCHAR(160) NULL",
+  "ALTER TABLE cbs_customers ADD COLUMN sole_prop_declaration TINYINT(1) NULL DEFAULT 0",
+  "ALTER TABLE cbs_customers ADD COLUMN account_request_letterhead TINYINT(1) NULL DEFAULT 0",
+  "ALTER TABLE cbs_customers ADD COLUMN nature_of_business VARCHAR(120) NULL",
 ];
 let cddReady = false;
 async function ensureCddColumns() {
@@ -38,6 +46,22 @@ async function ensureCddColumns() {
   for (const sql of CDD_ALTERS) {
     try { await pool.query(sql); } catch (_) {}
   }
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS cbs_customer_documents (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        customer_id BIGINT UNSIGNED NOT NULL,
+        doc_type VARCHAR(60) NOT NULL,
+        file_path VARCHAR(255) NOT NULL,
+        file_name VARCHAR(160) NULL,
+        notes VARCHAR(255) NULL,
+        uploaded_by VARCHAR(50) NULL,
+        created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_cust_docs (customer_id),
+        KEY idx_doc_type (doc_type)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+  } catch (_) {}
   cddReady = true;
 }
 
@@ -163,6 +187,7 @@ router.post('/', auth(), async (req, res, next) => {
         [ins.insertId, b.cnic]
       );
     }
+    await applySolePropFields(ins.insertId, b);
     const [[row]] = await pool.query(`SELECT * FROM cbs_customers WHERE id = ?`, [ins.insertId]);
     res.status(201).json(row);
   } catch (e) {
@@ -269,6 +294,7 @@ router.put('/:id', auth(), async (req, res, next) => {
         req.params.id,
       ]
     );
+    await applySolePropFields(req.params.id, b);
     const [[row]] = await pool.query(`SELECT * FROM cbs_customers WHERE id = ?`, [req.params.id]);
     res.json(row);
   } catch (e) {
@@ -347,6 +373,155 @@ router.post('/:id/cnic-photos', auth(), async (req, res, next) => {
     if (e.status) return res.status(e.status).json({ error: e.message });
     next(e);
   }
+});
+
+
+
+
+const DOC_TYPES = [
+  'cnic_front', 'cnic_back',
+  'id_copy',
+  'business_registration',
+  'ntn_certificate',
+  'sales_tax_certificate',
+  'trade_body_membership',
+  'sole_prop_declaration',
+  'account_request_letterhead',
+  'source_of_funds',
+  'other',
+];
+
+function saveCustomerDoc(customerId, docType, data, originalName) {
+  ensureUploadDir();
+  if (!data || typeof data !== 'string') return null;
+  let ext = 'jpg';
+  let b64 = data;
+  const m = data.match(/^data:(image\/(png|jpeg|jpg|webp)|application\/pdf);base64,(.+)$/i);
+  if (m) {
+    if ((m[1] || '').includes('pdf')) ext = 'pdf';
+    else ext = (m[2] || 'jpg').toLowerCase() === 'jpeg' ? 'jpg' : (m[2] || 'jpg').toLowerCase();
+    b64 = m[3];
+  } else if (originalName && originalName.toLowerCase().endsWith('.pdf')) {
+    ext = 'pdf';
+  }
+  const buf = Buffer.from(b64, 'base64');
+  if (buf.length < 50) throw Object.assign(new Error('Invalid file data'), { status: 400 });
+  if (buf.length > 8 * 1024 * 1024) throw Object.assign(new Error('File max 8MB'), { status: 400 });
+  const name = `${customerId}_${docType}_${crypto.randomBytes(4).toString('hex')}.${ext}`;
+  const full = path.join(UPLOAD_ROOT, name);
+  fs.writeFileSync(full, buf);
+  return { path: `/uploads/cnic/${name}`, fileName: originalName || name };
+}
+
+async function applySolePropFields(id, b) {
+  if (!b || id == null) return;
+  try {
+    await pool.query(
+      `UPDATE cbs_customers SET
+        business_name = COALESCE(?, business_name),
+        business_ntn = COALESCE(?, business_ntn),
+        business_reg_no = COALESCE(?, business_reg_no),
+        sales_tax_no = COALESCE(?, sales_tax_no),
+        trade_body_membership = COALESCE(?, trade_body_membership),
+        sole_prop_declaration = COALESCE(?, sole_prop_declaration),
+        account_request_letterhead = COALESCE(?, account_request_letterhead)
+       WHERE id = ?`,
+      [
+        b.business_name ?? null,
+        b.business_ntn ?? b.ntn ?? null,
+        b.business_reg_no ?? null,
+        b.sales_tax_no ?? null,
+        b.trade_body_membership ?? null,
+        b.sole_prop_declaration == null ? null : b.sole_prop_declaration ? 1 : 0,
+        b.account_request_letterhead == null ? null : b.account_request_letterhead ? 1 : 0,
+        id,
+      ]
+    );
+  } catch (_) {}
+}
+
+router.get('/:id/documents', auth(), async (req, res, next) => {
+  try {
+    await ensureCddColumns();
+    const [rows] = await pool.query(
+      `SELECT id, customer_id, doc_type, file_path, file_name, notes, uploaded_by, created_at
+       FROM cbs_customer_documents WHERE customer_id = ? ORDER BY id DESC`,
+      [req.params.id]
+    );
+    res.json(rows);
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post('/:id/documents', auth(), async (req, res, next) => {
+  try {
+    await ensureCddColumns();
+    const id = Number(req.params.id);
+    const [[cust]] = await pool.query(`SELECT id FROM cbs_customers WHERE id = ?`, [id]);
+    if (!cust) return res.status(404).json({ error: 'Customer not found' });
+    const b = req.body || {};
+    const docType = String(b.doc_type || b.type || 'other').trim();
+    if (!DOC_TYPES.includes(docType) && docType !== 'other') {
+      // allow custom but keep short
+    }
+    const data = b.file || b.data || b.base64 || b.content;
+    if (!data) return res.status(400).json({ error: 'file (base64/data URL) required' });
+    const saved = saveCustomerDoc(id, docType.replace(/[^a-z0-9_]/gi, '_').slice(0, 40), data, b.file_name);
+    const [ins] = await pool.query(
+      `INSERT INTO cbs_customer_documents (customer_id, doc_type, file_path, file_name, notes, uploaded_by)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, docType, saved.path, saved.fileName, b.notes || null, req.user?.userId || null]
+    );
+    // mirror CNIC paths
+    if (docType === 'cnic_front') {
+      await pool.query(`UPDATE cbs_customers SET cnic_front_path = ? WHERE id = ?`, [saved.path, id]);
+    }
+    if (docType === 'cnic_back') {
+      await pool.query(`UPDATE cbs_customers SET cnic_back_path = ? WHERE id = ?`, [saved.path, id]);
+    }
+    const [[row]] = await pool.query(`SELECT * FROM cbs_customer_documents WHERE id = ?`, [ins.insertId]);
+    res.status(201).json(row);
+  } catch (e) {
+    if (e.status) return res.status(e.status).json({ error: e.message });
+    next(e);
+  }
+});
+
+router.get('/doc-checklist/:customerType', auth(), async (req, res) => {
+  const t = String(req.params.customerType || 'individual').toLowerCase();
+  const individual = [
+    { code: 'cnic_front', label: 'CNIC / ID front', required: true },
+    { code: 'cnic_back', label: 'CNIC / ID back', required: true },
+    { code: 'id_copy', label: 'ID copy (verified / original seen)', required: true },
+    { code: 'source_of_funds', label: 'Source of funds proof (if applicable)', required: false },
+  ];
+  const sole = [
+    ...individual,
+    { code: 'business_registration', label: 'Business registration certificate (if registered)', required: false },
+    { code: 'ntn_certificate', label: 'NTN / tax registration', required: false },
+    { code: 'sales_tax_certificate', label: 'Sales tax registration (if applicable)', required: false },
+    { code: 'trade_body_membership', label: 'Trade body / chamber membership', required: false },
+    { code: 'sole_prop_declaration', label: 'Sole proprietorship declaration (letterhead)', required: true },
+    { code: 'account_request_letterhead', label: 'Account opening request (letterhead)', required: true },
+  ];
+  const corporate = [
+    ...individual,
+    { code: 'business_registration', label: 'Incorporation / registration docs', required: true },
+    { code: 'ntn_certificate', label: 'NTN', required: false },
+    { code: 'other', label: 'Board resolution / signatory mandate', required: true },
+  ];
+  let items = individual;
+  if (t.includes('sole') || t === 'sole_proprietorship' || t === 'sole_prop') items = sole;
+  else if (t.includes('corp') || t === 'company' || t === 'partnership') items = corporate;
+  res.json({
+    customer_type: t,
+    note: 'SBP Annex style: sole prop needs proprietor ID + at least one business proof; letterhead declaration commonly required by policy.',
+    min_business_one_of: t.includes('sole')
+      ? ['business_registration', 'ntn_certificate', 'sales_tax_certificate', 'trade_body_membership', 'sole_prop_declaration']
+      : [],
+    items,
+  });
 });
 
 

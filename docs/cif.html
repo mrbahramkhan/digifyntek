@@ -78,7 +78,12 @@
                 </div>
                 <div class="field"><label>Nationality</label><input class="inp" id="f_nationality" value="Pakistani" /></div>
                 <div class="field"><label>Customer type</label>
-                  <select class="inp" id="f_type"><option value="individual">Individual</option><option value="corporate">Corporate / entity</option></select>
+                  <select class="inp" id="f_type">
+                    <option value="individual">Individual</option>
+                    <option value="sole_proprietorship">Sole proprietorship</option>
+                    <option value="partnership">Partnership</option>
+                    <option value="corporate">Company / corporate</option>
+                  </select>
                 </div>
               </div>
 
@@ -166,6 +171,59 @@
                   </select>
                 </div>
                 <div class="field full"><label>Notes / EDD comments</label><textarea class="inp" id="f_notes" rows="2"></textarea></div>
+              </div>
+
+
+              <div class="form-sec" id="soleSecTitle">6 · Sole proprietorship / business (SBP docs)</div>
+              <div class="form-grid" id="soleSec">
+                <div class="field full"><label>Business / trade name</label><input class="inp" id="f_biz_name" placeholder="As on letterhead / registration" /></div>
+                <div class="field"><label>Business NTN</label><input class="inp" id="f_biz_ntn" /></div>
+                <div class="field"><label>Registration number</label><input class="inp" id="f_biz_reg" /></div>
+                <div class="field"><label>Sales tax number</label><input class="inp" id="f_sales_tax" /></div>
+                <div class="field"><label>Trade body / chamber</label><input class="inp" id="f_trade_body" /></div>
+                <div class="field"><label>Sole prop declaration (letterhead)</label>
+                  <select class="inp" id="f_sp_decl"><option value="0">Not obtained</option><option value="1">Obtained / on file</option></select>
+                </div>
+                <div class="field"><label>A/c request on letterhead</label>
+                  <select class="inp" id="f_sp_req"><option value="0">Not obtained</option><option value="1">Obtained / on file</option></select>
+                </div>
+                <div class="field full hint" id="soleHint">
+                  SBP style: proprietor ID (verified) + <strong>at least one</strong> business proof
+                  (registration / NTN / sales tax / trade body / letterhead declaration).
+                </div>
+              </div>
+
+              <div class="form-sec">7 · Document checklist &amp; upload</div>
+              <div class="form-grid">
+                <div class="field full">
+                  <div id="docChecklist" class="hint">Select customer type to load checklist…</div>
+                </div>
+                <div class="field"><label>Document type</label>
+                  <select class="inp" id="f_doc_type">
+                    <option value="cnic_front">CNIC front</option>
+                    <option value="cnic_back">CNIC back</option>
+                    <option value="id_copy">ID copy</option>
+                    <option value="business_registration">Business registration</option>
+                    <option value="ntn_certificate">NTN certificate</option>
+                    <option value="sales_tax_certificate">Sales tax certificate</option>
+                    <option value="trade_body_membership">Trade body membership</option>
+                    <option value="sole_prop_declaration">Sole prop declaration (letterhead)</option>
+                    <option value="account_request_letterhead">Account request (letterhead)</option>
+                    <option value="source_of_funds">Source of funds proof</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="field"><label>File (image/PDF)</label>
+                  <input class="inp" type="file" id="f_doc_file" accept="image/*,application/pdf" />
+                </div>
+                <div class="field full">
+                  <button type="button" class="btn btn-p" id="btnDocUpload">Upload document</button>
+                  <span class="hint" id="docMsg"></span>
+                </div>
+                <div class="field full">
+                  <table class="data"><thead><tr><th>Type</th><th>File</th><th>When</th></tr></thead>
+                  <tbody id="docTb"><tr><td colspan="3" class="empty">Save customer first</td></tr></tbody></table>
+                </div>
               </div>
 
               <div class="form-actions" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
@@ -276,6 +334,15 @@
     sv('f_kyc', r ? (r.kyc_status || 'pending') : 'pending');
     sv('f_status', r ? (r.status || 'active') : 'active');
     sv('f_notes', r ? r.notes : '');
+    sv('f_biz_name', r ? r.business_name : '');
+    sv('f_biz_ntn', r ? r.business_ntn : '');
+    sv('f_biz_reg', r ? r.business_reg_no : '');
+    sv('f_sales_tax', r ? r.sales_tax_no : '');
+    sv('f_trade_body', r ? r.trade_body_membership : '');
+    sv('f_sp_decl', r && Number(r.sole_prop_declaration) === 1 ? '1' : '0');
+    sv('f_sp_req', r && Number(r.account_request_letterhead) === 1 ? '1' : '0');
+    loadDocs(r ? r.id : null);
+    toggleSoleUI();
     $('formTitle').textContent = r ? 'Edit · ' + (r.full_name || r.id) : 'New customer · SBP CDD';
     if ($('frontPrev')) {
       if (r && r.cnic_front_path) {
@@ -354,7 +421,14 @@
       is_pep: gv('f_pep') === '1',
       kyc_status: gv('f_kyc'),
       status: gv('f_status'),
-      notes: gv('f_notes')
+      notes: gv('f_notes'),
+      business_name: gv('f_biz_name'),
+      business_ntn: gv('f_biz_ntn'),
+      business_reg_no: gv('f_biz_reg'),
+      sales_tax_no: gv('f_sales_tax'),
+      trade_body_membership: gv('f_trade_body'),
+      sole_prop_declaration: gv('f_sp_decl') === '1',
+      account_request_letterhead: gv('f_sp_req') === '1'
     };
   }
 
@@ -577,6 +651,78 @@
   };
 
 
+
+  function toggleSoleUI() {
+    var t = gv('f_type');
+    var sole = t === 'sole_proprietorship' || t === 'partnership' || t === 'corporate';
+    // always show business block for non-individual; checklist always
+    loadChecklist(t);
+  }
+  async function loadChecklist(ctype) {
+    var box = $('docChecklist');
+    if (!box) return;
+    try {
+      var r = await DigiFyntekAPI.request('/api/v1/cif/doc-checklist/' + encodeURIComponent(ctype || 'individual'));
+      var html = '<strong>Checklist (' + (r.customer_type || '') + ')</strong><ul style="margin:6px 0 0 18px;padding:0">';
+      (r.items || []).forEach(function (it) {
+        html += '<li>' + it.label + (it.required ? ' <em>*</em>' : '') + ' <code style="font-size:10px">' + it.code + '</code></li>';
+      });
+      html += '</ul>';
+      if (r.min_business_one_of && r.min_business_one_of.length) {
+        html += '<div style="margin-top:6px">Min one business proof: ' + r.min_business_one_of.join(', ') + '</div>';
+      }
+      if (r.note) html += '<div style="margin-top:4px">' + r.note + '</div>';
+      box.innerHTML = html;
+    } catch (e) {
+      box.textContent = e.message || e;
+    }
+  }
+  async function loadDocs(customerId) {
+    var tb = $('docTb');
+    if (!tb) return;
+    if (!customerId) {
+      tb.innerHTML = '<tr><td colspan="3" class="empty">Save customer first</td></tr>';
+      return;
+    }
+    try {
+      var rows = await DigiFyntekAPI.request('/api/v1/cif/' + customerId + '/documents');
+      if (!Array.isArray(rows)) rows = [];
+      tb.innerHTML = rows.map(function (d) {
+        return '<tr><td>' + d.doc_type + '</td><td><a href="' + d.file_path + '" target="_blank">' +
+          (d.file_name || d.file_path) + '</a></td><td>' + (d.created_at || '') + '</td></tr>';
+      }).join('') || '<tr><td colspan="3" class="empty">No documents yet</td></tr>';
+    } catch (e) {
+      tb.innerHTML = '<tr><td colspan="3">' + (e.message || e) + '</td></tr>';
+    }
+  }
+  $('f_type') && $('f_type').addEventListener('change', toggleSoleUI);
+
+  $('btnDocUpload') && ($('btnDocUpload').onclick = async function () {
+    var id = gv('f_id');
+    if (!id) return msg('Pehle customer save karein', false);
+    var fileInput = $('f_doc_file');
+    var f = fileInput && fileInput.files && fileInput.files[0];
+    if (!f) return msg('File select karein', false);
+    try {
+      var dataUrl = await readFileAsDataUrl(f);
+      var row = await DigiFyntekAPI.request('/api/v1/cif/' + id + '/documents', {
+        method: 'POST',
+        body: JSON.stringify({
+          doc_type: gv('f_doc_type'),
+          file: dataUrl,
+          file_name: f.name
+        })
+      });
+      msg('Document uploaded: ' + (row.doc_type || ''), true);
+      if ($('docMsg')) $('docMsg').textContent = 'OK';
+      fileInput.value = '';
+      await loadDocs(id);
+    } catch (e) {
+      msg(e.message || e, false);
+    }
+  });
+
+  toggleSoleUI();
   load();
 })();
 </script>
