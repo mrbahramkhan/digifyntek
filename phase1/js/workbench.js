@@ -175,6 +175,27 @@
   }
   $('btnCustNew') && ($('btnCustNew').onclick = function () { fillCustomer(null); });
 
+  $('btnOpenKyc') && ($('btnOpenKyc').onclick = async function () {
+    var id = $('c_id') && $('c_id').value;
+    if (!id) return msg('custMsg', 'Pehle CIF save karein', false);
+    try {
+      var row = await api('/api/v1/kyc', {
+        method: 'POST',
+        body: JSON.stringify({
+          customer_id: Number(id),
+          case_type: 'onboarding',
+          risk_rating: ($('c_risk') && $('c_risk').value) || 'low',
+          source_of_funds: ($('c_sof') && $('c_sof').value) || null,
+          purpose_of_account: ($('c_purpose') && $('c_purpose').value) || null
+        })
+      });
+      msg('custMsg', 'KYC case opened #' + (row.id || row.case_id || ''), true);
+    } catch (e) {
+      msg('custMsg', e.message || e, false);
+    }
+  });
+
+
   function applyCitizen(c, meta) {
     if (!c) return;
     if (c.full_name) $('c_name').value = c.full_name;
