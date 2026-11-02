@@ -83,25 +83,28 @@
               </div>
 
               
-              <div class="form-sec">1b · CNIC photos (front &amp; back)</div>
+              <div class="form-sec">1b · CNIC card photos (edit / upload)</div>
               <div class="form-grid">
                 <div class="field">
-                  <label>CNIC front</label>
-                  <input class="inp" type="file" id="f_cnic_front" accept="image/*" />
-                  <div class="hint" id="frontPrevWrap" style="margin-top:6px">
-                    <img id="frontPrev" alt="" style="max-width:100%;max-height:120px;border-radius:8px;display:none;border:1px solid var(--line,#e2e8f0)" />
+                  <label>CNIC front (upload or replace)</label>
+                  <input class="inp" type="file" id="f_cnic_front" accept="image/png,image/jpeg,image/webp,image/*" capture="environment" />
+                  <div id="frontPrevWrap" style="margin-top:8px;min-height:40px">
+                    <img id="frontPrev" alt="CNIC front" style="max-width:100%;max-height:140px;border-radius:8px;display:none;border:1px solid var(--line,#e2e8f0)" />
+                    <div class="hint" id="frontPathHint" style="display:none"></div>
                   </div>
                 </div>
                 <div class="field">
-                  <label>CNIC back</label>
-                  <input class="inp" type="file" id="f_cnic_back" accept="image/*" />
-                  <div class="hint" id="backPrevWrap" style="margin-top:6px">
-                    <img id="backPrev" alt="" style="max-width:100%;max-height:120px;border-radius:8px;display:none;border:1px solid var(--line,#e2e8f0)" />
+                  <label>CNIC back (upload or replace)</label>
+                  <input class="inp" type="file" id="f_cnic_back" accept="image/png,image/jpeg,image/webp,image/*" capture="environment" />
+                  <div id="backPrevWrap" style="margin-top:8px;min-height:40px">
+                    <img id="backPrev" alt="CNIC back" style="max-width:100%;max-height:140px;border-radius:8px;display:none;border:1px solid var(--line,#e2e8f0)" />
+                    <div class="hint" id="backPathHint" style="display:none"></div>
                   </div>
                 </div>
                 <div class="field full">
-                  <button type="button" class="btn" id="btnUploadCnic">Upload CNIC photos</button>
+                  <button type="button" class="btn btn-p" id="btnUploadCnic">Save CNIC photos</button>
                   <span class="hint" id="photoMsg" style="margin-left:8px"></span>
+                  <div class="hint" style="margin-top:6px">Edit mode: customer select/save karein, phir front/back image choose karke <strong>Save CNIC photos</strong> dabayein. Max 5MB each.</div>
                 </div>
               </div>
 
@@ -276,22 +279,34 @@
     $('formTitle').textContent = r ? 'Edit · ' + (r.full_name || r.id) : 'New customer · SBP CDD';
     if ($('frontPrev')) {
       if (r && r.cnic_front_path) {
-        $('frontPrev').src = r.cnic_front_path;
+        $('frontPrev').src = r.cnic_front_path + (r.cnic_front_path.indexOf('?') >= 0 ? '' : '?t=' + Date.now());
         $('frontPrev').style.display = 'block';
+        if ($('frontPathHint')) {
+          $('frontPathHint').style.display = 'block';
+          $('frontPathHint').textContent = 'Saved: ' + r.cnic_front_path;
+        }
       } else {
         $('frontPrev').removeAttribute('src');
         $('frontPrev').style.display = 'none';
+        if ($('frontPathHint')) $('frontPathHint').style.display = 'none';
       }
     }
     if ($('backPrev')) {
       if (r && r.cnic_back_path) {
-        $('backPrev').src = r.cnic_back_path;
+        $('backPrev').src = r.cnic_back_path + (r.cnic_back_path.indexOf('?') >= 0 ? '' : '?t=' + Date.now());
         $('backPrev').style.display = 'block';
+        if ($('backPathHint')) {
+          $('backPathHint').style.display = 'block';
+          $('backPathHint').textContent = 'Saved: ' + r.cnic_back_path;
+        }
       } else {
         $('backPrev').removeAttribute('src');
         $('backPrev').style.display = 'none';
+        if ($('backPathHint')) $('backPathHint').style.display = 'none';
       }
     }
+    if ($('f_cnic_front')) $('f_cnic_front').value = '';
+    if ($('f_cnic_back')) $('f_cnic_back').value = '';
     render();
   }
 
@@ -377,6 +392,28 @@
       if (row && row.id) {
         selected = rows.find(function (x) { return x.id === row.id; }) || row;
         fill(selected);
+        // Auto-upload CNIC photos if selected on this edit
+        var frontInput = $('f_cnic_front');
+        var backInput = $('f_cnic_back');
+        var front = frontInput && frontInput.files && frontInput.files[0];
+        var back = backInput && backInput.files && backInput.files[0];
+        if (front || back) {
+          try {
+            var bodyP = {};
+            if (front) bodyP.front = await readFileAsDataUrl(front);
+            if (back) bodyP.back = await readFileAsDataUrl(back);
+            var resP = await DigiFyntekAPI.request('/api/v1/cif/' + row.id + '/cnic-photos', {
+              method: 'POST', body: JSON.stringify(bodyP)
+            });
+            msg('CIF + CNIC photos saved', true);
+            if (resP.customer) {
+              selected = Object.assign({}, selected, resP.customer);
+              fill(selected);
+            }
+          } catch (pe) {
+            msg('CIF saved; photo upload failed: ' + (pe.message || pe), false);
+          }
+        }
       }
     } catch (err) {
       msg(err.message || err, false);
