@@ -321,14 +321,25 @@
 
       <div class="panel-view" id="view-cash">
         <div class="panel">
-          <div class="panel-h">Cash deposit / withdrawal</div>
+          <div class="panel-h">Cash deposit / withdrawal (teller)</div>
           <div class="panel-b">
-            <form id="frmCash" class="form-grid">
-              <div class="field"><label>Account ID *</label><input class="inp" id="x_id" required /></div>
-              <div class="field"><label>Type</label><select class="inp" id="x_type"><option value="deposit">Deposit</option><option value="withdraw">Withdraw</option></select></div>
-              <div class="field"><label>Amount *</label><input class="inp" id="x_amt" type="number" step="0.01" min="0.01" required /></div>
-              <div class="field"><label>Narrative</label><input class="inp" id="x_nar" value="Cash" /></div>
-              <div class="field full"><button type="submit" class="btn btn-p">Post</button></div>
+            <form id="frmCash">
+              <div class="form-grid">
+                <div class="form-sec">1 · Account &amp; transaction</div>
+                <div class="field"><label>Account ID *</label><input class="inp" id="x_id" required /></div>
+                <div class="field"><label>Type *</label>
+                  <select class="inp" id="x_type"><option value="deposit">Cash deposit</option><option value="withdraw">Cash withdrawal</option></select>
+                </div>
+                <div class="field"><label>Amount (PKR) *</label><input class="inp" id="x_amt" type="number" step="0.01" min="0.01" required /></div>
+                <div class="field"><label>Value date</label><input class="inp" type="date" id="x_date" /></div>
+                <div class="form-sec">2 · SBP transaction due diligence</div>
+                <div class="field full"><label>Purpose / narrative *</label><input class="inp" id="x_nar" required placeholder="Salary credit / business cash / personal" /></div>
+                <div class="field"><label>Source of funds (deposit)</label><input class="inp" id="x_sof" placeholder="Salary / business / other" /></div>
+                <div class="field"><label>Beneficiary / depositor name</label><input class="inp" id="x_party" /></div>
+                <div class="field"><label>CNIC of counterparty (if third party)</label><input class="inp" id="x_cnic" /></div>
+                <div class="field"><label>Cash above threshold — EDD note</label><input class="inp" id="x_edd" placeholder="If large cash, note verification" /></div>
+                <div class="field full"><button type="submit" class="btn btn-p">Post cash</button></div>
+              </div>
             </form>
             <div class="msg" id="cashMsg"></div>
           </div>
@@ -339,12 +350,18 @@
         <div class="panel">
           <div class="panel-h">Internal fund transfer</div>
           <div class="panel-b">
-            <form id="frmXfer" class="form-grid">
-              <div class="field"><label>From account ID *</label><input class="inp" id="xf_from" required /></div>
-              <div class="field"><label>To account ID *</label><input class="inp" id="xf_to" required /></div>
-              <div class="field"><label>Amount *</label><input class="inp" id="xf_amt" type="number" step="0.01" required /></div>
-              <div class="field"><label>Narrative</label><input class="inp" id="xf_nar" value="Transfer" /></div>
-              <div class="field full"><button type="submit" class="btn btn-p">Transfer</button></div>
+            <form id="frmXfer">
+              <div class="form-grid">
+                <div class="form-sec">1 · Accounts</div>
+                <div class="field"><label>From account ID *</label><input class="inp" id="xf_from" required /></div>
+                <div class="field"><label>To account ID *</label><input class="inp" id="xf_to" required /></div>
+                <div class="field"><label>Amount (PKR) *</label><input class="inp" id="xf_amt" type="number" step="0.01" required /></div>
+                <div class="field"><label>Value date</label><input class="inp" type="date" id="xf_date" /></div>
+                <div class="form-sec">2 · Purpose (required for audit)</div>
+                <div class="field full"><label>Purpose / narrative *</label><input class="inp" id="xf_nar" required value="Customer transfer" /></div>
+                <div class="field"><label>Reference / instrument no</label><input class="inp" id="xf_ref" /></div>
+                <div class="field full"><button type="submit" class="btn btn-p">Transfer</button></div>
+              </div>
             </form>
             <div class="msg" id="xferMsg"></div>
           </div>
@@ -355,17 +372,27 @@
         <div class="panel">
           <div class="panel-h">Term deposit placement</div>
           <div class="panel-b">
-            <form id="frmTd" class="form-grid">
-              <div class="field"><label>Customer ID *</label><input class="inp" id="t_cust" required /></div>
-              <div class="field"><label>Principal *</label><input class="inp" id="t_amt" type="number" step="0.01" required /></div>
-              <div class="field"><label>Tenor (days)</label><input class="inp" id="t_days" type="number" value="180" /></div>
-              <div class="field"><label>Rate %</label><input class="inp" id="t_rate" type="number" step="0.01" value="12" /></div>
-              <div class="field"><label>Product</label>
-                <select class="inp" id="t_prod"><option value="TD-STD">TD-STD</option><option value="TD-ISL">TD-ISL</option></select>
+            <form id="frmTd">
+              <div class="form-grid">
+                <div class="form-sec">1 · Customer &amp; product</div>
+                <div class="field"><label>Customer ID *</label><input class="inp" id="t_cust" required /></div>
+                <div class="field"><label>Product</label>
+                  <select class="inp" id="t_prod"><option value="TD-STD">TD-STD Conventional</option><option value="TD-ISL">TD-ISL Islamic</option></select>
+                </div>
+                <div class="field"><label>Branch</label><input class="inp" id="t_br" value="001" /></div>
+                <div class="field"><label>Funding account ID</label><input class="inp" id="t_fund" /></div>
+                <div class="form-sec">2 · Principal &amp; tenor</div>
+                <div class="field"><label>Principal (PKR) *</label><input class="inp" id="t_amt" type="number" step="0.01" required /></div>
+                <div class="field"><label>Tenor (days) *</label><input class="inp" id="t_days" type="number" value="180" required /></div>
+                <div class="field"><label>Rate / profit % *</label><input class="inp" id="t_rate" type="number" step="0.01" value="12" required /></div>
+                <div class="field"><label>Maturity instruction</label>
+                  <select class="inp" id="t_mat"><option value="auto_renew">Auto renew</option><option value="pay_to_account">Pay to account</option><option value="pay_by_instrument">Instrument</option></select>
+                </div>
+                <div class="form-sec">3 · CDD linkage</div>
+                <div class="field"><label>Source of funds</label><input class="inp" id="t_sof" placeholder="Savings / maturity / business" /></div>
+                <div class="field"><label>Purpose</label><input class="inp" id="t_purpose" placeholder="Investment / savings plan" /></div>
+                <div class="field full"><button type="submit" class="btn btn-p">Place TD</button></div>
               </div>
-              <div class="field"><label>Branch</label><input class="inp" id="t_br" value="001" /></div>
-              <div class="field"><label>Funding account ID</label><input class="inp" id="t_fund" /></div>
-              <div class="field full"><button type="submit" class="btn btn-p">Place TD</button></div>
             </form>
             <div class="msg" id="tdMsg"></div>
           </div>
@@ -374,37 +401,54 @@
 
       <div class="panel-view" id="view-loan">
         <div class="panel">
-          <div class="panel-h">Financing disburse / repay</div>
+          <div class="panel-h">Credit / financing application &amp; disburse</div>
           <div class="panel-b">
-            <form id="frmLoan" class="form-grid">
-              <div class="form-sec">Facility</div>
-              <div class="field"><label>Customer ID *</label><input class="inp" id="l_cust" required /></div>
-              <div class="field"><label>Product</label>
-                <select class="inp" id="l_prod">
-                  <option value="LON-AGRI">LON-AGRI Agri</option>
-                  <option value="LON-PER">LON-PER Personal</option>
-                  <option value="MUR-GOODS">MUR-GOODS Murabaha</option>
-                </select>
+            <form id="frmLoan">
+              <div class="form-grid">
+                <div class="form-sec">1 · Borrower &amp; facility</div>
+                <div class="field"><label>Customer ID *</label><input class="inp" id="l_cust" required /></div>
+                <div class="field"><label>Product *</label>
+                  <select class="inp" id="l_prod">
+                    <option value="LON-AGRI">LON-AGRI Agri</option>
+                    <option value="LON-PER">LON-PER Personal</option>
+                    <option value="LON-SME">LON-SME Business</option>
+                    <option value="MUR-GOODS">MUR-GOODS Murabaha</option>
+                  </select>
+                </div>
+                <div class="field"><label>Principal *</label><input class="inp" id="l_amt" type="number" step="0.01" required /></div>
+                <div class="field"><label>Rate / profit %</label><input class="inp" id="l_rate" type="number" step="0.01" value="18" /></div>
+                <div class="field"><label>Tenor (months)</label><input class="inp" id="l_tenor" type="number" value="12" /></div>
+                <div class="field"><label>Branch</label><input class="inp" id="l_br" value="001" /></div>
+                <div class="form-sec">2 · Islamic / conventional</div>
+                <div class="field"><label>Book</label><select class="inp" id="l_isl"><option value="0">Conventional</option><option value="1">Islamic</option></select></div>
+                <div class="field"><label>Islamic mode</label>
+                  <select class="inp" id="l_mode"><option value="">—</option><option value="murabaha">Murabaha</option><option value="ijarah">Ijarah</option><option value="diminishing_musharakah">Diminishing musharakah</option></select>
+                </div>
+                <div class="field"><label>Credit / disbursement account ID</label><input class="inp" id="l_acct" /></div>
+                <div class="form-sec">3 · Purpose &amp; repayment (SBP credit CDD)</div>
+                <div class="field full"><label>Purpose of financing *</label><input class="inp" id="l_purpose" required placeholder="Working capital / agri input / asset" /></div>
+                <div class="field"><label>Source of repayment</label><input class="inp" id="l_repay_src" placeholder="Business cashflow / salary / crop" /></div>
+                <div class="field"><label>Security / collateral ref</label><input class="inp" id="l_sec" placeholder="Collateral ID or description" /></div>
+                <div class="field"><label>Risk rating</label>
+                  <select class="inp" id="l_risk"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
+                </div>
+                <div class="field full"><label>Narrative</label><input class="inp" id="l_nar" value="Disbursement" /></div>
+                <div class="field full"><button type="submit" class="btn btn-p">Disburse / book facility</button></div>
               </div>
-              <div class="field"><label>Principal *</label><input class="inp" id="l_amt" type="number" step="0.01" required /></div>
-              <div class="field"><label>Rate / profit %</label><input class="inp" id="l_rate" type="number" step="0.01" value="18" /></div>
-              <div class="field"><label>Islamic?</label><select class="inp" id="l_isl"><option value="0">Conventional</option><option value="1">Islamic</option></select></div>
-              <div class="field"><label>Islamic mode</label><select class="inp" id="l_mode"><option value="">—</option><option value="murabaha">Murabaha</option><option value="ijarah">Ijarah</option><option value="diminishing_musharakah">Diminishing musharakah</option></select></div>
-              <div class="field"><label>Credit account ID</label><input class="inp" id="l_acct" /></div>
-              <div class="field"><label>Branch</label><input class="inp" id="l_br" value="001" /></div>
-              <div class="field full"><label>Narrative</label><input class="inp" id="l_nar" value="Disbursement" /></div>
-              <div class="field full"><button type="submit" class="btn btn-p">Disburse</button></div>
             </form>
             <div class="msg" id="loanMsg"></div>
             <div class="table-wrap" style="margin:12px 0">
               <table class="data"><thead><tr><th>ID</th><th>Contract</th><th>Customer</th><th>Principal</th><th>Status</th></tr></thead>
               <tbody id="loanTb"></tbody></table>
             </div>
-            <form id="frmRepay" class="form-grid">
-              <div class="form-sec">Repayment</div>
-              <div class="field"><label>Contract ID *</label><input class="inp" id="r_id" required /></div>
-              <div class="field"><label>Amount *</label><input class="inp" id="r_amt" type="number" step="0.01" required /></div>
-              <div class="field full"><button type="submit" class="btn">Post repayment</button></div>
+            <form id="frmRepay">
+              <div class="form-grid">
+                <div class="form-sec">Repayment</div>
+                <div class="field"><label>Contract ID *</label><input class="inp" id="r_id" required /></div>
+                <div class="field"><label>Amount *</label><input class="inp" id="r_amt" type="number" step="0.01" required /></div>
+                <div class="field"><label>Narrative</label><input class="inp" id="r_nar" value="Repayment" /></div>
+                <div class="field full"><button type="submit" class="btn">Post repayment</button></div>
+              </div>
             </form>
             <div class="msg" id="repayMsg"></div>
           </div>
@@ -413,24 +457,34 @@
 
       <div class="panel-view" id="view-collateral">
         <div class="panel">
-          <div class="panel-h">Collateral / security</div>
+          <div class="panel-h">Collateral / security registration</div>
           <div class="panel-b">
-            <form id="frmCol" class="form-grid">
-              <div class="field"><label>Customer ID *</label><input class="inp" id="col_cust" required /></div>
-              <div class="field"><label>Type</label>
-                <select class="inp" id="col_type">
-                  <option value="property">Property</option>
-                  <option value="vehicle">Vehicle</option>
-                  <option value="gold">Gold</option>
-                  <option value="cash">Cash margin</option>
-                  <option value="guarantee">Guarantee</option>
-                  <option value="other">Other</option>
-                </select>
+            <form id="frmCol">
+              <div class="form-grid">
+                <div class="form-sec">1 · Linkage</div>
+                <div class="field"><label>Customer ID *</label><input class="inp" id="col_cust" required /></div>
+                <div class="field"><label>Facility / contract ref</label><input class="inp" id="col_fac" /></div>
+                <div class="field"><label>Type *</label>
+                  <select class="inp" id="col_type">
+                    <option value="property">Property</option>
+                    <option value="vehicle">Vehicle</option>
+                    <option value="gold">Gold</option>
+                    <option value="cash">Cash margin</option>
+                    <option value="guarantee">Guarantee</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="form-sec">2 · Valuation</div>
+                <div class="field"><label>Market value *</label><input class="inp" id="col_val" type="number" step="0.01" required /></div>
+                <div class="field"><label>Forced sale value</label><input class="inp" id="col_fsv" type="number" step="0.01" /></div>
+                <div class="field"><label>Valuation date</label><input class="inp" type="date" id="col_vdate" /></div>
+                <div class="field"><label>Valuer / source</label><input class="inp" id="col_valuer" /></div>
+                <div class="field full"><label>Description / title details *</label><input class="inp" id="col_desc" required /></div>
+                <div class="field"><label>Ownership proof on file</label>
+                  <select class="inp" id="col_proof"><option value="1">Yes</option><option value="0">No</option></select>
+                </div>
+                <div class="field full"><button type="submit" class="btn btn-p">Register collateral</button></div>
               </div>
-              <div class="field"><label>Market value</label><input class="inp" id="col_val" type="number" step="0.01" /></div>
-              <div class="field"><label>Forced sale value</label><input class="inp" id="col_fsv" type="number" step="0.01" /></div>
-              <div class="field full"><label>Description</label><input class="inp" id="col_desc" /></div>
-              <div class="field full"><button type="submit" class="btn btn-p">Register collateral</button></div>
             </form>
             <div class="msg" id="colMsg"></div>
             <div class="table-wrap" style="margin-top:12px">
@@ -443,14 +497,25 @@
 
       <div class="panel-view" id="view-instruments">
         <div class="panel">
-          <div class="panel-h">Cheque book issue</div>
+          <div class="panel-h">Cheque book request / issue</div>
           <div class="panel-b">
-            <form id="frmInst" class="form-grid">
-              <div class="field"><label>Account no</label><input class="inp" id="inst_acct" /></div>
-              <div class="field"><label>Member / customer ref</label><input class="inp" id="inst_mem" /></div>
-              <div class="field"><label>Branch code</label><input class="inp" id="inst_br" value="001" /></div>
-              <div class="field"><label>Leaves</label><input class="inp" id="inst_leaves" type="number" value="25" /></div>
-              <div class="field full"><button type="submit" class="btn btn-p">Issue book</button></div>
+            <form id="frmInst">
+              <div class="form-grid">
+                <div class="form-sec">1 · Account</div>
+                <div class="field"><label>Account no *</label><input class="inp" id="inst_acct" required /></div>
+                <div class="field"><label>Member / customer ref</label><input class="inp" id="inst_mem" /></div>
+                <div class="field"><label>Branch code</label><input class="inp" id="inst_br" value="001" /></div>
+                <div class="field"><label>Leaves</label><input class="inp" id="inst_leaves" type="number" value="25" /></div>
+                <div class="form-sec">2 · Controls</div>
+                <div class="field"><label>Delivery mode</label>
+                  <select class="inp" id="inst_del"><option value="branch">Branch collect</option><option value="courier">Courier</option></select>
+                </div>
+                <div class="field"><label>KYC / account active confirmed</label>
+                  <select class="inp" id="inst_kyc"><option value="1">Yes</option><option value="0">No</option></select>
+                </div>
+                <div class="field full"><label>Remarks</label><input class="inp" id="inst_rmk" /></div>
+                <div class="field full"><button type="submit" class="btn btn-p">Issue / request book</button></div>
+              </div>
             </form>
             <div class="msg" id="instMsg"></div>
             <div class="table-wrap" style="margin-top:12px">
@@ -543,14 +608,24 @@
 
       <div class="panel-view" id="view-members">
         <div class="panel">
-          <div class="panel-h">Cooperative members</div>
+          <div class="panel-h">Cooperative member registration</div>
           <div class="panel-b">
-            <form id="frmMem" class="form-grid">
-              <div class="field"><label>Full name *</label><input class="inp" id="m_name" required /></div>
-              <div class="field"><label>CNIC</label><input class="inp" id="m_cnic" /></div>
-              <div class="field"><label>Phone</label><input class="inp" id="m_phone" /></div>
-              <div class="field"><label>Branch</label><input class="inp" id="m_br" value="001" /></div>
-              <div class="field full"><button type="submit" class="btn btn-p">Register member</button></div>
+            <form id="frmMem">
+              <div class="form-grid">
+                <div class="form-sec">1 · Identity</div>
+                <div class="field full"><label>Full name *</label><input class="inp" id="m_name" required /></div>
+                <div class="field"><label>CNIC *</label><input class="inp" id="m_cnic" required /></div>
+                <div class="field"><label>Father / husband</label><input class="inp" id="m_father" /></div>
+                <div class="field"><label>Mobile *</label><input class="inp" id="m_phone" required /></div>
+                <div class="field"><label>Branch</label><input class="inp" id="m_br" value="001" /></div>
+                <div class="form-sec">2 · Membership</div>
+                <div class="field"><label>Member type</label>
+                  <select class="inp" id="m_type"><option value="regular">Regular</option><option value="associate">Associate</option></select>
+                </div>
+                <div class="field"><label>Share application (units)</label><input class="inp" id="m_shares" type="number" value="1" /></div>
+                <div class="field full"><label>Address</label><input class="inp" id="m_addr" /></div>
+                <div class="field full"><button type="submit" class="btn btn-p">Register member</button></div>
+              </div>
             </form>
             <div class="msg" id="memMsg"></div>
             <div class="table-wrap" style="margin-top:12px">
@@ -566,16 +641,16 @@
           <div class="panel-h">SBP control map (in-app)</div>
           <div class="panel-b">
             <ul class="hint" style="line-height:1.85;padding-left:18px">
-              <li><strong>CDD</strong> — name, father, DOB, CNIC, address, mobile, occupation, SOF, PEP, risk (CIF form)</li>
-              <li><strong>Identity</strong> — NADRA / biometric with reference retained</li>
-              <li><strong>KYC</strong> — case status before full banking relationship</li>
-              <li><strong>Accounts</strong> — product-based CASA; pending status if KYC open</li>
-              <li><strong>Credit</strong> — product, principal, rate/Islamic mode, collateral optional</li>
-              <li><strong>Instruments</strong> — cheque books; clearing queue</li>
-              <li><strong>Ledger</strong> — double-entry; trial balance; EOD accruals</li>
-              <li><strong>Maker-checker</strong> — approval queue for sensitive posts</li>
-              <li><strong>Access</strong> — users, roles, permissions, optional admin MFA</li>
-              <li><strong>MIS</strong> — AI reports + fixed TB / portfolio</li>
+              <li><strong>CIF / CDD</strong> — full identity, address, SOF, PEP, risk, sole-prop pack, CNIC photos, docs</li>
+              <li><strong>Account opening</strong> — purpose, SOF, turnover, nominee, channels, KYC-linked status</li>
+              <li><strong>Cash</strong> — purpose, SOF, third-party CNIC, EDD note for large cash</li>
+              <li><strong>Transfer</strong> — purpose mandatory, reference</li>
+              <li><strong>TD</strong> — product, tenor, rate, SOF, purpose, maturity instruction</li>
+              <li><strong>Credit</strong> — purpose of financing, repayment source, security, risk, Islamic mode</li>
+              <li><strong>Collateral</strong> — type, MV/FSV, valuer, ownership proof</li>
+              <li><strong>Cheque books</strong> — account, leaves, delivery, KYC confirm</li>
+              <li><strong>Members</strong> — CNIC, type, shares</li>
+              <li><strong>Controls</strong> — EOD, maker-checker, RBAC, AI/MIS</li>
             </ul>
             <p class="hint">Official SBP returns, live NADRA, and device certification are institution-side production steps.</p>
           </div>

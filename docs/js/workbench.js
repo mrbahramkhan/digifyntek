@@ -398,11 +398,20 @@
     e.preventDefault();
     var id = $('x_id').value.trim();
     var type = $('x_type').value;
+    var nar = ($('x_nar') && $('x_nar').value.trim()) || '';
+    if (!nar) return msg('cashMsg', 'Purpose / narrative required', false);
+    var parts = [nar];
+    if ($('x_sof') && $('x_sof').value.trim()) parts.push('SOF:' + $('x_sof').value.trim());
+    if ($('x_party') && $('x_party').value.trim()) parts.push('Party:' + $('x_party').value.trim());
+    if ($('x_cnic') && $('x_cnic').value.trim()) parts.push('CNIC:' + $('x_cnic').value.trim());
+    if ($('x_edd') && $('x_edd').value.trim()) parts.push('EDD:' + $('x_edd').value.trim());
     try {
-      await api('/api/v1/accounts/' + id + '/' + type, {
-        method: 'POST',
-        body: JSON.stringify({ amount: Number($('x_amt').value), narrative: $('x_nar').value })
-      });
+      var body = {
+        amount: Number($('x_amt').value),
+        narrative: parts.join(' | '),
+        business_date: ($('x_date') && $('x_date').value) || undefined
+      };
+      await api('/api/v1/accounts/' + id + '/' + type, { method: 'POST', body: JSON.stringify(body) });
       msg('cashMsg', 'Posted ' + type, true);
     } catch (err) { msg('cashMsg', err.message || err, false); }
   });
@@ -410,11 +419,15 @@
   /* ——— Transfer ——— */
   $('frmXfer') && ($('frmXfer').onsubmit = async function (e) {
     e.preventDefault();
+    var nar = ($('xf_nar') && $('xf_nar').value.trim()) || '';
+    if (!nar) return msg('xferMsg', 'Purpose required', false);
+    if ($('xf_ref') && $('xf_ref').value.trim()) nar += ' | REF:' + $('xf_ref').value.trim();
     var body = {
       from_account_id: Number($('xf_from').value),
       to_account_id: Number($('xf_to').value),
       amount: Number($('xf_amt').value),
-      narrative: $('xf_nar').value
+      narrative: nar,
+      business_date: ($('xf_date') && $('xf_date').value) || undefined
     };
     try {
       await api('/api/v1/ledger/transfer', { method: 'POST', body: JSON.stringify(body) });
@@ -436,9 +449,12 @@
       tenor_days: Number($('t_days').value),
       rate_pct: Number($('t_rate').value),
       product_code: $('t_prod').value,
-      branch_code: $('t_br').value || '001'
+      branch_code: ($('t_br') && $('t_br').value) || '001',
+      maturity_instruction: ($('t_mat') && $('t_mat').value) || undefined,
+      source_of_funds: ($('t_sof') && $('t_sof').value.trim()) || undefined,
+      purpose: ($('t_purpose') && $('t_purpose').value.trim()) || undefined
     };
-    if ($('t_fund').value.trim()) body.funding_account_id = Number($('t_fund').value);
+    if ($('t_fund') && $('t_fund').value.trim()) body.funding_account_id = Number($('t_fund').value);
     try {
       var r = await api('/api/v1/term-deposits', { method: 'POST', body: JSON.stringify(body) });
       msg('tdMsg', 'TD placed ' + (r.td_no || r.id || ''), true);
@@ -460,17 +476,24 @@
   }
   $('frmLoan') && ($('frmLoan').onsubmit = async function (e) {
     e.preventDefault();
+    var purpose = ($('l_purpose') && $('l_purpose').value.trim()) || '';
+    if (!purpose) return msg('loanMsg', 'Purpose of financing required (SBP)', false);
     var body = {
       customer_id: Number($('l_cust').value),
       product_code: $('l_prod').value,
       principal: Number($('l_amt').value),
       rate_pct: Number($('l_rate').value),
+      tenor_months: ($('l_tenor') && $('l_tenor').value) ? Number($('l_tenor').value) : undefined,
       branch_code: $('l_br').value,
       is_islamic: $('l_isl').value === '1',
       islamic_mode: $('l_mode').value || null,
-      narrative: $('l_nar').value
+      purpose: purpose,
+      source_of_repayment: ($('l_repay_src') && $('l_repay_src').value.trim()) || undefined,
+      security_ref: ($('l_sec') && $('l_sec').value.trim()) || undefined,
+      risk_rating: ($('l_risk') && $('l_risk').value) || undefined,
+      narrative: (($('l_nar') && $('l_nar').value) || 'Disbursement') + ' | Purpose:' + purpose
     };
-    if ($('l_acct').value.trim()) body.credit_account_id = Number($('l_acct').value);
+    if ($('l_acct') && $('l_acct').value.trim()) body.credit_account_id = Number($('l_acct').value);
     try {
       var r = await api('/api/v1/financing/disburse', { method: 'POST', body: JSON.stringify(body) });
       msg('loanMsg', 'Disbursed ' + (r.contract_no || r.id || ''), true);
@@ -481,7 +504,7 @@
     e.preventDefault();
     try {
       await api('/api/v1/financing/' + $('r_id').value.trim() + '/repay', {
-        method: 'POST', body: JSON.stringify({ amount: Number($('r_amt').value) })
+        method: 'POST', body: JSON.stringify({ amount: Number($('r_amt').value), narrative: ($('r_nar') && $('r_nar').value) || 'Repayment' })
       });
       msg('repayMsg', 'Repayment posted', true);
     } catch (err) { msg('repayMsg', err.message || err, false); }
@@ -509,7 +532,11 @@
       collateral_type: $('col_type').value,
       description: $('col_desc').value,
       value: Number($('col_val').value),
-      forced_sale_value: Number($('col_fsv').value || $('col_val').value)
+      forced_sale_value: Number(($('col_fsv') && $('col_fsv').value) || $('col_val').value),
+      facility_ref: ($('col_fac') && $('col_fac').value.trim()) || undefined,
+      valuation_date: ($('col_vdate') && $('col_vdate').value) || undefined,
+      valuer: ($('col_valuer') && $('col_valuer').value.trim()) || undefined,
+      ownership_proof: ($('col_proof') && $('col_proof').value === '1')
     };
     try {
       await api('/api/v1/collateral', { method: 'POST', body: JSON.stringify(body) }).catch(function () {
@@ -537,11 +564,16 @@
   }
   $('frmInst') && ($('frmInst').onsubmit = async function (e) {
     e.preventDefault();
+    if ($('inst_kyc') && $('inst_kyc').value === '0') {
+      return msg('instMsg', 'Confirm KYC / active account before issue', false);
+    }
     var body = {
       account_no: $('inst_acct').value.trim(),
-      member_ref: $('inst_mem').value.trim(),
+      member_ref: ($('inst_mem') && $('inst_mem').value.trim()) || undefined,
       branch_code: $('inst_br').value,
-      leaves: Number($('inst_leaves').value) || 25
+      leaves: Number($('inst_leaves').value) || 25,
+      delivery_mode: ($('inst_del') && $('inst_del').value) || 'branch',
+      remarks: ($('inst_rmk') && $('inst_rmk').value.trim()) || undefined
     };
     try {
       await api('/api/instruments', { method: 'POST', body: JSON.stringify(body) });
@@ -599,24 +631,19 @@
   }
   $('frmMem') && ($('frmMem').onsubmit = async function (e) {
     e.preventDefault();
+    var body = {
+      full_name: $('m_name').value.trim(),
+      cnic: $('m_cnic').value.trim(),
+      phone: $('m_phone').value.trim(),
+      branch_code: ($('m_br') && $('m_br').value) || '001',
+      father_or_husband: ($('m_father') && $('m_father').value.trim()) || undefined,
+      member_type: ($('m_type') && $('m_type').value) || 'regular',
+      share_units: ($('m_shares') && $('m_shares').value) ? Number($('m_shares').value) : 1,
+      address: ($('m_addr') && $('m_addr').value.trim()) || undefined
+    };
     try {
-      await api('/api/v1/members', {
-        method: 'POST',
-        body: JSON.stringify({
-          full_name: $('m_name').value.trim(),
-          cnic: $('m_cnic').value.trim(),
-          phone: $('m_phone').value.trim(),
-          branch_code: $('m_br').value
-        })
-      }).catch(function () {
-        return api('/api/members', {
-          method: 'POST',
-          body: JSON.stringify({
-            full_name: $('m_name').value.trim(),
-            cnic: $('m_cnic').value.trim(),
-            phone: $('m_phone').value.trim()
-          })
-        });
+      await api('/api/v1/members', { method: 'POST', body: JSON.stringify(body) }).catch(function () {
+        return api('/api/members', { method: 'POST', body: JSON.stringify(body) });
       });
       msg('memMsg', 'Member saved', true);
       loadMembers();
