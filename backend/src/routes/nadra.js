@@ -12,7 +12,7 @@ router.get('/config', auth(), (_req, res) => {
  * POST /api/v1/nadra/verify
  * Body: { cnic, full_name?, date_of_birth?, father_name?, customer_id?, kyc_case_id? }
  */
-router.post('/verify', auth(), requirePermission('kyc.write', 'cif.write', 'kyc.decide'), async (req, res, next) => {
+router.post('/verify', auth(), requirePermission('kyc.write', 'cif.write', 'kyc.decide', 'nadra.verify'), async (req, res, next) => {
   try {
     const b = req.body || {};
     if (!b.cnic) return res.status(400).json({ error: 'cnic required' });
@@ -130,6 +130,74 @@ router.get('/history', auth(), async (req, res, next) => {
        ORDER BY id DESC LIMIT 200`
     ).catch(() => [[]]);
     res.json({ count: rows.length, rows });
+  } catch (e) {
+    next(e);
+  }
+});
+
+
+
+/** Bio-Verisys explicit */
+router.post('/bio-verify', auth(), requirePermission('kyc.write', 'cif.write', 'kyc.decide', 'nadra.verify'), async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    if (!b.cnic) return res.status(400).json({ error: 'cnic required' });
+    b.biometric_ok = b.biometric_ok != null ? b.biometric_ok : true;
+    const result = await nadra.verifyBioVerisys({
+      cnic: b.cnic,
+      fullName: b.full_name,
+      dateOfBirth: b.dob || b.date_of_birth,
+      fatherName: b.father_name,
+      biometricOk: b.biometric_ok,
+      biometricTemplate: b.biometric_template,
+      biometricType: b.biometric_type,
+      fingerIndex: b.finger_index,
+      branchCode: b.branch_code,
+    });
+    res.json(result);
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** Verisys demographic only (if policy allows) */
+router.post('/verisys', auth(), requirePermission('kyc.write', 'cif.write', 'kyc.decide', 'nadra.verify'), async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    if (!b.cnic) return res.status(400).json({ error: 'cnic required' });
+    if (process.env.NADRA_ALLOW_VERISYS !== '1' && nadra.mode() === 'live') {
+      return res.status(403).json({ error: 'Verisys disabled — set NADRA_ALLOW_VERISYS=1 or use bio-verify' });
+    }
+    const result = await nadra.verifyVerisys({
+      cnic: b.cnic,
+      fullName: b.full_name,
+      dateOfBirth: b.dob || b.date_of_birth,
+      fatherName: b.father_name,
+      branchCode: b.branch_code,
+    });
+    res.json(result);
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.get('/history', auth(), requirePermission('kyc.write', 'cif.read', 'kyc.decide', 'nadra.verify', 'admin.rbac'), async (req, res, next) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 50, 200);
+    const [rows] = await pool.query(
+      `SELECT id, customer_id, kyc_case_id, cnic, mode, status, verified, match_score, reference_no, requested_by, created_at
+       FROM cbs_nadra_verifications
+       WHERE (? IS NULL OR cnic = ?) AND (? IS NULL OR customer_id = ?)
+       ORDER BY id DESC LIMIT ?`,
+      [
+        req.query.cnic || null,
+        req.query.cnic ? String(req.query.cnic).replace(/\D/g, '') : null,
+        req.query.customer_id || null,
+        req.query.customer_id || null,
+        limit,
+      ]
+    ).catch(() => [[]]);
+    res.json(rows || []);
   } catch (e) {
     next(e);
   }
