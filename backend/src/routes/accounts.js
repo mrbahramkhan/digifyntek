@@ -59,6 +59,7 @@ router.post('/', auth(), async (req, res, next) => {
     const b = req.body || {};
     if (!b.customer_id) return res.status(400).json({ error: 'customer_id required' });
     if (!b.product_code) return res.status(400).json({ error: 'product_code required' });
+    if (!b.purpose_of_account || !String(b.purpose_of_account).trim()) return res.status(400).json({ error: 'purpose_of_account required (SBP onboarding)' });
     const accountNo = b.account_no || ref('ACC').slice(0, 20);
     // KYC gate: pending KYC customers open as pending unless override
     let status = b.status || 'active';
@@ -162,6 +163,8 @@ router.get('/:id/statement', auth(), async (req, res, next) => {
 router.post('/:id/deposit', auth(), async (req, res, next) => {
   try {
     const b = req.body || {};
+    if (!b.narrative || !String(b.narrative).trim()) return res.status(400).json({ error: 'narrative/purpose required (SBP)' });
+    if (b.amount == null || Number(b.amount) <= 0) return res.status(400).json({ error: 'amount required' });
     const result = await ledger.cashDeposit({
       accountId: Number(req.params.id),
       amount: b.amount,
@@ -178,6 +181,8 @@ router.post('/:id/deposit', auth(), async (req, res, next) => {
 router.post('/:id/withdraw', auth(), async (req, res, next) => {
   try {
     const b = req.body || {};
+    if (!b.narrative || !String(b.narrative).trim()) return res.status(400).json({ error: 'narrative/purpose required (SBP)' });
+    if (b.amount == null || Number(b.amount) <= 0) return res.status(400).json({ error: 'amount required' });
     const result = await ledger.cashWithdrawal({
       accountId: Number(req.params.id),
       amount: b.amount,

@@ -221,10 +221,36 @@
 
       <div class="panel-view" id="view-kyc">
         <div class="panel">
-          <div class="panel-h">KYC / AML cases</div>
+          <div class="panel-h">KYC / AML cases (SBP CDD workflow)</div>
           <div class="panel-b">
-            <p class="hint">Link cases to CIF · high-risk / PEP → enhanced review before activation.</p>
-            <button type="button" class="btn" id="btnKycLoad">Refresh</button>
+            <p class="hint">Onboarding case: identity (NADRA/BV) · screening · risk · decision. High-risk / PEP → EDD before activation.</p>
+            <div class="form-grid" style="margin-bottom:12px">
+              <div class="field"><label>Customer ID</label><input class="inp" id="kyc_cust" /></div>
+              <div class="field"><label>Case type</label>
+                <select class="inp" id="kyc_type"><option value="onboarding">Onboarding</option><option value="periodic_review">Periodic review</option><option value="edd">EDD</option></select>
+              </div>
+              <div class="field"><label>Risk rating</label>
+                <select class="inp" id="kyc_risk"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
+              </div>
+              <div class="field"><label>Source of funds</label><input class="inp" id="kyc_sof" /></div>
+              <div class="field"><label>Purpose of account</label><input class="inp" id="kyc_purpose" /></div>
+              <div class="field full">
+                <button type="button" class="btn btn-p" id="btnKycOpen">Open KYC case</button>
+                <button type="button" class="btn" id="btnKycLoad">Refresh list</button>
+              </div>
+            </div>
+            <div class="form-grid" style="margin-bottom:12px">
+              <div class="form-sec">Decision (compliance)</div>
+              <div class="field"><label>Case ID</label><input class="inp" id="kyc_case_id" /></div>
+              <div class="field"><label>Decision</label>
+                <select class="inp" id="kyc_decision"><option value="approve">Approve</option><option value="reject">Reject</option><option value="refer">Refer / EDD</option></select>
+              </div>
+              <div class="field"><label>KYC outcome</label>
+                <select class="inp" id="kyc_outcome"><option value="verified">Verified</option><option value="rejected">Rejected</option><option value="manual_review">Manual review</option></select>
+              </div>
+              <div class="field full"><label>Note</label><input class="inp" id="kyc_note" /></div>
+              <div class="field full"><button type="button" class="btn" id="btnKycDecide">Submit decision</button></div>
+            </div>
             <div class="table-wrap" style="margin-top:10px">
               <table class="data"><thead><tr><th>ID</th><th>Customer</th><th>Status</th><th>Risk</th></tr></thead>
               <tbody id="kycTb"></tbody></table>

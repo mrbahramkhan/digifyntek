@@ -111,6 +111,12 @@ router.post('/', auth(), async (req, res, next) => {
   try {
     const b = req.body || {};
     if (!b.full_name) return res.status(400).json({ error: 'full_name required' });
+    // SBP CDD minimums (soft enforcement for individual onboarding)
+    if ((b.customer_type || 'individual') === 'individual' || b.customer_type === 'sole_proprietorship') {
+      const cnic = String(b.cnic || '').replace(/\D/g, '');
+      if (cnic && cnic.length !== 13) return res.status(400).json({ error: 'CNIC must be 13 digits' });
+      if (!b.phone && !b.mobile) return res.status(400).json({ error: 'mobile/phone required for CDD' });
+    }
     const customerNo = b.customer_no || ref('CIF').slice(0, 20);
     await ensureCddColumns();
     const [ins] = await pool.query(

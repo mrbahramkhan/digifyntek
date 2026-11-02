@@ -71,6 +71,14 @@ router.post('/', auth(), requirePermission('td.write'), async (req, res, next) =
         if (b.rate_pct == null && prod.interest_rate != null) b.rate_pct = prod.interest_rate;
       }
     } catch (_) {}
+    if (!b.customer_id) return res.status(400).json({ error: 'customer_id required' });
+    if (b.principal == null || Number(b.principal) <= 0) return res.status(400).json({ error: 'principal required' });
+    if (b.tenor_days == null || Number(b.tenor_days) <= 0) return res.status(400).json({ error: 'tenor_days required' });
+    const tdNar = [b.narrative || 'TD placement'];
+    if (b.purpose) tdNar.push('Purpose:' + b.purpose);
+    if (b.source_of_funds) tdNar.push('SOF:' + b.source_of_funds);
+    if (b.maturity_instruction) tdNar.push('Maturity:' + b.maturity_instruction);
+    b.narrative = tdNar.join(' | ').slice(0, 500);
     const result = await ledger.placeTermDeposit({
       customerId: b.customer_id,
       fundingAccountId: b.funding_account_id || null,
@@ -80,7 +88,7 @@ router.post('/', auth(), requirePermission('td.write'), async (req, res, next) =
       valueDate: b.value_date,
       branchCode: b.branch_code,
       productCode: b.product_code,
-      rolloverInstruction: b.rollover_instruction,
+      rolloverInstruction: b.rollover_instruction || b.maturity_instruction,
       isIslamic,
       islamicMode,
       withholdingTaxPct: b.withholding_tax_pct,

@@ -71,6 +71,14 @@ router.get('/:id', auth(), async (req, res, next) => {
 router.post('/disburse', auth(), requirePermission('loan.disburse'), async (req, res, next) => {
   try {
     const b = req.body || {};
+    if (!b.customer_id) return res.status(400).json({ error: 'customer_id required' });
+    if (b.principal == null || Number(b.principal) <= 0) return res.status(400).json({ error: 'principal required' });
+    if (!b.purpose && !(b.narrative || '').toLowerCase().includes('purpose')) {
+      return res.status(400).json({ error: 'purpose of financing required (SBP credit CDD)' });
+    }
+    if (b.purpose) {
+      b.narrative = ((b.narrative || 'Disbursement') + ' | Purpose:' + b.purpose).slice(0, 500);
+    }
     // Resolve islamic flag from body or product master
     let isIslamic = !!b.is_islamic;
     let islamicMode = b.islamic_mode || null;
