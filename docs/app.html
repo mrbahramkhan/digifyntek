@@ -236,27 +236,83 @@
 
       <div class="panel-view" id="view-account">
         <div class="panel">
-          <div class="panel-h">CASA account opening</div>
+          <div class="panel-h">Account opening form (SBP onboarding)</div>
           <div class="panel-b">
-            <form id="frmAcct" class="form-grid">
-              <div class="field"><label>Customer ID (CIF) *</label><input class="inp" id="a_cust" required /></div>
-              <div class="field"><label>Product *</label>
-                <select class="inp" id="a_prod">
-                  <option value="SAV-STD">SAV-STD Savings</option>
-                  <option value="CUR-STD">CUR-STD Current</option>
-                  <option value="SAV-ISL">SAV-ISL Islamic savings</option>
-                  <option value="CUR-ISL">CUR-ISL Islamic current</option>
-                </select>
+            <form id="frmAcct">
+              <div class="form-grid">
+                <div class="form-sec">1 · Customer &amp; product</div>
+                <div class="field"><label>Customer ID (CIF) *</label><input class="inp" id="a_cust" required placeholder="CIF id" /></div>
+                <div class="field"><label>Account title</label><input class="inp" id="a_title" placeholder="Defaults to customer name" /></div>
+                <div class="field"><label>Product *</label>
+                  <select class="inp" id="a_prod">
+                    <option value="SAV-STD">SAV-STD Savings</option>
+                    <option value="CUR-STD">CUR-STD Current</option>
+                    <option value="SAV-ISL">SAV-ISL Islamic savings</option>
+                    <option value="CUR-ISL">CUR-ISL Islamic current</option>
+                  </select>
+                </div>
+                <div class="field"><label>Branch code</label><input class="inp" id="a_br" value="001" /></div>
+                <div class="field"><label>Status</label>
+                  <select class="inp" id="a_status">
+                    <option value="pending">Pending (KYC / activation)</option>
+                    <option value="active">Active</option>
+                    <option value="restricted">Restricted</option>
+                  </select>
+                </div>
+                <div class="field"><label>Open date</label><input class="inp" type="date" id="a_odate" /></div>
+
+                <div class="form-sec">2 · Purpose, funds &amp; activity</div>
+                <div class="field full"><label>Purpose of account *</label>
+                  <input class="inp" id="a_purpose" required placeholder="Salary / savings / business receipts / remittance" /></div>
+                <div class="field"><label>Source of funds</label><input class="inp" id="a_sof" placeholder="Salary / business / agri" /></div>
+                <div class="field"><label>Expected monthly turnover (PKR)</label><input class="inp" id="a_turnover" type="number" step="0.01" /></div>
+                <div class="field"><label>Initial deposit (PKR)</label><input class="inp" id="a_init" type="number" step="0.01" value="0" /></div>
+                <div class="field"><label>Risk rating (optional)</label>
+                  <select class="inp" id="a_risk"><option value="">From CIF</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
+                </div>
+
+                <div class="form-sec">3 · Operating instructions</div>
+                <div class="field"><label>Mode of operation</label>
+                  <select class="inp" id="a_mode">
+                    <option value="self">Self</option>
+                    <option value="either_or_survivor">Either or survivor</option>
+                    <option value="jointly">Jointly</option>
+                    <option value="mandate">Mandate / authorized</option>
+                  </select>
+                </div>
+                <div class="field"><label>Statement frequency</label>
+                  <select class="inp" id="a_stmt"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="half_yearly">Half-yearly</option><option value="on_request">On request</option></select>
+                </div>
+                <div class="field"><label>Cheque book</label>
+                  <select class="inp" id="a_chq"><option value="0">No</option><option value="1">Yes</option></select>
+                </div>
+                <div class="field"><label>Debit card</label>
+                  <select class="inp" id="a_card"><option value="0">No</option><option value="1">Yes</option></select>
+                </div>
+                <div class="field"><label>Internet banking</label>
+                  <select class="inp" id="a_ib"><option value="0">No</option><option value="1">Yes</option></select>
+                </div>
+                <div class="field"><label>SMS alerts</label>
+                  <select class="inp" id="a_sms"><option value="1">Yes</option><option value="0">No</option></select>
+                </div>
+
+                <div class="form-sec">4 · Nominee (optional)</div>
+                <div class="field"><label>Nominee name</label><input class="inp" id="a_nom_name" /></div>
+                <div class="field"><label>Relation</label><input class="inp" id="a_nom_rel" /></div>
+                <div class="field"><label>Nominee CNIC</label><input class="inp" id="a_nom_cnic" /></div>
+
+                <div class="form-sec">5 · Declarations</div>
+                <div class="field"><label>KYC cleared for activation</label>
+                  <select class="inp" id="a_kyc"><option value="0">No — keep pending if needed</option><option value="1">Yes</option></select>
+                </div>
+                <div class="field full"><label>Notes</label><textarea class="inp" id="a_notes" rows="2"></textarea></div>
+                <div class="field full hint">SBP-aligned: purpose of account, SOF, product, and CIF linkage required. Pending KYC customers default to <strong>pending</strong> status unless forced active by policy.</div>
+                <div class="field full"><button type="submit" class="btn btn-p">Open account</button></div>
               </div>
-              <div class="field"><label>Branch</label><input class="inp" id="a_br" value="001" /></div>
-              <div class="field"><label>Initial status</label>
-                <select class="inp" id="a_status"><option value="active">Active</option><option value="pending">Pending KYC</option></select>
-              </div>
-              <div class="field full"><button type="submit" class="btn btn-p">Open account</button></div>
             </form>
             <div class="msg" id="acctMsg"></div>
             <div class="table-wrap" style="margin-top:12px">
-              <table class="data"><thead><tr><th>ID</th><th>Account</th><th>Customer</th><th>Product</th><th>Balance</th><th>Status</th></tr></thead>
+              <table class="data"><thead><tr><th>ID</th><th>Account</th><th>Title</th><th>Customer</th><th>Product</th><th>Balance</th><th>Status</th></tr></thead>
               <tbody id="acctTb"></tbody></table>
             </div>
           </div>

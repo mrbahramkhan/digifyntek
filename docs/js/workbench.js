@@ -346,26 +346,49 @@
       var rows = Array.isArray(a) ? a : [];
       $('acctTb').innerHTML = rows.map(function (r) {
         return '<tr><td>' + r.id + '</td><td>' + (r.account_no || '') + '</td><td>' +
-          (r.customer_id || '') + '</td><td>' + (r.product_code || '') + '</td><td>' +
+          (r.account_title || '') + '</td><td>' + (r.customer_id || '') + '</td><td>' +
+          (r.product_code || '') + '</td><td>' +
           (r.ledger_balance != null ? r.ledger_balance : 0) + '</td><td>' + (r.status || '') + '</td></tr>';
-      }).join('') || '<tr><td colspan="6">None</td></tr>';
+      }).join('') || '<tr><td colspan="7">None</td></tr>';
     } catch (e) {
       $('acctTb').innerHTML = '<tr><td colspan="6">' + (e.message || '') + '</td></tr>';
     }
   }
   $('frmAcct') && ($('frmAcct').onsubmit = async function (e) {
     e.preventDefault();
+    function ag(id) { var el = $(id); return el ? el.value.trim() : ''; }
     try {
-      var row = await api('/api/v1/accounts', {
-        method: 'POST',
-        body: JSON.stringify({
-          customer_id: Number($('a_cust').value),
-          product_code: $('a_prod').value,
-          branch_code: $('a_br').value,
-          status: $('a_status').value || 'active'
-        })
-      });
-      msg('acctMsg', 'Opened ' + (row.account_no || '') + ' id=' + row.id, true);
+      var body = {
+        customer_id: Number(ag('a_cust')),
+        product_code: ag('a_prod'),
+        branch_code: ag('a_br') || '001',
+        status: ag('a_status') || 'pending',
+        open_date: ag('a_odate') || null,
+        account_title: ag('a_title') || null,
+        purpose_of_account: ag('a_purpose'),
+        source_of_funds: ag('a_sof') || null,
+        expected_monthly_turnover: ag('a_turnover') ? Number(ag('a_turnover')) : null,
+        initial_deposit: ag('a_init') ? Number(ag('a_init')) : 0,
+        risk_rating: ag('a_risk') || null,
+        mode_of_operation: ag('a_mode') || 'self',
+        operating_instructions: ag('a_mode') || 'self',
+        statement_frequency: ag('a_stmt') || 'monthly',
+        cheque_book_required: ag('a_chq') === '1',
+        debit_card_required: ag('a_card') === '1',
+        internet_banking: ag('a_ib') === '1',
+        sms_alerts: ag('a_sms') !== '0',
+        nominee_name: ag('a_nom_name') || null,
+        nominee_relation: ag('a_nom_rel') || null,
+        nominee_cnic: ag('a_nom_cnic') || null,
+        kyc_cleared: ag('a_kyc') === '1',
+        notes: ag('a_notes') || null
+      };
+      if (!body.purpose_of_account) {
+        msg('acctMsg', 'Purpose of account required (SBP)', false);
+        return;
+      }
+      var row = await api('/api/v1/accounts', { method: 'POST', body: JSON.stringify(body) });
+      msg('acctMsg', 'Opened ' + (row.account_no || '') + ' · status ' + (row.status || '') + ' · id=' + row.id, true);
       loadAccounts();
     } catch (err) { msg('acctMsg', err.message || err, false); }
   });
