@@ -82,6 +82,29 @@
                 </div>
               </div>
 
+              
+              <div class="form-sec">1b · CNIC photos (front &amp; back)</div>
+              <div class="form-grid">
+                <div class="field">
+                  <label>CNIC front</label>
+                  <input class="inp" type="file" id="f_cnic_front" accept="image/*" />
+                  <div class="hint" id="frontPrevWrap" style="margin-top:6px">
+                    <img id="frontPrev" alt="" style="max-width:100%;max-height:120px;border-radius:8px;display:none;border:1px solid var(--line,#e2e8f0)" />
+                  </div>
+                </div>
+                <div class="field">
+                  <label>CNIC back</label>
+                  <input class="inp" type="file" id="f_cnic_back" accept="image/*" />
+                  <div class="hint" id="backPrevWrap" style="margin-top:6px">
+                    <img id="backPrev" alt="" style="max-width:100%;max-height:120px;border-radius:8px;display:none;border:1px solid var(--line,#e2e8f0)" />
+                  </div>
+                </div>
+                <div class="field full">
+                  <button type="button" class="btn" id="btnUploadCnic">Upload CNIC photos</button>
+                  <span class="hint" id="photoMsg" style="margin-left:8px"></span>
+                </div>
+              </div>
+
               <div class="form-sec">2 · Contact & address</div>
               <div class="form-grid">
                 <div class="field"><label>Mobile *</label><input class="inp" id="f_phone" /></div>
@@ -251,6 +274,24 @@
     sv('f_status', r ? (r.status || 'active') : 'active');
     sv('f_notes', r ? r.notes : '');
     $('formTitle').textContent = r ? 'Edit · ' + (r.full_name || r.id) : 'New customer · SBP CDD';
+    if ($('frontPrev')) {
+      if (r && r.cnic_front_path) {
+        $('frontPrev').src = r.cnic_front_path;
+        $('frontPrev').style.display = 'block';
+      } else {
+        $('frontPrev').removeAttribute('src');
+        $('frontPrev').style.display = 'none';
+      }
+    }
+    if ($('backPrev')) {
+      if (r && r.cnic_back_path) {
+        $('backPrev').src = r.cnic_back_path;
+        $('backPrev').style.display = 'block';
+      } else {
+        $('backPrev').removeAttribute('src');
+        $('backPrev').style.display = 'none';
+      }
+    }
     render();
   }
 
@@ -437,6 +478,67 @@
     }, 400);
   };
   $('btnBioCancel').onclick = function () { $('bioOverlay').classList.remove('open'); };
+
+
+  function readFileAsDataUrl(file) {
+    return new Promise(function (resolve, reject) {
+      if (!file) return resolve(null);
+      var r = new FileReader();
+      r.onload = function () { resolve(r.result); };
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+  function previewFile(inputId, imgId) {
+    var input = $(inputId);
+    var img = $(imgId);
+    if (!input || !img) return;
+    input.onchange = function () {
+      var f = input.files && input.files[0];
+      if (!f) { img.style.display = 'none'; return; }
+      var r = new FileReader();
+      r.onload = function () { img.src = r.result; img.style.display = 'block'; };
+      r.readAsDataURL(f);
+    };
+  }
+  previewFile('f_cnic_front', 'frontPrev');
+  previewFile('f_cnic_back', 'backPrev');
+
+  $('btnUploadCnic').onclick = async function () {
+    var id = gv('f_id');
+    if (!id) return msg('Pehle customer save karein, phir photos upload karein', false);
+    var frontInput = $('f_cnic_front');
+    var backInput = $('f_cnic_back');
+    var front = frontInput.files && frontInput.files[0];
+    var back = backInput.files && backInput.files[0];
+    if (!front && !back) return msg('Front ya back image select karein', false);
+    try {
+      var body = {};
+      if (front) body.front = await readFileAsDataUrl(front);
+      if (back) body.back = await readFileAsDataUrl(back);
+      var res = await DigiFyntekAPI.request('/api/v1/cif/' + id + '/cnic-photos', {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+      msg('CNIC photos uploaded', true);
+      var pm = $('photoMsg');
+      if (pm) pm.textContent = 'OK';
+      if (res.customer) {
+        if (res.customer.cnic_front_path) {
+          $('frontPrev').src = res.customer.cnic_front_path;
+          $('frontPrev').style.display = 'block';
+        }
+        if (res.customer.cnic_back_path) {
+          $('backPrev').src = res.customer.cnic_back_path;
+          $('backPrev').style.display = 'block';
+        }
+      }
+      await load();
+    } catch (e) {
+      msg(e.message || e, false);
+    }
+  };
+
 
   load();
 })();

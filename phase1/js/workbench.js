@@ -172,6 +172,14 @@
     setVal('c_kyc', r ? (r.kyc_status || 'pending') : 'pending');
     setVal('c_status', r ? (r.status || 'active') : 'active');
     setVal('c_notes', r ? r.notes : '');
+    if ($('c_frontPrev')) {
+      if (r && r.cnic_front_path) { $('c_frontPrev').src = r.cnic_front_path; $('c_frontPrev').style.display = 'block'; }
+      else { $('c_frontPrev').style.display = 'none'; }
+    }
+    if ($('c_backPrev')) {
+      if (r && r.cnic_back_path) { $('c_backPrev').src = r.cnic_back_path; $('c_backPrev').style.display = 'block'; }
+      else { $('c_backPrev').style.display = 'none'; }
+    }
   }
   $('btnCustNew') && ($('btnCustNew').onclick = function () { fillCustomer(null); });
 

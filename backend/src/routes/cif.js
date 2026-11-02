@@ -1,4 +1,7 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 const { auth } = require('../middleware/auth');
 const pool = require('../config/db');
 const { ref, audit } = require('../ledger/service');
@@ -26,6 +29,8 @@ const CDD_ALTERS = [
   "ALTER TABLE cbs_customers ADD COLUMN next_of_kin_phone VARCHAR(30) NULL",
   "ALTER TABLE cbs_customers ADD COLUMN beneficial_owner VARCHAR(160) NULL",
   "ALTER TABLE cbs_customers ADD COLUMN id_type VARCHAR(30) NULL DEFAULT 'CNIC'",
+  "ALTER TABLE cbs_customers ADD COLUMN cnic_front_path VARCHAR(255) NULL",
+  "ALTER TABLE cbs_customers ADD COLUMN cnic_back_path VARCHAR(255) NULL",
 ];
 let cddReady = false;
 async function ensureCddColumns() {
@@ -270,5 +275,79 @@ router.put('/:id', auth(), async (req, res, next) => {
     next(e);
   }
 });
+
+
+
+const UPLOAD_ROOT = path.join(__dirname, '../../uploads/cnic');
+
+function ensureUploadDir() {
+  try {
+    fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
+  } catch (_) {}
+}
+
+/** Accept data URL or raw base64; return relative URL path */
+function saveCnicImage(customerId, side, data) {
+  ensureUploadDir();
+  if (!data || typeof data !== 'string') return null;
+  let ext = 'jpg';
+  let b64 = data;
+  const m = data.match(/^data:image\/(png|jpeg|jpg|webp);base64,(.+)$/i);
+  if (m) {
+    ext = m[1].toLowerCase() === 'jpeg' ? 'jpg' : m[1].toLowerCase();
+    b64 = m[2];
+  }
+  const buf = Buffer.from(b64, 'base64');
+  if (buf.length < 100) throw Object.assign(new Error('Invalid image data'), { status: 400 });
+  if (buf.length > 5 * 1024 * 1024) throw Object.assign(new Error('Image max 5MB'), { status: 400 });
+  const name = `${customerId}_${side}_${crypto.randomBytes(4).toString('hex')}.${ext}`;
+  const full = path.join(UPLOAD_ROOT, name);
+  fs.writeFileSync(full, buf);
+  return `/uploads/cnic/${name}`;
+}
+
+/** Upload CNIC front + back photos */
+router.post('/:id/cnic-photos', auth(), async (req, res, next) => {
+  try {
+    await ensureCddColumns();
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: 'customer id required' });
+    const [[cust]] = await pool.query(`SELECT id FROM cbs_customers WHERE id = ?`, [id]);
+    if (!cust) return res.status(404).json({ error: 'Customer not found' });
+
+    const b = req.body || {};
+    const updates = {};
+    if (b.front || b.cnic_front || b.front_base64) {
+      updates.cnic_front_path = saveCnicImage(id, 'front', b.front || b.cnic_front || b.front_base64);
+    }
+    if (b.back || b.cnic_back || b.back_base64) {
+      updates.cnic_back_path = saveCnicImage(id, 'back', b.back || b.cnic_back || b.back_base64);
+    }
+    if (!updates.cnic_front_path && !updates.cnic_back_path) {
+      return res.status(400).json({ error: 'front and/or back image required (base64 or data URL)' });
+    }
+    if (updates.cnic_front_path) {
+      await pool.query(`UPDATE cbs_customers SET cnic_front_path = ? WHERE id = ?`, [
+        updates.cnic_front_path,
+        id,
+      ]);
+    }
+    if (updates.cnic_back_path) {
+      await pool.query(`UPDATE cbs_customers SET cnic_back_path = ? WHERE id = ?`, [
+        updates.cnic_back_path,
+        id,
+      ]);
+    }
+    const [[row]] = await pool.query(
+      `SELECT id, customer_no, full_name, cnic, cnic_front_path, cnic_back_path FROM cbs_customers WHERE id = ?`,
+      [id]
+    );
+    res.json({ ok: true, customer: row });
+  } catch (e) {
+    if (e.status) return res.status(e.status).json({ error: e.message });
+    next(e);
+  }
+});
+
 
 module.exports = router;

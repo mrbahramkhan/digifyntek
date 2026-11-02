@@ -223,6 +223,7 @@ const uiCandidates = [
   path.join(process.cwd(), 'phase1'),
 ].filter(Boolean);
 const uiRoot = uiCandidates.find((d) => { try { return fs.existsSync(d); } catch { return false; } }) || uiCandidates[1];
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(express.static(uiRoot, { index: 'index.html', extensions: ['html'] }));
 
 app.use(notFound);
