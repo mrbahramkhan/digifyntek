@@ -193,6 +193,21 @@
                 </div>
               </div>
 
+
+              <div class="form-sec">6b · Sole proprietorship declaration</div>
+              <div class="form-grid">
+                <div class="field full">
+                  <label>Declaration text (letterhead equivalent)</label>
+                  <textarea class="inp" id="f_sp_text" rows="6" placeholder="I hereby declare that I am the sole proprietor…"></textarea>
+                </div>
+                <div class="field"><label>Declared by (proprietor)</label><input class="inp" id="f_sp_by" /></div>
+                <div class="field"><label>Declaration date</label><input class="inp" type="date" id="f_sp_date" /></div>
+                <div class="field full">
+                  <button type="button" class="btn" id="btnSpTemplate">Fill standard template</button>
+                  <span class="hint"> Uses full name, CNIC and business name from this form.</span>
+                </div>
+              </div>
+
               <div class="form-sec">7 · Document checklist &amp; upload</div>
               <div class="form-grid">
                 <div class="field full">
@@ -340,6 +355,9 @@
     sv('f_sales_tax', r ? r.sales_tax_no : '');
     sv('f_trade_body', r ? r.trade_body_membership : '');
     sv('f_sp_decl', r && Number(r.sole_prop_declaration) === 1 ? '1' : '0');
+    sv('f_sp_text', r ? (r.sole_prop_declaration_text || '') : '');
+    sv('f_sp_by', r ? (r.sole_prop_declared_by || '') : '');
+    sv('f_sp_date', r && r.sole_prop_declared_at ? String(r.sole_prop_declared_at).slice(0, 10) : '');
     sv('f_sp_req', r && Number(r.account_request_letterhead) === 1 ? '1' : '0');
     loadDocs(r ? r.id : null);
     toggleSoleUI();
@@ -720,6 +738,24 @@
     } catch (e) {
       msg(e.message || e, false);
     }
+  });
+
+
+  $('btnSpTemplate') && ($('btnSpTemplate').onclick = function () {
+    var name = gv('f_name') || '[Proprietor Name]';
+    var cnic = gv('f_cnic') || '[CNIC]';
+    var biz = gv('f_biz_name') || '[Business Name]';
+    var txt =
+      'I, ' + name + ', holder of CNIC ' + cnic + ', do hereby declare that:\n\n' +
+      '1. I am the sole proprietor of "' + biz + '" and no other person has ownership interest in the said concern.\n' +
+      '2. I am solely responsible for all liabilities, obligations and transactions arising from any account or banking relationship opened in the name of the said sole proprietorship / in my name for the business.\n' +
+      '3. All information and documents provided for customer due diligence are true and correct to the best of my knowledge.\n' +
+      '4. I undertake to inform the institution of any change in ownership, address, or nature of business promptly.\n\n' +
+      'This declaration is made for the purpose of establishing / maintaining a banking / financial relationship.';
+    sv('f_sp_text', txt);
+    if (!gv('f_sp_by')) sv('f_sp_by', name);
+    if (!gv('f_sp_date')) sv('f_sp_date', new Date().toISOString().slice(0, 10));
+    sv('f_sp_decl', '1');
   });
 
   toggleSoleUI();

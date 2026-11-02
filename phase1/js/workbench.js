@@ -179,6 +179,9 @@
     setVal('c_trade_body', r ? r.trade_body_membership : '');
     setVal('c_sp_decl', r && Number(r.sole_prop_declaration) === 1 ? '1' : '0');
     setVal('c_sp_req', r && Number(r.account_request_letterhead) === 1 ? '1' : '0');
+    setVal('c_sp_text', r ? r.sole_prop_declaration_text : '');
+    setVal('c_sp_by', r ? r.sole_prop_declared_by : '');
+    setVal('c_sp_date', r && r.sole_prop_declared_at ? String(r.sole_prop_declared_at).slice(0, 10) : '');
     if ($('c_frontPrev')) {
       if (r && r.cnic_front_path) { $('c_frontPrev').src = r.cnic_front_path; $('c_frontPrev').style.display = 'block'; }
       else { $('c_frontPrev').style.display = 'none'; }
@@ -319,7 +322,10 @@
       sales_tax_no: gv('c_sales_tax'),
       trade_body_membership: gv('c_trade_body'),
       sole_prop_declaration: gv('c_sp_decl') === '1',
-      account_request_letterhead: gv('c_sp_req') === '1'
+      sole_prop_declaration_text: gv('c_sp_text'),
+      sole_prop_declared_by: gv('c_sp_by'),
+      sole_prop_declared_at: gv('c_sp_date') || null,
+      account_request_letterhead: gv('c_sp_req') === '1' 
     };
     try {
       var id = $('c_id').value;

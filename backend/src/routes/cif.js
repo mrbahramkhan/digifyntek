@@ -38,6 +38,9 @@ const CDD_ALTERS = [
   "ALTER TABLE cbs_customers ADD COLUMN trade_body_membership VARCHAR(160) NULL",
   "ALTER TABLE cbs_customers ADD COLUMN sole_prop_declaration TINYINT(1) NULL DEFAULT 0",
   "ALTER TABLE cbs_customers ADD COLUMN account_request_letterhead TINYINT(1) NULL DEFAULT 0",
+  "ALTER TABLE cbs_customers ADD COLUMN sole_prop_declaration_text TEXT NULL",
+  "ALTER TABLE cbs_customers ADD COLUMN sole_prop_declared_at DATE NULL",
+  "ALTER TABLE cbs_customers ADD COLUMN sole_prop_declared_by VARCHAR(160) NULL",
   "ALTER TABLE cbs_customers ADD COLUMN nature_of_business VARCHAR(120) NULL",
 ];
 let cddReady = false;
@@ -424,7 +427,10 @@ async function applySolePropFields(id, b) {
         sales_tax_no = COALESCE(?, sales_tax_no),
         trade_body_membership = COALESCE(?, trade_body_membership),
         sole_prop_declaration = COALESCE(?, sole_prop_declaration),
-        account_request_letterhead = COALESCE(?, account_request_letterhead)
+        account_request_letterhead = COALESCE(?, account_request_letterhead),
+        sole_prop_declaration_text = COALESCE(?, sole_prop_declaration_text),
+        sole_prop_declared_at = COALESCE(?, sole_prop_declared_at),
+        sole_prop_declared_by = COALESCE(?, sole_prop_declared_by)
        WHERE id = ?`,
       [
         b.business_name ?? null,
@@ -434,6 +440,9 @@ async function applySolePropFields(id, b) {
         b.trade_body_membership ?? null,
         b.sole_prop_declaration == null ? null : b.sole_prop_declaration ? 1 : 0,
         b.account_request_letterhead == null ? null : b.account_request_letterhead ? 1 : 0,
+        b.sole_prop_declaration_text ?? null,
+        b.sole_prop_declared_at ?? null,
+        b.sole_prop_declared_by ?? null,
         id,
       ]
     );
