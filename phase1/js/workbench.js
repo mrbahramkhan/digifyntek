@@ -106,18 +106,106 @@
     });
     return m;
   }
+
+  var _dashData = { customers: [], accounts: [] };
+  var _dashTimer = null;
+
+  function setDashInsight(text, rows) {
+    var el = $('dashInsight');
+    if (el) el.textContent = text || '';
+    var wrap = $('dashInsightTable');
+    var tb = $('dashInsightTb');
+    if (!wrap || !tb) return;
+    if (!rows || !rows.length) {
+      wrap.style.display = 'none';
+      tb.innerHTML = '';
+      return;
+    }
+    wrap.style.display = 'block';
+    tb.innerHTML = rows.slice(0, 25).map(function (r) {
+      return '<tr style="cursor:pointer" data-jump="' + (r.jump || '') + '"><td>' + (r.ref || '') +
+        '</td><td>' + (r.name || '') + '</td><td>' + (r.detail || '') + '</td></tr>';
+    }).join('');
+  }
+
   function renderDashCharts(customers, accounts) {
     if (typeof Chart === 'undefined') return;
+    _dashData.customers = customers || [];
+    _dashData.accounts = accounts || [];
     var C = chartColors();
     var common = {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { boxWidth: 12, color: C.text, font: { size: 11 } } }
+        legend: { position: 'bottom', labels: { boxWidth: 12, color: C.text, font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: 'rgba(15,23,42,0.9)',
+          titleFont: { size: 12 },
+          bodyFont: { size: 12 },
+          padding: 10,
+          cornerRadius: 8
+        }
       }
     };
 
-    // Products bar
+    function onProductClick(evt, elements) {
+      if (!elements.length) return;
+      var i = elements[0].index;
+      var label = _dashCharts.products.data.labels[i];
+      var list = _dashData.accounts.filter(function (a) { return (a.product_code || 'OTHER') === label; });
+      setDashInsight('Product ' + label + ' — ' + list.length + ' account(s). Click row hint: open Accounts.', list.map(function (a) {
+        return { ref: a.account_no || a.id, name: a.account_title || a.product_code, detail: (a.status || '') + ' · bal ' + (a.ledger_balance != null ? a.ledger_balance : a.balance || 0), jump: 'account' };
+      }));
+      if ($('dashFilterNote')) $('dashFilterNote').textContent = 'Filter: product ' + label;
+    }
+    function onRiskClick(evt, elements) {
+      if (!elements.length) return;
+      var i = elements[0].index;
+      var label = _dashCharts.risk.data.labels[i];
+      var key = String(label).toLowerCase();
+      var list = _dashData.customers.filter(function (c) { return (c.risk_rating || 'unknown').toLowerCase() === key; });
+      setDashInsight('Risk ' + label + ' — ' + list.length + ' customer(s).', list.map(function (c) {
+        return { ref: c.customer_no || c.id, name: c.full_name, detail: (c.kyc_status || '') + ' · ' + (c.cnic || ''), jump: 'customer' };
+      }));
+      if ($('dashFilterNote')) $('dashFilterNote').textContent = 'Filter: risk ' + label;
+    }
+    function onKycClick(evt, elements) {
+      if (!elements.length) return;
+      var i = elements[0].index;
+      var label = _dashCharts.kyc.data.labels[i];
+      var key = String(label).replace(/\s+/g, '_').toLowerCase();
+      var list = _dashData.customers.filter(function (c) { return (c.kyc_status || 'unknown').toLowerCase() === key; });
+      setDashInsight('KYC ' + label + ' — ' + list.length + ' customer(s).', list.map(function (c) {
+        return { ref: c.customer_no || c.id, name: c.full_name, detail: (c.risk_rating || '') + ' · ' + (c.cnic || ''), jump: 'kyc' };
+      }));
+      if ($('dashFilterNote')) $('dashFilterNote').textContent = 'Filter: KYC ' + label;
+    }
+    function onStatusClick(evt, elements) {
+      if (!elements.length) return;
+      var i = elements[0].index;
+      var label = _dashCharts.acctStatus.data.labels[i];
+      var list = _dashData.accounts.filter(function (a) { return (a.status || 'unknown').toLowerCase() === String(label).toLowerCase(); });
+      setDashInsight('Status ' + label + ' — ' + list.length + ' account(s).', list.map(function (a) {
+        return { ref: a.account_no || a.id, name: a.product_code, detail: a.status, jump: 'account' };
+      }));
+      if ($('dashFilterNote')) $('dashFilterNote').textContent = 'Filter: status ' + label;
+    }
+    function onBalanceClick(evt, elements) {
+      if (!elements.length) return;
+      var i = elements[0].index;
+      var acc = (_dashData.accounts || []).slice().sort(function (a, b) {
+        return Number(b.ledger_balance || b.balance || 0) - Number(a.ledger_balance || a.balance || 0);
+      })[i];
+      if (!acc) return;
+      setDashInsight('Account ' + (acc.account_no || acc.id), [{
+        ref: acc.account_no || acc.id,
+        name: acc.account_title || acc.product_code,
+        detail: 'Balance ' + (acc.ledger_balance != null ? acc.ledger_balance : acc.balance || 0),
+        jump: 'account'
+      }]);
+      if ($('dashFilterNote')) $('dashFilterNote').textContent = 'Selected: ' + (acc.account_no || acc.id);
+    }
+
     destroyChart('products');
     var prod = countBy(accounts, function (a) { return a.product_code || 'OTHER'; });
     var pLabels = Object.keys(prod);
@@ -137,6 +225,7 @@
         },
         options: {
           ...common,
+          onClick: onProductClick,
           plugins: { ...common.plugins, legend: { display: false } },
           scales: {
             x: { ticks: { color: C.text, font: { size: 10 } }, grid: { display: false } },
@@ -146,7 +235,6 @@
       });
     }
 
-    // Risk doughnut
     destroyChart('risk');
     var risk = countBy(customers, function (c) { return (c.risk_rating || 'unknown').toLowerCase(); });
     var rLabels = Object.keys(risk);
@@ -160,17 +248,13 @@
             data: rLabels.map(function (k) { return risk[k]; }),
             backgroundColor: rLabels.map(function (k) { return C.risk[k] || C.risk.unknown; }),
             borderWidth: 0,
-            hoverOffset: 6
+            hoverOffset: 8
           }]
         },
-        options: {
-          ...common,
-          cutout: '62%'
-        }
+        options: { ...common, cutout: '62%', onClick: onRiskClick }
       });
     }
 
-    // KYC doughnut
     destroyChart('kyc');
     var kyc = countBy(customers, function (c) { return (c.kyc_status || 'unknown').toLowerCase(); });
     var kLabels = Object.keys(kyc);
@@ -184,17 +268,13 @@
             data: kLabels.map(function (k) { return kyc[k]; }),
             backgroundColor: kLabels.map(function (k) { return C.kyc[k] || C.kyc.unknown; }),
             borderWidth: 0,
-            hoverOffset: 6
+            hoverOffset: 8
           }]
         },
-        options: {
-          ...common,
-          cutout: '62%'
-        }
+        options: { ...common, cutout: '62%', onClick: onKycClick }
       });
     }
 
-    // Account status
     destroyChart('acctStatus');
     var st = countBy(accounts, function (a) { return (a.status || 'unknown').toLowerCase(); });
     var sLabels = Object.keys(st);
@@ -215,6 +295,7 @@
         options: {
           ...common,
           indexAxis: 'y',
+          onClick: onStatusClick,
           plugins: { ...common.plugins, legend: { display: false } },
           scales: {
             x: { beginAtZero: true, ticks: { color: C.text, precision: 0 }, grid: { color: C.grid } },
@@ -224,7 +305,6 @@
       });
     }
 
-    // Top balances
     destroyChart('balances');
     var sorted = (accounts || []).slice().sort(function (a, b) {
       return Number(b.ledger_balance || b.balance || 0) - Number(a.ledger_balance || a.balance || 0);
@@ -245,6 +325,7 @@
         },
         options: {
           ...common,
+          onClick: onBalanceClick,
           plugins: { ...common.plugins, legend: { display: false } },
           scales: {
             x: { ticks: { color: C.text, maxRotation: 45, minRotation: 0, font: { size: 9 } }, grid: { display: false } },
@@ -282,7 +363,31 @@
     } catch (e) {
       console.warn('charts', e);
     }
+    var u = $('dashUpdated');
+    if (u) u.textContent = 'Updated ' + new Date().toLocaleTimeString();
+    // rebind data-go on new KPI buttons
+    document.querySelectorAll('#view-home [data-go]').forEach(function (b) {
+      b.onclick = function () { show(b.getAttribute('data-go')); };
+    });
   }
+
+  $('btnDashRefresh') && ($('btnDashRefresh').onclick = function () { loadHome(); });
+  $('dashAutoRefresh') && ($('dashAutoRefresh').onchange = function () {
+    if (_dashTimer) { clearInterval(_dashTimer); _dashTimer = null; }
+    if ($('dashAutoRefresh').checked) {
+      _dashTimer = setInterval(function () {
+        if (document.getElementById('view-home') && document.getElementById('view-home').classList.contains('active')) {
+          loadHome();
+        }
+      }, 30000);
+    }
+  });
+  $('dashInsightTb') && ($('dashInsightTb').onclick = function (e) {
+    var tr = e.target.closest('tr[data-jump]');
+    if (!tr) return;
+    var j = tr.getAttribute('data-jump');
+    if (j) show(j);
+  });
 
   /* ——— CIF / CDD ——— */
   var custRows = [];

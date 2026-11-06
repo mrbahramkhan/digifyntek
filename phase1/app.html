@@ -241,49 +241,68 @@
           </div>
         </div>
 
+        <div class="dash-toolbar" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px">
+          <button type="button" class="btn btn-p" id="btnDashRefresh">↻ Refresh</button>
+          <label class="hint" style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+            <input type="checkbox" id="dashAutoRefresh" /> Auto-refresh 30s
+          </label>
+          <span class="spacer"></span>
+          <span class="hint" id="dashUpdated">—</span>
+          <span class="hint" id="dashFilterNote" style="font-weight:600;color:var(--brand-deep,#0c4a5e)"></span>
+        </div>
         <div class="dash-kpis">
-          <div class="dash-kpi">
+          <button type="button" class="dash-kpi" data-go="customer" title="Open CIF / CDD" style="cursor:pointer;text-align:left;font:inherit;width:100%">
             <div class="ico">👤</div>
             <div class="lbl">Customers</div>
             <div class="val" id="kCif">—</div>
-            <div class="sub">CIF / CDD register</div>
-          </div>
-          <div class="dash-kpi">
+            <div class="sub">Click → CIF register</div>
+          </button>
+          <button type="button" class="dash-kpi" data-go="account" title="Open accounts" style="cursor:pointer;text-align:left;font:inherit;width:100%">
             <div class="ico">🏦</div>
             <div class="lbl">Accounts</div>
             <div class="val" id="kAcct">—</div>
-            <div class="sub">CASA &amp; products</div>
-          </div>
-          <div class="dash-kpi">
+            <div class="sub">Click → Account opening</div>
+          </button>
+          <button type="button" class="dash-kpi" data-go="approvals" title="Approvals" style="cursor:pointer;text-align:left;font:inherit;width:100%">
             <div class="ico">✅</div>
             <div class="lbl">Pending approvals</div>
             <div class="val" id="kAppr">—</div>
-            <div class="sub">Maker–checker queue</div>
-          </div>
-          <div class="dash-kpi">
+            <div class="sub">Click → Maker–checker</div>
+          </button>
+          <button type="button" class="dash-kpi" data-go="eod" title="EOD" style="cursor:pointer;text-align:left;font:inherit;width:100%">
             <div class="ico">📅</div>
             <div class="lbl">EOD status</div>
             <div class="val" id="kEod" style="font-size:18px">—</div>
-            <div class="sub">Day control</div>
+            <div class="sub">Click → Day control</div>
+          </button>
+        </div>
+        <div class="panel" style="margin-bottom:18px">
+          <div class="panel-h">Drill-down insight</div>
+          <div class="panel-b">
+            <p class="hint" style="margin:0 0 8px">Charts par click karein — filter + module open. <span id="dashInsight">No selection yet.</span></p>
+            <div id="dashInsightTable" class="table-wrap" style="max-height:180px;overflow:auto;display:none">
+              <table class="data"><thead><tr><th>Ref</th><th>Name / product</th><th>Detail</th></tr></thead>
+              <tbody id="dashInsightTb"></tbody></table>
+            </div>
           </div>
         </div>
 
 
         <div class="dash-charts" style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px;margin-bottom:18px">
           <div class="panel">
-            <div class="panel-h">Portfolio — accounts by product</div>
+            <div class="panel-h">Portfolio — accounts by product <span class="hint" style="font-weight:500;text-transform:none;letter-spacing:0">· click bar</span></div>
             <div class="panel-b" style="height:260px;position:relative">
               <canvas id="chartProducts"></canvas>
             </div>
           </div>
           <div class="panel">
-            <div class="panel-h">CDD risk mix</div>
+            <div class="panel-h">CDD risk mix <span class="hint" style="font-weight:500;text-transform:none;letter-spacing:0">· click slice</span></div>
             <div class="panel-b" style="height:260px;position:relative">
               <canvas id="chartRisk"></canvas>
             </div>
           </div>
           <div class="panel">
-            <div class="panel-h">KYC status</div>
+            <div class="panel-h">KYC status <span class="hint" style="font-weight:500;text-transform:none;letter-spacing:0">· click slice</span></div>
             <div class="panel-b" style="height:260px;position:relative">
               <canvas id="chartKyc"></canvas>
             </div>
