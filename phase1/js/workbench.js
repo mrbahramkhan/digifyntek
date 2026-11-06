@@ -79,15 +79,194 @@
   };
   if (document.documentElement.getAttribute('data-theme') === 'dark') $('btnTheme').textContent = '☀';
 
+
+  var _dashCharts = {};
+  function destroyChart(key) {
+    if (_dashCharts[key]) {
+      try { _dashCharts[key].destroy(); } catch (e) {}
+      _dashCharts[key] = null;
+    }
+  }
+  function chartColors() {
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return {
+      text: dark ? '#94a3b8' : '#64748b',
+      grid: dark ? 'rgba(148,163,184,0.12)' : 'rgba(100,116,139,0.12)',
+      brand: ['#0e7490', '#0891b2', '#06b6d4', '#22d3ee', '#67e8f9', '#155e75'],
+      risk: { low: '#059669', medium: '#d97706', high: '#dc2626', unknown: '#94a3b8' },
+      kyc: { verified: '#059669', pending: '#d97706', rejected: '#dc2626', manual_review: '#2563eb', unknown: '#94a3b8' },
+      status: { active: '#059669', pending: '#d97706', restricted: '#dc2626', dormant: '#64748b', closed: '#94a3b8', unknown: '#94a3b8' }
+    };
+  }
+  function countBy(rows, keyFn) {
+    var m = {};
+    (rows || []).forEach(function (r) {
+      var k = keyFn(r) || 'unknown';
+      m[k] = (m[k] || 0) + 1;
+    });
+    return m;
+  }
+  function renderDashCharts(customers, accounts) {
+    if (typeof Chart === 'undefined') return;
+    var C = chartColors();
+    var common = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, color: C.text, font: { size: 11 } } }
+      }
+    };
+
+    // Products bar
+    destroyChart('products');
+    var prod = countBy(accounts, function (a) { return a.product_code || 'OTHER'; });
+    var pLabels = Object.keys(prod);
+    var pEl = document.getElementById('chartProducts');
+    if (pEl) {
+      _dashCharts.products = new Chart(pEl, {
+        type: 'bar',
+        data: {
+          labels: pLabels,
+          datasets: [{
+            label: 'Accounts',
+            data: pLabels.map(function (k) { return prod[k]; }),
+            backgroundColor: C.brand,
+            borderRadius: 6,
+            maxBarThickness: 36
+          }]
+        },
+        options: {
+          ...common,
+          plugins: { ...common.plugins, legend: { display: false } },
+          scales: {
+            x: { ticks: { color: C.text, font: { size: 10 } }, grid: { display: false } },
+            y: { beginAtZero: true, ticks: { color: C.text, precision: 0 }, grid: { color: C.grid } }
+          }
+        }
+      });
+    }
+
+    // Risk doughnut
+    destroyChart('risk');
+    var risk = countBy(customers, function (c) { return (c.risk_rating || 'unknown').toLowerCase(); });
+    var rLabels = Object.keys(risk);
+    var rEl = document.getElementById('chartRisk');
+    if (rEl) {
+      _dashCharts.risk = new Chart(rEl, {
+        type: 'doughnut',
+        data: {
+          labels: rLabels.map(function (x) { return x.charAt(0).toUpperCase() + x.slice(1); }),
+          datasets: [{
+            data: rLabels.map(function (k) { return risk[k]; }),
+            backgroundColor: rLabels.map(function (k) { return C.risk[k] || C.risk.unknown; }),
+            borderWidth: 0,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          ...common,
+          cutout: '62%'
+        }
+      });
+    }
+
+    // KYC doughnut
+    destroyChart('kyc');
+    var kyc = countBy(customers, function (c) { return (c.kyc_status || 'unknown').toLowerCase(); });
+    var kLabels = Object.keys(kyc);
+    var kEl = document.getElementById('chartKyc');
+    if (kEl) {
+      _dashCharts.kyc = new Chart(kEl, {
+        type: 'doughnut',
+        data: {
+          labels: kLabels.map(function (x) { return x.replace(/_/g, ' '); }),
+          datasets: [{
+            data: kLabels.map(function (k) { return kyc[k]; }),
+            backgroundColor: kLabels.map(function (k) { return C.kyc[k] || C.kyc.unknown; }),
+            borderWidth: 0,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          ...common,
+          cutout: '62%'
+        }
+      });
+    }
+
+    // Account status
+    destroyChart('acctStatus');
+    var st = countBy(accounts, function (a) { return (a.status || 'unknown').toLowerCase(); });
+    var sLabels = Object.keys(st);
+    var sEl = document.getElementById('chartAcctStatus');
+    if (sEl) {
+      _dashCharts.acctStatus = new Chart(sEl, {
+        type: 'bar',
+        data: {
+          labels: sLabels,
+          datasets: [{
+            label: 'Count',
+            data: sLabels.map(function (k) { return st[k]; }),
+            backgroundColor: sLabels.map(function (k) { return C.status[k] || C.status.unknown; }),
+            borderRadius: 6,
+            maxBarThickness: 40
+          }]
+        },
+        options: {
+          ...common,
+          indexAxis: 'y',
+          plugins: { ...common.plugins, legend: { display: false } },
+          scales: {
+            x: { beginAtZero: true, ticks: { color: C.text, precision: 0 }, grid: { color: C.grid } },
+            y: { ticks: { color: C.text }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // Top balances
+    destroyChart('balances');
+    var sorted = (accounts || []).slice().sort(function (a, b) {
+      return Number(b.ledger_balance || b.balance || 0) - Number(a.ledger_balance || a.balance || 0);
+    }).slice(0, 8);
+    var bEl = document.getElementById('chartBalances');
+    if (bEl) {
+      _dashCharts.balances = new Chart(bEl, {
+        type: 'bar',
+        data: {
+          labels: sorted.map(function (a) { return a.account_no || ('#' + a.id); }),
+          datasets: [{
+            label: 'Ledger balance (PKR)',
+            data: sorted.map(function (a) { return Number(a.ledger_balance || a.balance || 0); }),
+            backgroundColor: 'rgba(14, 116, 144, 0.75)',
+            borderRadius: 6,
+            maxBarThickness: 28
+          }]
+        },
+        options: {
+          ...common,
+          plugins: { ...common.plugins, legend: { display: false } },
+          scales: {
+            x: { ticks: { color: C.text, maxRotation: 45, minRotation: 0, font: { size: 9 } }, grid: { display: false } },
+            y: { beginAtZero: true, ticks: { color: C.text }, grid: { color: C.grid } }
+          }
+        }
+      });
+    }
+  }
+
   async function loadHome() {
     function set(id, v) { var el = $(id); if (el) el.textContent = v; }
+    var customers = [], accounts = [];
     try {
       var c = await api('/api/v1/cif?limit=500');
-      set('kCif', (Array.isArray(c) ? c : (c.rows || [])).length);
+      customers = Array.isArray(c) ? c : (c.rows || []);
+      set('kCif', customers.length);
     } catch (e) { set('kCif', '—'); }
     try {
       var a = await api('/api/v1/accounts?limit=500');
-      set('kAcct', (Array.isArray(a) ? a : (a.rows || [])).length);
+      accounts = Array.isArray(a) ? a : (a.rows || []);
+      set('kAcct', accounts.length);
     } catch (e) { set('kAcct', '—'); }
     try {
       var p = await api('/api/v1/approvals?status=pending&limit=20');
@@ -98,6 +277,11 @@
       var st = (eod && (eod.status || eod.state || eod.business_date)) || 'Ready';
       set('kEod', st);
     } catch (e) { set('kEod', '—'); }
+    try {
+      renderDashCharts(customers, accounts);
+    } catch (e) {
+      console.warn('charts', e);
+    }
   }
 
   /* ——— CIF / CDD ——— */

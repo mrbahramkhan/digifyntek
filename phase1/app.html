@@ -45,6 +45,7 @@
   <script>
     (function(){ var t=localStorage.getItem('DIGIFYNTEK_THEME')||'light'; if(t==='dark') document.documentElement.setAttribute('data-theme','dark'); })();
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -266,6 +267,47 @@
             <div class="sub">Day control</div>
           </div>
         </div>
+
+
+        <div class="dash-charts" style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px;margin-bottom:18px">
+          <div class="panel">
+            <div class="panel-h">Portfolio — accounts by product</div>
+            <div class="panel-b" style="height:260px;position:relative">
+              <canvas id="chartProducts"></canvas>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">CDD risk mix</div>
+            <div class="panel-b" style="height:260px;position:relative">
+              <canvas id="chartRisk"></canvas>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">KYC status</div>
+            <div class="panel-b" style="height:260px;position:relative">
+              <canvas id="chartKyc"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="dash-charts" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+          <div class="panel">
+            <div class="panel-h">Account status distribution</div>
+            <div class="panel-b" style="height:240px;position:relative">
+              <canvas id="chartAcctStatus"></canvas>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">Ledger balances (top accounts)</div>
+            <div class="panel-b" style="height:240px;position:relative">
+              <canvas id="chartBalances"></canvas>
+            </div>
+          </div>
+        </div>
+        <style>
+          @media (max-width: 1000px) {
+            .dash-charts { grid-template-columns: 1fr !important; }
+          }
+        </style>
 
         <div class="dash-grid">
           <div class="panel">
