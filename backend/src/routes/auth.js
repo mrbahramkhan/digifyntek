@@ -65,11 +65,12 @@ async function ensureMfaColumns() {
 function needsMfaChallenge(u) {
   const role = String(u.role || '').toLowerCase();
   const isAdmin = ADMIN_ROLES.has(role);
-  if (!isAdmin) return { challenge: false };
+  // Any user with MFA enrolled must complete 2FA
   if (Number(u.mfa_enabled) === 1 && u.mfa_secret) {
     return { challenge: true, setup: false };
   }
-  if (MFA_ENFORCE_ADMIN || Number(u.mfa_enforced) === 1) {
+  // Admins: enforce setup when MFA_ENFORCE_ADMIN or mfa_enforced
+  if (isAdmin && (MFA_ENFORCE_ADMIN || Number(u.mfa_enforced) === 1)) {
     return { challenge: true, setup: true };
   }
   return { challenge: false };

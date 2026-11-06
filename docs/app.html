@@ -29,7 +29,7 @@
     .btn-p { background:var(--brand); color:#fff; border-color:transparent; }
     .btn-s { font-size:12px; padding:6px 10px; }
     .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; align-items:center; }
-    .split { display:grid; grid-template-columns:1fr 1.15fr; gap:12px; }
+    .split { display:grid; grid-template-columns:minmax(340px,1fr) minmax(300px,1.1fr); gap:14px; align-items:start; } /* form left, table right */
     @media(max-width:960px){ .split{ grid-template-columns:1fr; } }
     /* kpi styles moved to dash-kpi in home + app.css */
     .msg { font-size:12px; margin-top:8px; } .msg.ok{color:var(--ok);} .msg.err{color:var(--bad);}
@@ -362,18 +362,7 @@
 
       <!-- CIF CDD -->
       <div class="panel-view" id="view-customer">
-        <div class="split">
-          <div class="panel">
-            <div class="panel-h">Customer register</div>
-            <div class="panel-b">
-              <input class="inp" id="custQ" placeholder="Search name / CNIC / risk…" />
-              <div class="table-wrap" style="margin-top:8px;max-height:480px;overflow:auto">
-                <table class="data"><thead><tr><th>ID</th><th>Name</th><th>CNIC</th><th>Risk</th><th>KYC</th></tr></thead>
-                <tbody id="custTb"></tbody></table>
-              </div>
-            </div>
-          </div>
-          <div class="panel">
+        <div class="split"><div class="panel">
             <div class="panel-h">CDD form (SBP minimum identity & risk)</div>
             <div class="panel-b">
               <form id="frmCust">
@@ -468,14 +457,25 @@
               </form>
             </div>
           </div>
-        </div>
+          <div class="panel">
+            <div class="panel-h">Customer register</div>
+            <div class="panel-b">
+              <input class="inp" id="custQ" placeholder="Search name / CNIC / risk…" />
+              <div class="table-wrap" style="margin-top:8px;max-height:480px;overflow:auto">
+                <table class="data"><thead><tr><th>ID</th><th>Name</th><th>CNIC</th><th>Risk</th><th>KYC</th></tr></thead>
+                <tbody id="custTb"></tbody></table>
+              </div>
+            </div>
+          </div>
+          </div>
       </div>
 
       <div class="panel-view" id="view-kyc">
-        <div class="panel">
-          <div class="panel-h">KYC / AML cases (SBP CDD workflow)</div>
-          <div class="panel-b">
-            <p class="hint">Onboarding case: identity (NADRA/BV) · screening · risk · decision. High-risk / PEP → EDD before activation.</p>
+        <div class="split">
+          <div class="panel">
+            <div class="panel-h">KYC / AML cases (SBP CDD workflow)</div>
+            <div class="panel-b">
+              <p class="hint">Onboarding case: identity (NADRA/BV) · screening · risk · decision. High-risk / PEP → EDD before activation.</p>
             <div class="form-grid" style="margin-bottom:12px">
               <div class="field"><label>Customer ID</label><input class="inp" id="kyc_cust" /></div>
               <div class="field"><label>Case type</label>
@@ -503,20 +503,26 @@
               <div class="field full"><label>Note</label><input class="inp" id="kyc_note" /></div>
               <div class="field full"><button type="button" class="btn" id="btnKycDecide">Submit decision</button></div>
             </div>
-            <div class="table-wrap" style="margin-top:10px">
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">Records</div>
+            <div class="panel-b">
+              <div class="table-wrap" style="margin-top:10px">
               <table class="data"><thead><tr><th>ID</th><th>Customer</th><th>Status</th><th>Risk</th></tr></thead>
               <tbody id="kycTb"></tbody></table>
             </div>
             <div class="msg" id="kycMsg"></div>
+            </div>
           </div>
         </div>
       </div>
-
-      <div class="panel-view" id="view-account">
-        <div class="panel">
-          <div class="panel-h">Account opening form (SBP onboarding)</div>
-          <div class="panel-b">
-            <form id="frmAcct">
+<div class="panel-view" id="view-account">
+        <div class="split">
+          <div class="panel">
+            <div class="panel-h">Account opening form (SBP onboarding)</div>
+            <div class="panel-b">
+              <form id="frmAcct">
               <div class="form-grid">
                 <div class="form-sec">1 · Customer &amp; product</div>
                 <div class="field"><label>Customer ID (CIF) *</label><input class="inp" id="a_cust" required placeholder="CIF id" /></div>
@@ -589,15 +595,20 @@
               </div>
             </form>
             <div class="msg" id="acctMsg"></div>
-            <div class="table-wrap" style="margin-top:12px">
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">Records</div>
+            <div class="panel-b">
+              <div class="table-wrap" style="margin-top:12px">
               <table class="data"><thead><tr><th>ID</th><th>Account</th><th>Title</th><th>Customer</th><th>Product</th><th>Balance</th><th>Status</th></tr></thead>
               <tbody id="acctTb"></tbody></table>
+            </div>
             </div>
           </div>
         </div>
       </div>
-
-      <div class="panel-view" id="view-cash">
+<div class="panel-view" id="view-cash">
         <div class="panel">
           <div class="panel-h">Cash deposit / withdrawal (teller)</div>
           <div class="panel-b">
@@ -678,10 +689,11 @@
       </div>
 
       <div class="panel-view" id="view-loan">
-        <div class="panel">
-          <div class="panel-h">Credit / financing application &amp; disburse</div>
-          <div class="panel-b">
-            <form id="frmLoan">
+        <div class="split">
+          <div class="panel">
+            <div class="panel-h">Credit / financing application &amp; disburse</div>
+            <div class="panel-b">
+              <form id="frmLoan">
               <div class="form-grid">
                 <div class="form-sec">1 · Borrower &amp; facility</div>
                 <div class="field"><label>Customer ID *</label><input class="inp" id="l_cust" required /></div>
@@ -715,7 +727,12 @@
               </div>
             </form>
             <div class="msg" id="loanMsg"></div>
-            <div class="table-wrap" style="margin:12px 0">
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">Records</div>
+            <div class="panel-b">
+              <div class="table-wrap" style="margin:12px 0">
               <table class="data"><thead><tr><th>ID</th><th>Contract</th><th>Customer</th><th>Principal</th><th>Status</th></tr></thead>
               <tbody id="loanTb"></tbody></table>
             </div>
@@ -729,15 +746,16 @@
               </div>
             </form>
             <div class="msg" id="repayMsg"></div>
+            </div>
           </div>
         </div>
       </div>
-
-      <div class="panel-view" id="view-collateral">
-        <div class="panel">
-          <div class="panel-h">Collateral / security registration</div>
-          <div class="panel-b">
-            <form id="frmCol">
+<div class="panel-view" id="view-collateral">
+        <div class="split">
+          <div class="panel">
+            <div class="panel-h">Collateral / security registration</div>
+            <div class="panel-b">
+              <form id="frmCol">
               <div class="form-grid">
                 <div class="form-sec">1 · Linkage</div>
                 <div class="field"><label>Customer ID *</label><input class="inp" id="col_cust" required /></div>
@@ -765,19 +783,25 @@
               </div>
             </form>
             <div class="msg" id="colMsg"></div>
-            <div class="table-wrap" style="margin-top:12px">
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">Records</div>
+            <div class="panel-b">
+              <div class="table-wrap" style="margin-top:12px">
               <table class="data"><thead><tr><th>ID</th><th>Customer</th><th>Type</th><th>Value</th></tr></thead>
               <tbody id="colTb"></tbody></table>
+            </div>
             </div>
           </div>
         </div>
       </div>
-
-      <div class="panel-view" id="view-instruments">
-        <div class="panel">
-          <div class="panel-h">Cheque book request / issue</div>
-          <div class="panel-b">
-            <form id="frmInst">
+<div class="panel-view" id="view-instruments">
+        <div class="split">
+          <div class="panel">
+            <div class="panel-h">Cheque book request / issue</div>
+            <div class="panel-b">
+              <form id="frmInst">
               <div class="form-grid">
                 <div class="form-sec">1 · Account</div>
                 <div class="field"><label>Account no *</label><input class="inp" id="inst_acct" required /></div>
@@ -796,15 +820,20 @@
               </div>
             </form>
             <div class="msg" id="instMsg"></div>
-            <div class="table-wrap" style="margin-top:12px">
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">Records</div>
+            <div class="panel-b">
+              <div class="table-wrap" style="margin-top:12px">
               <table class="data"><thead><tr><th>ID</th><th>Book</th><th>Account</th><th>Status</th></tr></thead>
               <tbody id="instTb"></tbody></table>
+            </div>
             </div>
           </div>
         </div>
       </div>
-
-      <div class="panel-view" id="view-clearing">
+<div class="panel-view" id="view-clearing">
         <div class="panel">
           <div class="panel-h">Cheque clearing queue</div>
           <div class="panel-b">
@@ -885,10 +914,11 @@
       </div>
 
       <div class="panel-view" id="view-members">
-        <div class="panel">
-          <div class="panel-h">Cooperative member registration</div>
-          <div class="panel-b">
-            <form id="frmMem">
+        <div class="split">
+          <div class="panel">
+            <div class="panel-h">Cooperative member registration</div>
+            <div class="panel-b">
+              <form id="frmMem">
               <div class="form-grid">
                 <div class="form-sec">1 · Identity</div>
                 <div class="field full"><label>Full name *</label><input class="inp" id="m_name" required /></div>
@@ -906,15 +936,20 @@
               </div>
             </form>
             <div class="msg" id="memMsg"></div>
-            <div class="table-wrap" style="margin-top:12px">
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">Records</div>
+            <div class="panel-b">
+              <div class="table-wrap" style="margin-top:12px">
               <table class="data"><thead><tr><th>ID</th><th>No</th><th>Name</th><th>Status</th></tr></thead>
               <tbody id="memTb"></tbody></table>
+            </div>
             </div>
           </div>
         </div>
       </div>
-
-      <div class="panel-view" id="view-sbp">
+<div class="panel-view" id="view-sbp">
         <div class="panel">
           <div class="panel-h">SBP control map (in-app)</div>
           <div class="panel-b">

@@ -188,8 +188,13 @@
           <p>Core banking · Islamic · Agri</p>
         </div>
       </div>
-      <h2>Sign in</h2>
-      <p class="sub">Enter your institution credentials to continue</p>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#06b6d4,#0e7490);color:#fff;font-size:13px;font-weight:700">1</span>
+        <div>
+          <h2 style="margin:0;font-size:18px">Sign in</h2>
+          <p class="sub" style="margin:2px 0 0">Password, then 2FA if enabled for your role</p>
+        </div>
+      </div>
       <form id="frm" autocomplete="on">
         <div class="field">
           <label for="userId">User ID</label>
@@ -202,20 +207,34 @@
         <button class="btn-login" type="submit" id="btn">Sign in</button>
         <div class="err" id="err"></div>
       </form>
-      <div id="mfaPanel" style="display:none;margin-top:8px">
-        <h2 style="font-size:17px;margin:0 0 4px">Authenticator code</h2>
-        <p class="sub" id="mfaSub">Enter the 6-digit code from your app</p>
-        <div id="setupBox" style="display:none;margin-bottom:12px;padding:12px;border:1px solid var(--line,#e2e8f0);border-radius:10px;font-size:12px">
-          <div style="font-weight:600;margin-bottom:6px">Admin MFA setup required</div>
-          <div id="setupSecret" style="word-break:break-all;font-family:ui-monospace,monospace;margin-bottom:8px"></div>
-          <div class="hint">Add this secret in Google Authenticator / Authy, then enter a code below.</div>
+      <div id="mfaPanel" style="display:none;margin-top:4px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#06b6d4,#0e7490);color:#fff;font-size:13px;font-weight:700">2</span>
+          <div>
+            <h2 style="font-size:17px;margin:0;letter-spacing:-0.02em">Two-factor authentication</h2>
+            <p class="sub" id="mfaSub" style="margin:2px 0 0">Enter the 6-digit code from your authenticator app</p>
+          </div>
+        </div>
+        <div id="setupBox" style="display:none;margin-bottom:14px;padding:14px;border:1px solid rgba(14,116,144,0.2);border-radius:12px;background:rgba(236,254,255,0.6);font-size:12.5px">
+          <div style="font-weight:700;margin-bottom:8px;color:#0c4a5e">Set up authenticator</div>
+          <ol style="margin:0 0 10px 18px;padding:0;line-height:1.55;color:#334155">
+            <li>Install Google Authenticator, Authy, or Microsoft Authenticator</li>
+            <li>Scan the QR code (or enter the secret manually)</li>
+            <li>Enter the 6-digit code below to confirm</li>
+          </ol>
+          <div id="qrWrap" style="text-align:center;margin:10px 0;display:none">
+            <img id="mfaQr" alt="MFA QR" style="width:160px;height:160px;border-radius:8px;background:#fff;padding:6px" />
+          </div>
+          <div id="setupSecret" style="word-break:break-all;font-family:ui-monospace,monospace;font-size:11px;padding:8px 10px;background:#fff;border-radius:8px;border:1px solid #d7e6ee;margin-bottom:6px"></div>
+          <div class="hint">Keep this secret private. You will need the app on every admin login.</div>
         </div>
         <div class="field">
-          <label for="mfaCode">6-digit code</label>
-          <input class="inp" id="mfaCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" />
+          <label for="mfaCode">Authentication code</label>
+          <input class="inp" id="mfaCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="letter-spacing:0.35em;font-size:18px;font-weight:700;text-align:center" />
         </div>
         <button class="btn-login" type="button" id="btnMfa">Verify &amp; continue</button>
-        <button type="button" class="btn-login" id="btnSetup" style="display:none;margin-top:8px;background:#0f766e">Generate MFA secret</button>
+        <button type="button" class="btn-login" id="btnSetup" style="display:none;margin-top:8px;background:linear-gradient(135deg,#0f766e,#0e7490)">Generate / show MFA secret</button>
+        <button type="button" id="btnBackLogin" style="display:block;width:100%;margin-top:10px;background:transparent;border:none;color:#64748b;font-size:13px;cursor:pointer;font-weight:600">← Back to password</button>
         <div class="err" id="mfaErr"></div>
       </div>
       <p class="hint-foot">Demo: <code>superadmin</code> / <code>12345678</code></p>
@@ -297,13 +316,36 @@
             body: JSON.stringify({ mfa_token: mfaToken })
           });
           document.getElementById('setupBox').style.display = 'block';
-          document.getElementById('setupSecret').textContent = 'Secret: ' + r.secret;
+          document.getElementById('setupSecret').textContent = 'Secret: ' + (r.secret || '');
           setupRequired = true;
+          if (r.otpauth_url) {
+            var qr = document.getElementById('mfaQr');
+            var wrap = document.getElementById('qrWrap');
+            if (qr && wrap) {
+              qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(r.otpauth_url);
+              wrap.style.display = 'block';
+            }
+          }
         } catch (ex) {
           mfaErr.style.display = 'block';
           mfaErr.textContent = ex.message || ex;
         }
       };
+
+      document.getElementById('btnBackLogin') && (document.getElementById('btnBackLogin').onclick = function () {
+        mfaToken = null;
+        document.getElementById('mfaPanel').style.display = 'none';
+        frm.style.display = 'block';
+        document.getElementById('password').value = '';
+        document.getElementById('mfaCode').value = '';
+      });
+
+      document.getElementById('mfaCode') && document.getElementById('mfaCode').addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter') {
+          ev.preventDefault();
+          document.getElementById('btnMfa').click();
+        }
+      });
 
       document.getElementById('btnMfa').onclick = async function () {
         var mfaErr = document.getElementById('mfaErr');

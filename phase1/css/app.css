@@ -239,9 +239,18 @@ textarea.inp { height: auto; padding: 10px 12px; min-height: 80px; resize: verti
 
 .split {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: minmax(320px, 0.95fr) minmax(280px, 1.05fr);
   gap: 16px;
   align-items: start;
+}
+/* Convention: first panel = form (left), second = data table (right) */
+.split > .panel:first-child .panel-b {
+  max-height: calc(100vh - 140px);
+  overflow: auto;
+}
+.split > .panel:last-child .table-wrap {
+  max-height: calc(100vh - 160px);
+  overflow: auto;
 }
 @media (max-width: 960px) {
   .split { grid-template-columns: 1fr; }
