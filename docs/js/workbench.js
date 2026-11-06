@@ -80,22 +80,24 @@
   if (document.documentElement.getAttribute('data-theme') === 'dark') $('btnTheme').textContent = '☀';
 
   async function loadHome() {
+    function set(id, v) { var el = $(id); if (el) el.textContent = v; }
     try {
       var c = await api('/api/v1/cif?limit=500');
-      $('kCif').textContent = (Array.isArray(c) ? c : []).length;
-    } catch (e) {}
+      set('kCif', (Array.isArray(c) ? c : (c.rows || [])).length);
+    } catch (e) { set('kCif', '—'); }
     try {
       var a = await api('/api/v1/accounts?limit=500');
-      $('kAcct').textContent = (Array.isArray(a) ? a : []).length;
-    } catch (e) {}
+      set('kAcct', (Array.isArray(a) ? a : (a.rows || [])).length);
+    } catch (e) { set('kAcct', '—'); }
     try {
       var p = await api('/api/v1/approvals?status=pending&limit=20');
-      $('kAppr').textContent = (p.rows || (Array.isArray(p) ? p : [])).length;
-    } catch (e) {}
+      set('kAppr', (p.rows || (Array.isArray(p) ? p : [])).length);
+    } catch (e) { set('kAppr', '0'); }
     try {
       var eod = await api('/api/v1/eod/status');
-      $('kEod').textContent = (eod && (eod.status || eod.state)) || '—';
-    } catch (e) {}
+      var st = (eod && (eod.status || eod.state || eod.business_date)) || 'Ready';
+      set('kEod', st);
+    } catch (e) { set('kEod', '—'); }
   }
 
   /* ——— CIF / CDD ——— */

@@ -31,8 +31,7 @@
     .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; align-items:center; }
     .split { display:grid; grid-template-columns:1fr 1.15fr; gap:12px; }
     @media(max-width:960px){ .split{ grid-template-columns:1fr; } }
-    .kpi { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; }
-    .kpi .v { font-size:20px; font-weight:700; color:var(--brand); }
+    /* kpi styles moved to dash-kpi in home + app.css */
     .msg { font-size:12px; margin-top:8px; } .msg.ok{color:var(--ok);} .msg.err{color:var(--bad);}
     table.data { width:100%; border-collapse:collapse; font-size:12px; }
     table.data th, table.data td { border-bottom:1px solid var(--line); padding:7px 8px; text-align:left; }
@@ -92,19 +91,211 @@
     <div class="workspace">
 
       <div class="panel-view active" id="view-home">
-        <div class="kpis">
-          <div class="kpi"><div class="l">Customers</div><div class="v" id="kCif">—</div></div>
-          <div class="kpi"><div class="l">Accounts</div><div class="v" id="kAcct">—</div></div>
-          <div class="kpi"><div class="l">Pending approvals</div><div class="v" id="kAppr">—</div></div>
-          <div class="kpi"><div class="l">EOD</div><div class="v" id="kEod">—</div></div>
+        <style>
+          .dash-hero {
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 18px;
+            background: linear-gradient(125deg, #0c4a5e 0%, #0e7490 45%, #0891b2 100%);
+            color: #ecfeff;
+            box-shadow: 0 12px 36px rgba(12, 74, 94, 0.28);
+            position: relative;
+            overflow: hidden;
+          }
+          .dash-hero::after {
+            content: '';
+            position: absolute; right: -40px; top: -40px;
+            width: 180px; height: 180px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(103,232,249,.35), transparent 70%);
+          }
+          .dash-hero h2 {
+            margin: 0 0 6px; font-size: 20px; font-weight: 800; letter-spacing: -.03em;
+            position: relative; z-index: 1;
+          }
+          .dash-hero p {
+            margin: 0; font-size: 13.5px; opacity: .88; max-width: 520px;
+            position: relative; z-index: 1; line-height: 1.5;
+          }
+          .dash-hero .flow {
+            margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px;
+            position: relative; z-index: 1;
+          }
+          .dash-hero .chip {
+            font-size: 11px; font-weight: 700;
+            padding: 5px 10px; border-radius: 999px;
+            background: rgba(255,255,255,.15);
+            border: 1px solid rgba(255,255,255,.2);
+          }
+          .dash-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 18px;
+          }
+          @media (max-width: 900px) {
+            .dash-kpis { grid-template-columns: repeat(2, 1fr); }
+          }
+          .dash-kpi {
+            background: var(--panel, #fff);
+            border: 1px solid var(--line, #d7e6ee);
+            border-radius: 14px;
+            padding: 16px 16px 14px;
+            box-shadow: 0 4px 20px rgba(12,74,94,.06);
+            transition: transform .18s, box-shadow .18s;
+            position: relative;
+            overflow: hidden;
+          }
+          .dash-kpi:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(12,74,94,.12);
+          }
+          .dash-kpi .ico {
+            width: 36px; height: 36px; border-radius: 11px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; margin-bottom: 12px;
+            background: var(--brand-soft, #ecfeff);
+          }
+          .dash-kpi .lbl {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .05em; color: var(--ink-3, #64748b);
+          }
+          .dash-kpi .val {
+            font-size: 26px; font-weight: 800; letter-spacing: -.03em;
+            color: var(--brand-deep, #0c4a5e); margin-top: 4px;
+            font-variant-numeric: tabular-nums;
+          }
+          .dash-kpi .sub {
+            font-size: 11.5px; color: var(--ink-3, #64748b); margin-top: 4px;
+          }
+          .dash-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 16px;
+          }
+          @media (max-width: 900px) {
+            .dash-grid { grid-template-columns: 1fr; }
+          }
+          .dash-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+          }
+          .dash-act {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--line, #d7e6ee);
+            background: var(--panel, #fff);
+            cursor: pointer;
+            text-align: left;
+            font: inherit;
+            transition: border-color .15s, background .15s, transform .15s;
+          }
+          .dash-act:hover {
+            border-color: var(--brand-mid, #0891b2);
+            background: var(--brand-soft, #ecfeff);
+            transform: translateY(-1px);
+          }
+          .dash-act .ai {
+            width: 40px; height: 40px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            background: linear-gradient(135deg, #ecfeff, #cffafe);
+            flex-shrink: 0;
+          }
+          .dash-act strong {
+            display: block; font-size: 13px; font-weight: 700;
+            color: var(--ink, #0f172a);
+          }
+          .dash-act span {
+            font-size: 11.5px; color: var(--ink-3, #64748b);
+          }
+          .dash-list {
+            list-style: none; padding: 0; margin: 0;
+          }
+          .dash-list li {
+            display: flex; gap: 10px; align-items: flex-start;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--line, #d7e6ee);
+            font-size: 13px;
+          }
+          .dash-list li:last-child { border-bottom: 0; }
+          .dash-list .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--brand-mid, #0891b2);
+            margin-top: 5px; flex-shrink: 0;
+          }
+        </style>
+
+        <div class="dash-hero">
+          <h2>Operations dashboard</h2>
+          <p>DigiFyntek workbench — SBP-aligned CDD, accounts, credit, ledger and day control in one place.</p>
+          <div class="flow">
+            <span class="chip">1 CDD / CIF</span>
+            <span class="chip">2 KYC</span>
+            <span class="chip">3 Account</span>
+            <span class="chip">4 Transactions</span>
+            <span class="chip">5 Credit</span>
+            <span class="chip">6 EOD</span>
+          </div>
         </div>
-        <p class="hint" style="margin:12px 0">SBP-style ops: CDD → KYC → account → transactions → credit → GL → EOD. Use sidebar modules.</p>
-        <div class="toolbar">
-          <button type="button" class="btn btn-p" data-go="customer">New CIF</button>
-          <button type="button" class="btn" data-go="account">Open account</button>
-          <button type="button" class="btn" data-go="loan">Financing</button>
-          <button type="button" class="btn" data-go="eod">EOD</button>
-          <button type="button" class="btn" data-go="ai-report">Reports</button>
+
+        <div class="dash-kpis">
+          <div class="dash-kpi">
+            <div class="ico">👤</div>
+            <div class="lbl">Customers</div>
+            <div class="val" id="kCif">—</div>
+            <div class="sub">CIF / CDD register</div>
+          </div>
+          <div class="dash-kpi">
+            <div class="ico">🏦</div>
+            <div class="lbl">Accounts</div>
+            <div class="val" id="kAcct">—</div>
+            <div class="sub">CASA &amp; products</div>
+          </div>
+          <div class="dash-kpi">
+            <div class="ico">✅</div>
+            <div class="lbl">Pending approvals</div>
+            <div class="val" id="kAppr">—</div>
+            <div class="sub">Maker–checker queue</div>
+          </div>
+          <div class="dash-kpi">
+            <div class="ico">📅</div>
+            <div class="lbl">EOD status</div>
+            <div class="val" id="kEod" style="font-size:18px">—</div>
+            <div class="sub">Day control</div>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          <div class="panel">
+            <div class="panel-h">Quick actions</div>
+            <div class="panel-b">
+              <div class="dash-actions">
+                <button type="button" class="dash-act" data-go="customer"><span class="ai">📋</span><span><strong>New CIF / CDD</strong><span>Onboard customer</span></span></button>
+                <button type="button" class="dash-act" data-go="account"><span class="ai">💳</span><span><strong>Open account</strong><span>CASA / product</span></span></button>
+                <button type="button" class="dash-act" data-go="cash"><span class="ai">💵</span><span><strong>Cash teller</strong><span>Deposit / withdraw</span></span></button>
+                <button type="button" class="dash-act" data-go="loan"><span class="ai">📑</span><span><strong>Financing</strong><span>Disburse / repay</span></span></button>
+                <button type="button" class="dash-act" data-go="kyc"><span class="ai">🔍</span><span><strong>KYC cases</strong><span>Review &amp; decide</span></span></button>
+                <button type="button" class="dash-act" data-go="eod"><span class="ai">🌙</span><span><strong>End of day</strong><span>Accrual &amp; close</span></span></button>
+                <button type="button" class="dash-act" data-go="ai-report"><span class="ai">📊</span><span><strong>AI reports</strong><span>Natural language MIS</span></span></button>
+                <button type="button" class="dash-act" data-go="users"><span class="ai">🔐</span><span><strong>Users &amp; roles</strong><span>RBAC control</span></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">Operating checklist</div>
+            <div class="panel-b">
+              <ul class="dash-list">
+                <li><span class="dot"></span><span><strong>Identity</strong> — CNIC, NADRA / biometric, CDD fields</span></li>
+                <li><span class="dot"></span><span><strong>KYC decision</strong> — risk, PEP, approve before full activation</span></li>
+                <li><span class="dot"></span><span><strong>Account purpose</strong> — SOF &amp; purpose on every CASA</span></li>
+                <li><span class="dot"></span><span><strong>Transactions</strong> — narrative / purpose on cash &amp; transfers</span></li>
+                <li><span class="dot"></span><span><strong>Credit</strong> — purpose of financing &amp; security</span></li>
+                <li><span class="dot"></span><span><strong>Day end</strong> — EOD, trial balance, approvals clear</span></li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
 
