@@ -188,7 +188,7 @@ async function status(orgCode) {
       { code: 'TRIAL_BALANCE', label: 'Trial balance must balance', required: true },
       { code: 'PENDING_APPROVALS', label: 'No PENDING approval requests', required: true },
       { code: 'UNPOSTED', label: 'Clear legacy unposted (if applicable)', required: false },
-      { code: 'ACCRUAL', label: 'Interest/profit accrual step', required: false },
+      { code: 'ACCRUAL', label: 'Deposit & loan accruals (Actual/365)', required: true },
       { code: 'CLOSE', label: 'Close day and open next business date', required: true },
     ],
   };
@@ -313,8 +313,10 @@ async function runEod(orgCode, userId, body = {}) {
     steps.push({ code: 'UNPOSTED', ok: true, detail: `Skipped: ${e.message}` });
   }
 
-  // --- Accrual (standard deposits + loans; part of EOD; idempotent per day) ---
-  if (!body.skip_accrual) {
+  // --- Accrual: ALWAYS auto-run during EOD (deposits + loans). Idempotent per business date.
+  // Emergency skip only if BOTH skip_accrual and force_skip_accrual are true.
+  const allowSkipAccrual = body.skip_accrual === true && body.force_skip_accrual === true;
+  if (!allowSkipAccrual) {
     try {
       const accrual = require('./accrual');
       const acc = await accrual.runAllAccruals({
@@ -338,16 +340,23 @@ async function runEod(orgCode, userId, body = {}) {
         code: 'ACCRUAL',
         ok: !hasErrors,
         required: true,
-        detail: `Actual/365 · posted ${acc.total_count} entries · PKR ${acc.total_amount} | SAV ${acc.savings.count || 0} (${acc.savings.amount || 0}) · TD ${acc.term_deposits.count || 0} (${acc.term_deposits.amount || 0}) · LOAN ${acc.financing.count || 0} (${acc.financing.amount || 0}) · ISL ${acc.islamic_financing?.count || 0}/${acc.islamic_term_deposits?.count || 0}`,
+        auto: true,
+        detail: `AUTO · Actual/365 · posted ${acc.total_count} · PKR ${acc.total_amount} | SAV ${acc.savings.count || 0} (${acc.savings.amount || 0}) · TD ${acc.term_deposits.count || 0} (${acc.term_deposits.amount || 0}) · LOAN ${acc.financing.count || 0} (${acc.financing.amount || 0}) · ISL ${acc.islamic_financing?.count || 0}/${acc.islamic_term_deposits?.count || 0}`,
         accrual: acc,
       });
-      if (hasErrors && body.accrual_required !== false) overall = overall === 'failed' ? 'failed' : 'partial';
+      if (hasErrors) overall = overall === 'failed' ? 'failed' : 'partial';
     } catch (e) {
-      steps.push({ code: 'ACCRUAL', ok: false, required: true, detail: e.message });
-      if (body.accrual_required !== false) overall = 'failed';
+      steps.push({ code: 'ACCRUAL', ok: false, required: true, auto: true, detail: e.message });
+      overall = 'failed';
     }
   } else {
-    steps.push({ code: 'ACCRUAL', ok: true, required: false, detail: 'Skipped by request (skip_accrual)' });
+    steps.push({
+      code: 'ACCRUAL',
+      ok: true,
+      required: true,
+      auto: false,
+      detail: 'EMERGENCY skip (skip_accrual + force_skip_accrual both set)',
+    });
   }
 
   // --- Legacy day-end ---

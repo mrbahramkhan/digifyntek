@@ -1125,9 +1125,9 @@
   }
   $('btnEodRef') && ($('btnEodRef').onclick = loadEod);
   $('btnEod') && ($('btnEod').onclick = async function () {
-    if (!confirm('Run End of Day (includes deposit & loan accruals)?')) return;
+    if (!confirm('Run End of Day?\n\nAccruals for deposits (CASA/TD) and loans will run automatically.')) return;
     try {
-      var r = await api('/api/v1/eod/run', { method: 'POST', body: JSON.stringify({}) });
+      var r = await api('/api/v1/eod/run', { method: 'POST', body: JSON.stringify({ skip_accrual: false }) });
       msg('eodMsg', 'EOD ' + (r.status || 'done') + (r.steps ? ' · steps ' + r.steps.length : ''), true);
       loadEod();
       loadAccrualLog();
