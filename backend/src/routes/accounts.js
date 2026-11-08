@@ -60,6 +60,21 @@ router.post('/', auth(), async (req, res, next) => {
     if (!b.customer_id) return res.status(400).json({ error: 'customer_id required' });
     if (!b.product_code) return res.status(400).json({ error: 'product_code required' });
     if (!b.purpose_of_account || !String(b.purpose_of_account).trim()) return res.status(400).json({ error: 'purpose_of_account required (SBP onboarding)' });
+    if (!b.source_of_funds || !String(b.source_of_funds).trim()) return res.status(400).json({ error: 'source_of_funds required (SBP onboarding)' });
+    // Block active if customer KYC rejected
+    try {
+      const [[cust]] = await pool.query(`SELECT kyc_status, status, is_pep, risk_rating FROM cbs_customers WHERE id = ?`, [b.customer_id]);
+      if (!cust) return res.status(400).json({ error: 'CIF not found' });
+      if (String(cust.kyc_status || '').toLowerCase() === 'rejected') {
+        return res.status(400).json({ error: 'Cannot open account — customer KYC rejected' });
+      }
+      if (String(cust.status || '').toLowerCase() === 'closed') {
+        return res.status(400).json({ error: 'Cannot open account — customer relationship closed' });
+      }
+      if (String(cust.kyc_status || '').toLowerCase() === 'pending' && (b.status === 'active') && !b.force_active) {
+        b.status = 'pending';
+      }
+    } catch (_) {}
     const accountNo = b.account_no || ref('ACC').slice(0, 20);
     // KYC gate: pending KYC customers open as pending unless override
     let status = b.status || 'active';

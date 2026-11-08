@@ -70,6 +70,75 @@ async function ensureCddColumns() {
 
 
 
+
+/** SBP-oriented CIF validation — returns error string or null */
+function validateCifBody(b, { isUpdate } = {}) {
+  const name = String(b.full_name || '').trim();
+  if (!name || name.length < 3) return 'Full name required (min 3 characters, as per ID)';
+
+  const type = String(b.customer_type || 'individual').toLowerCase();
+  const natural = ['individual', 'sole_proprietorship', 'sole_prop'].includes(type) || type === '';
+
+  if (natural) {
+    const cnic = String(b.cnic || '').replace(/\D/g, '');
+    if (!cnic) return 'CNIC / ID number required for natural person (SBP CDD)';
+    if (cnic.length !== 13) return 'CNIC must be exactly 13 digits';
+    if (!b.phone && !b.mobile) return 'Mobile number required for CDD contact';
+    const mobile = String(b.phone || b.mobile || '').replace(/\D/g, '');
+    if (mobile && mobile.length < 10) return 'Mobile number looks invalid (min 10 digits)';
+    if (!b.father_or_husband && !b.father_name) return 'Father / husband name required (as per ID)';
+    if (!b.dob && !b.date_of_birth) return 'Date of birth required';
+    if (!b.address && !b.permanent_address) return 'Permanent address required';
+    if (!b.source_of_funds) return 'Source of funds / income required (SBP CDD)';
+    if (!b.occupation && type === 'individual') return 'Occupation required';
+  }
+
+  if (type === 'sole_proprietorship' || type === 'sole_prop') {
+    if (!b.business_name) return 'Business / trade name required for sole proprietorship';
+    if (!b.nature_of_business && !b.occupation) return 'Nature of business required';
+    const hasBizProof =
+      b.business_ntn ||
+      b.business_reg_no ||
+      b.sales_tax_no ||
+      b.trade_body_membership ||
+      b.sole_prop_declaration ||
+      b.sole_prop_declaration_text;
+    if (!hasBizProof) {
+      return 'Sole prop: provide NTN/registration/trade body OR sole prop declaration (SBP business proof)';
+    }
+  }
+
+  if (type === 'corporate' || type === 'company' || type === 'partnership') {
+    if (!b.business_name && !b.full_name) return 'Entity / business name required';
+    if (!b.beneficial_owner) return 'Beneficial owner identification required for entities';
+  }
+
+  // PEP → high risk
+  const pep = b.is_pep === true || b.is_pep === 1 || b.is_pep === '1' || b.pep_flag;
+  if (pep) {
+    const risk = String(b.risk_rating || '').toLowerCase();
+    if (risk === 'low') return 'PEP / related customer cannot be low risk — set medium or high (EDD)';
+  }
+
+  // High risk needs notes/EDD
+  if (String(b.risk_rating || '').toLowerCase() === 'high') {
+    if (!b.notes || String(b.notes).trim().length < 5) {
+      return 'High-risk customer requires EDD notes / comments';
+    }
+  }
+
+  // CNIC expiry if provided should not be long-expired for active verified KYC
+  if (b.cnic_expiry && String(b.kyc_status || '').toLowerCase() === 'verified') {
+    const exp = new Date(b.cnic_expiry);
+    if (!isNaN(exp) && exp < new Date(Date.now() - 180 * 864e5)) {
+      return 'CNIC expired — cannot mark KYC verified; renew or use NADRA token policy';
+    }
+  }
+
+  return null;
+}
+
+
 function actor(req) {
   return req.user?.userId || req.user?.id || null;
 }
@@ -110,12 +179,12 @@ router.get('/:id', auth(), async (req, res, next) => {
 router.post('/', auth(), async (req, res, next) => {
   try {
     const b = req.body || {};
-    if (!b.full_name) return res.status(400).json({ error: 'full_name required' });
-    // SBP CDD minimums (soft enforcement for individual onboarding)
-    if ((b.customer_type || 'individual') === 'individual' || b.customer_type === 'sole_proprietorship') {
-      const cnic = String(b.cnic || '').replace(/\D/g, '');
-      if (cnic && cnic.length !== 13) return res.status(400).json({ error: 'CNIC must be 13 digits' });
-      if (!b.phone && !b.mobile) return res.status(400).json({ error: 'mobile/phone required for CDD' });
+    const verr = validateCifBody(b, { isUpdate: false });
+    if (verr) return res.status(400).json({ error: verr });
+    // PEP auto-bump risk
+    if (b.is_pep === true || b.is_pep === 1 || b.is_pep === '1') {
+      if (!b.risk_rating || b.risk_rating === 'low') b.risk_rating = 'high';
+      if (!b.aml_risk || b.aml_risk === 'low') b.aml_risk = 'high';
     }
     const customerNo = b.customer_no || ref('CIF').slice(0, 20);
     await ensureCddColumns();
@@ -207,6 +276,12 @@ router.post('/', auth(), async (req, res, next) => {
 router.put('/:id', auth(), async (req, res, next) => {
   try {
     const b = req.body || {};
+    const verr = validateCifBody(b, { isUpdate: true });
+    if (verr) return res.status(400).json({ error: verr });
+    if (b.is_pep === true || b.is_pep === 1 || b.is_pep === '1') {
+      if (!b.risk_rating || b.risk_rating === 'low') b.risk_rating = 'high';
+      if (!b.aml_risk || b.aml_risk === 'low') b.aml_risk = 'high';
+    }
     await ensureCddColumns();
     await pool.query(
       `UPDATE cbs_customers SET

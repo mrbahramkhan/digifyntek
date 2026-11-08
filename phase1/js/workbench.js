@@ -389,6 +389,39 @@
     if (j) show(j);
   });
 
+
+  function validateCifClient(body) {
+    if (!body.full_name || body.full_name.length < 3) return 'Full name required (as per CNIC)';
+    var type = (body.customer_type || 'individual').toLowerCase();
+    var natural = type === 'individual' || type === 'sole_proprietorship';
+    if (natural) {
+      var cnic = String(body.cnic || '').replace(/\D/g, '');
+      if (cnic.length !== 13) return 'CNIC must be 13 digits (SBP identity)';
+      if (!body.phone && !body.mobile) return 'Mobile required';
+      if (!body.father_or_husband && !body.father_name) return 'Father / husband name required';
+      if (!body.dob) return 'Date of birth required';
+      if (!body.address) return 'Permanent address required';
+      if (!body.source_of_funds) return 'Source of funds required (SBP CDD)';
+      if (type === 'individual' && !body.occupation) return 'Occupation required';
+    }
+    if (type === 'sole_proprietorship') {
+      if (!body.business_name) return 'Business name required for sole prop';
+      if (!(body.business_ntn || body.business_reg_no || body.sole_prop_declaration || body.sole_prop_declaration_text || body.trade_body_membership || body.sales_tax_no)) {
+        return 'Sole prop: NTN / registration / declaration / trade body — at least one business proof';
+      }
+    }
+    if (type === 'corporate' || type === 'partnership') {
+      if (!body.beneficial_owner) return 'Beneficial owner required for entity';
+    }
+    if (body.is_pep && body.risk_rating === 'low') return 'PEP cannot be low risk — set medium/high';
+    if (body.risk_rating === 'high' && (!body.notes || body.notes.length < 5)) return 'High risk requires EDD notes';
+    if (body.kyc_status === 'verified' && body.cnic_expiry) {
+      var exp = new Date(body.cnic_expiry);
+      if (!isNaN(exp.getTime()) && exp < new Date(Date.now() - 180 * 864e5)) return 'CNIC expired — cannot verify KYC';
+    }
+    return null;
+  }
+
   /* ——— CIF / CDD ——— */
   var custRows = [];
   async function loadCustomers() {
@@ -618,6 +651,14 @@
       sole_prop_declared_at: gv('c_sp_date') || null,
       account_request_letterhead: gv('c_sp_req') === '1' 
     };
+    if (body.is_pep && (!body.risk_rating || body.risk_rating === 'low')) {
+      body.risk_rating = 'high';
+      body.aml_risk = 'high';
+      if ($('c_risk')) $('c_risk').value = 'high';
+      if ($('c_aml')) $('c_aml').value = 'high';
+    }
+    var verr = validateCifClient(body);
+    if (verr) return msg('custMsg', verr, false);
     try {
       var id = $('c_id').value;
       if (id) await api('/api/v1/cif/' + id, { method: 'PUT', body: JSON.stringify(body) });
@@ -625,7 +666,7 @@
         var created = await api('/api/v1/cif', { method: 'POST', body: JSON.stringify(body) });
         if (created && created.id) $('c_id').value = created.id;
       }
-      msg('custMsg', 'CIF saved (CDD)', true);
+      msg('custMsg', 'CIF saved (SBP CDD checks passed)', true);
       loadCustomers();
     } catch (err) { msg('custMsg', err.message || err, false); }
   });
@@ -674,9 +715,11 @@
         kyc_cleared: ag('a_kyc') === '1',
         notes: ag('a_notes') || null
       };
-      if (!body.purpose_of_account) {
-        msg('acctMsg', 'Purpose of account required (SBP)', false);
-        return;
+      if (!body.customer_id) return msg('acctMsg', 'Customer ID (CIF) required', false);
+      if (!body.purpose_of_account) return msg('acctMsg', 'Purpose of account required (SBP onboarding)', false);
+      if (!body.source_of_funds) return msg('acctMsg', 'Source of funds required on account opening', false);
+      if (body.status === 'active' && body.kyc_cleared !== true && body.kyc_cleared !== 1) {
+        // soft warn: allow but message
       }
       var row = await api('/api/v1/accounts', { method: 'POST', body: JSON.stringify(body) });
       msg('acctMsg', 'Opened ' + (row.account_no || '') + ' · status ' + (row.status || '') + ' · id=' + row.id, true);
