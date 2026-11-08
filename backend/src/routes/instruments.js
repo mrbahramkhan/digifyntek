@@ -690,4 +690,97 @@ router.post('/requests/:id/issue', auth(), async (req, res, next) => {
 });
 
 
+
+/** Workbench simple issue/request — maps to cheque_book_requests */
+router.post('/', auth(), async (req, res, next) => {
+  try {
+    await ensureTables();
+    const b = req.body || {};
+    if (!b.account_no || !String(b.account_no).trim()) {
+      return res.status(400).json({ error: 'account_no required' });
+    }
+    if (b.kyc_confirmed === false || b.kyc_confirmed === 0) {
+      return res.status(400).json({ error: 'Confirm KYC / active account before cheque book' });
+    }
+    const leaves = Math.min(200, Math.max(1, Number(b.leaves) || Number(b.leaves_requested) || 25));
+    if (leaves < 10) return res.status(400).json({ error: 'Minimum 10 leaves per request' });
+    // Account existence soft check
+    try {
+      const [[acct]] = await pool.query(
+        `SELECT id, status, customer_id FROM cbs_accounts WHERE account_no = ? OR id = ? LIMIT 1`,
+        [b.account_no, Number(b.account_no) || 0]
+      );
+      if (acct && String(acct.status || '').toLowerCase() === 'closed') {
+        return res.status(400).json({ error: 'Account closed — cannot issue cheque book' });
+      }
+      if (acct && String(acct.status || '').toLowerCase() === 'pending') {
+        return res.status(400).json({ error: 'Account pending activation — cheque book not allowed' });
+      }
+    } catch (_) {}
+
+    const org = orgCode(req);
+    const reqNo = b.request_no || `CBR-${Date.now().toString().slice(-8)}`;
+    try {
+      const [ins] = await pool.query(
+        `INSERT INTO cheque_book_requests
+          (por_orgacode, vac_code, request_no, member_ref, member_name, account_no,
+           bank_branch, branch_code, leaves_requested, request_date, status, reason, created_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), 'pending', ?, ?)`,
+        [
+          org,
+          b.branch_code || null,
+          reqNo,
+          b.member_ref || null,
+          b.member_name || null,
+          String(b.account_no).trim(),
+          b.bank_branch || null,
+          b.branch_code || '001',
+          leaves,
+          b.remarks || b.delivery_mode || null,
+          req.user?.userId || null,
+        ]
+      );
+      return res.status(201).json({ id: ins.insertId, request_no: reqNo, status: 'pending', leaves });
+    } catch (e) {
+      // fallback books insert if requests table missing shape
+      const start = 1;
+      const end = leaves;
+      const bookNo = `CB-${Date.now().toString().slice(-8)}`;
+      const [ins] = await pool.query(
+        `INSERT INTO cheque_books
+          (por_orgacode, book_no, member_ref, account_no, leaf_start, leaf_end, total_leaves, issue_date, status, notes, created_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), 'active', ?, ?)`,
+        [org, bookNo, b.member_ref || null, String(b.account_no).trim(), start, end, leaves, b.remarks || null, req.user?.userId || null]
+      );
+      return res.status(201).json({ id: ins.insertId, book_no: bookNo, status: 'active', leaves });
+    }
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.get('/', auth(), async (req, res, next) => {
+  try {
+    await ensureTables();
+    const limit = Math.min(Number(req.query.limit) || 50, 200);
+    try {
+      const [rows] = await pool.query(
+        `SELECT id, request_no AS book_no, account_no, status, leaves_requested AS total_leaves, created_at
+         FROM cheque_book_requests ORDER BY id DESC LIMIT ?`,
+        [limit]
+      );
+      if (rows.length) return res.json(rows);
+    } catch (_) {}
+    const [rows] = await pool.query(
+      `SELECT id, book_no, account_no, status, total_leaves, issue_date AS created_at
+       FROM cheque_books ORDER BY id DESC LIMIT ?`,
+      [limit]
+    );
+    res.json(rows);
+  } catch (e) {
+    next(e);
+  }
+});
+
+
 module.exports = router;

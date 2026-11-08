@@ -13,7 +13,23 @@ router.get('/status', auth(), async (req, res, next) => {
 
 router.post('/run', auth(), requirePermission('eod.run'), async (req, res, next) => {
   try {
-    const result = await eod.runEod(eod.org(req), req.user.userId || req.user.id, req.body || {});
+    const b = req.body || {};
+    // SBP-style control: warn/block if open maker-checker items (unless force)
+    if (!b.force) {
+      try {
+        const pool = require('../config/db');
+        const [[{ cnt }]] = await pool.query(
+          `SELECT COUNT(*) AS cnt FROM cbs_approvals WHERE status = 'pending'`
+        ).catch(() => [[{ cnt: 0 }]]);
+        if (Number(cnt) > 0 && !b.allow_pending_approvals) {
+          return res.status(400).json({
+            error: `EOD blocked: ${cnt} pending approval(s). Clear maker-checker or pass allow_pending_approvals`,
+            pending_approvals: Number(cnt),
+          });
+        }
+      } catch (_) {}
+    }
+    const result = await eod.runEod(eod.org(req), req.user.userId || req.user.id, b);
     res.status(result.ok ? 200 : 400).json(result);
   } catch (e) {
     next(e);

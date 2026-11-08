@@ -90,11 +90,24 @@ router.patch('/screening/:screenId', auth(), async (req, res, next) => {
 router.post('/:id/decide', auth(), requirePermission('kyc.decide'), async (req, res, next) => {
   try {
     const b = req.body || {};
+    const decision = String(b.decision || '').toLowerCase();
+    if (!['approve', 'reject', 'refer'].includes(decision)) {
+      return res.status(400).json({ error: 'decision must be approve | reject | refer' });
+    }
+    if (decision === 'reject' && (!b.note || String(b.note).trim().length < 5)) {
+      return res.status(400).json({ error: 'Rejection requires compliance note (min 5 chars)' });
+    }
+    if (decision === 'refer' && (!b.note || String(b.note).trim().length < 5)) {
+      return res.status(400).json({ error: 'EDD / refer requires note' });
+    }
+    if (decision === 'approve' && String(b.risk_rating || '').toLowerCase() === 'high' && (!b.note || String(b.note).trim().length < 5)) {
+      return res.status(400).json({ error: 'High-risk approval requires EDD note' });
+    }
     res.json(
       await kyc.decideCase({
         caseId: Number(req.params.id),
         decision: b.decision,
-        kycOutcome: b.kyc_outcome,
+        kycOutcome: b.kyc_outcome || (decision === 'approve' ? 'verified' : decision === 'reject' ? 'rejected' : 'manual_review'),
         riskRating: b.risk_rating,
         note: b.note,
         decidedBy: actor(req),

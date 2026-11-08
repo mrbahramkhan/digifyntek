@@ -898,16 +898,30 @@
   }
   $('frmCol') && ($('frmCol').onsubmit = async function (e) {
     e.preventDefault();
+    var cust = Number($('col_cust').value);
+    var type = $('col_type').value;
+    var desc = ($('col_desc') && $('col_desc').value.trim()) || '';
+    var val = Number($('col_val').value);
+    var fsv = Number(($('col_fsv') && $('col_fsv').value) || val);
+    var proof = ($('col_proof') && $('col_proof').value === '1');
+    var valuer = ($('col_valuer') && $('col_valuer').value.trim()) || '';
+    var vdate = ($('col_vdate') && $('col_vdate').value) || '';
+    if (!cust) return msg('colMsg', 'Customer ID required', false);
+    if (!desc || desc.length < 5) return msg('colMsg', 'Description / title details required', false);
+    if (!(val > 0)) return msg('colMsg', 'Market value must be > 0', false);
+    if (fsv > val * 1.05) return msg('colMsg', 'FSV cannot exceed market value', false);
+    if ((type === 'property' || type === 'vehicle') && !proof) return msg('colMsg', 'Property/vehicle needs ownership proof on file', false);
+    if (val >= 1000000 && !valuer && !vdate) return msg('colMsg', 'Value >= 1,000,000 requires valuer or valuation date', false);
     var body = {
-      customer_id: Number($('col_cust').value),
-      collateral_type: $('col_type').value,
-      description: $('col_desc').value,
-      value: Number($('col_val').value),
-      forced_sale_value: Number(($('col_fsv') && $('col_fsv').value) || $('col_val').value),
+      customer_id: cust,
+      collateral_type: type,
+      description: desc,
+      value: val,
+      forced_sale_value: fsv,
       facility_ref: ($('col_fac') && $('col_fac').value.trim()) || undefined,
-      valuation_date: ($('col_vdate') && $('col_vdate').value) || undefined,
-      valuer: ($('col_valuer') && $('col_valuer').value.trim()) || undefined,
-      ownership_proof: ($('col_proof') && $('col_proof').value === '1')
+      valuation_date: vdate || undefined,
+      valuer: valuer || undefined,
+      ownership_proof: proof
     };
     try {
       await api('/api/v1/collateral', { method: 'POST', body: JSON.stringify(body) }).catch(function () {
@@ -935,16 +949,22 @@
   }
   $('frmInst') && ($('frmInst').onsubmit = async function (e) {
     e.preventDefault();
+    var acct = ($('inst_acct') && $('inst_acct').value.trim()) || '';
+    var leaves = Number($('inst_leaves').value) || 25;
+    if (!acct) return msg('instMsg', 'Account number required', false);
     if ($('inst_kyc') && $('inst_kyc').value === '0') {
       return msg('instMsg', 'Confirm KYC / active account before issue', false);
     }
+    if (leaves < 10) return msg('instMsg', 'Minimum 10 leaves', false);
+    if (leaves > 200) return msg('instMsg', 'Maximum 200 leaves per book', false);
     var body = {
-      account_no: $('inst_acct').value.trim(),
+      account_no: acct,
       member_ref: ($('inst_mem') && $('inst_mem').value.trim()) || undefined,
       branch_code: $('inst_br').value,
-      leaves: Number($('inst_leaves').value) || 25,
+      leaves: leaves,
       delivery_mode: ($('inst_del') && $('inst_del').value) || 'branch',
-      remarks: ($('inst_rmk') && $('inst_rmk').value.trim()) || undefined
+      remarks: ($('inst_rmk') && $('inst_rmk').value.trim()) || undefined,
+      kyc_confirmed: !($('inst_kyc') && $('inst_kyc').value === '0')
     };
     try {
       await api('/api/instruments', { method: 'POST', body: JSON.stringify(body) });
@@ -1058,8 +1078,9 @@
   }
   $('btnEodRef') && ($('btnEodRef').onclick = loadEod);
   $('btnEod') && ($('btnEod').onclick = async function () {
+    if (!confirm('Run End of Day? Pending maker-checker items may block EOD (SBP control).')) return;
     try {
-      await api('/api/v1/eod/run', { method: 'POST', body: '{}' });
+      await api('/api/v1/eod/run', { method: 'POST', body: JSON.stringify({}) });
       msg('eodMsg', 'EOD done', true);
       loadEod();
     } catch (e) { msg('eodMsg', e.message || e, false); }
