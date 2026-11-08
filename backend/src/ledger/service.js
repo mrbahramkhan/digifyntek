@@ -344,17 +344,15 @@ async function internalTransfer({
   const tref = ref('TRF');
   const [ins] = await pool.query(
     `INSERT INTO cbs_transfers
-      (transfer_ref, from_account_id, to_account_id, amount, business_date, status,
-       journal_id, idempotency_key, narrative, created_by)
-     VALUES (?, ?, ?, ?, ?, 'POSTED', ?, ?, ?, ?)`,
+      (transfer_ref, from_account_id, to_account_id, amount, status,
+       journal_id, narrative, created_by)
+     VALUES (?, ?, ?, ?, 'POSTED', ?, ?, ?)`,
     [
       tref,
       fromAccountId,
       toAccountId,
       amt,
-      businessDate || new Date().toISOString().slice(0, 10),
       journal.id,
-      idempotencyKey || null,
       narrative || null,
       createdBy || null,
     ]

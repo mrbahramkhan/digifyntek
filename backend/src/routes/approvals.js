@@ -47,7 +47,7 @@ router.post('/:id/approve', auth(), requirePermission('approval.decide'), async 
     // maker-checker segregation (SBP control)
     try {
       const pool = require('../config/db');
-      const [[reqRow]] = await pool.query(`SELECT maker_id, created_by, status FROM cbs_approvals WHERE id = ?`, [req.params.id]).catch(() => [[null]]);
+      const [[reqRow]] = await pool.query(`SELECT maker_id, created_by, status FROM cbs_approval_requests WHERE id = ?`, [req.params.id]).catch(() => [[null]]);
       if (reqRow) {
         const maker = String(reqRow.maker_id || reqRow.created_by || '');
         const checker = String(actor(req) || '');

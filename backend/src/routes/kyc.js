@@ -103,11 +103,19 @@ router.post('/:id/decide', auth(), requirePermission('kyc.decide'), async (req, 
     if (decision === 'approve' && String(b.risk_rating || '').toLowerCase() === 'high' && (!b.note || String(b.note).trim().length < 5)) {
       return res.status(400).json({ error: 'High-risk approval requires EDD note' });
     }
+    // service expects approved|rejected (not approve|reject)
+    const mapped =
+      decision === 'approve' ? 'approved' :
+      decision === 'reject' ? 'rejected' :
+      decision; // refer handled above as note-only path if service supports
+    if (decision === 'refer') {
+      return res.status(400).json({ error: 'Use reject with note for EDD refer, or extend service for refer status' });
+    }
     res.json(
       await kyc.decideCase({
         caseId: Number(req.params.id),
-        decision: b.decision,
-        kycOutcome: b.kyc_outcome || (decision === 'approve' ? 'verified' : decision === 'reject' ? 'rejected' : 'manual_review'),
+        decision: mapped,
+        kycOutcome: b.kyc_outcome || (decision === 'approve' ? 'verified' : 'rejected'),
         riskRating: b.risk_rating,
         note: b.note,
         decidedBy: actor(req),
