@@ -16,6 +16,9 @@ router.post('/verify', auth(), requirePermission('kyc.write', 'cif.write', 'kyc.
   try {
     const b = req.body || {};
     if (!b.cnic) return res.status(400).json({ error: 'cnic required' });
+    const cnicDigits = String(b.cnic).replace(/\D/g, '');
+    if (cnicDigits.length !== 13) return res.status(400).json({ error: 'CNIC must be 13 digits' });
+    b.cnic = cnicDigits;
 
     const result = await nadra.verifyIdentity(b);
 
@@ -142,6 +145,9 @@ router.post('/bio-verify', auth(), requirePermission('kyc.write', 'cif.write', '
   try {
     const b = req.body || {};
     if (!b.cnic) return res.status(400).json({ error: 'cnic required' });
+    const cnicDigits = String(b.cnic).replace(/\D/g, '');
+    if (cnicDigits.length !== 13) return res.status(400).json({ error: 'CNIC must be 13 digits' });
+    b.cnic = cnicDigits;
     b.biometric_ok = b.biometric_ok != null ? b.biometric_ok : true;
     const result = await nadra.verifyBioVerisys({
       cnic: b.cnic,
@@ -165,6 +171,9 @@ router.post('/verisys', auth(), requirePermission('kyc.write', 'cif.write', 'kyc
   try {
     const b = req.body || {};
     if (!b.cnic) return res.status(400).json({ error: 'cnic required' });
+    const cnicDigits = String(b.cnic).replace(/\D/g, '');
+    if (cnicDigits.length !== 13) return res.status(400).json({ error: 'CNIC must be 13 digits' });
+    b.cnic = cnicDigits;
     if (process.env.NADRA_ALLOW_VERISYS !== '1' && nadra.mode() === 'live') {
       return res.status(403).json({ error: 'Verisys disabled — set NADRA_ALLOW_VERISYS=1 or use bio-verify' });
     }

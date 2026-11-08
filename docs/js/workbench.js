@@ -990,6 +990,44 @@
   }
 
   /* ——— Teller ——— */
+
+  $('btnTellerOpen') && ($('btnTellerOpen').onclick = async function () {
+    var bal = Number(($('tel_open_bal') && $('tel_open_bal').value) || 0);
+    if (bal < 0) return msg('tellerMsg', 'Opening balance >= 0', false);
+    try {
+      var r = await api('/api/v1/teller/drawers/open', {
+        method: 'POST',
+        body: JSON.stringify({ opening_balance: bal, branch_code: ($('tel_br') && $('tel_br').value) || '001' })
+      }).catch(function () {
+        return api('/api/teller/drawers/open', {
+          method: 'POST',
+          body: JSON.stringify({ opening_balance: bal, branch_code: '001' })
+        });
+      });
+      msg('tellerMsg', 'Drawer opened #' + (r.id || r.drawer_id || ''), true);
+      loadTeller();
+    } catch (e) { msg('tellerMsg', e.message || e, false); }
+  });
+  $('btnTellerClose') && ($('btnTellerClose').onclick = async function () {
+    var id = ($('tel_drawer_id') && $('tel_drawer_id').value.trim()) || '';
+    var counted = ($('tel_counted') && $('tel_counted').value);
+    if (!id) return msg('tellerMsg', 'Drawer ID required', false);
+    if (counted === '' || counted == null) return msg('tellerMsg', 'Counted balance required to close', false);
+    try {
+      await api('/api/v1/teller/drawers/' + id + '/close', {
+        method: 'POST',
+        body: JSON.stringify({ counted_balance: Number(counted) })
+      }).catch(function () {
+        return api('/api/teller/drawers/' + id + '/close', {
+          method: 'POST',
+          body: JSON.stringify({ counted_balance: Number(counted) })
+        });
+      });
+      msg('tellerMsg', 'Drawer closed', true);
+      loadTeller();
+    } catch (e) { msg('tellerMsg', e.message || e, false); }
+  });
+
   async function loadTeller() {
     try {
       var r = await api('/api/v1/teller/drawers').catch(function () {
@@ -1187,7 +1225,8 @@
   }
   async function runAi() {
     var prompt = ($('aiPrompt').value || '').trim();
-    if (!prompt) return msg('aiMeta', 'Enter prompt', false);
+    if (!prompt || prompt.length < 3) return msg('aiMeta', 'Enter a prompt (min 3 chars)', false);
+    if (/\b(drop|truncate|delete\s+from)\b/i.test(prompt)) return msg('aiMeta', 'Destructive prompt blocked', false);
     msg('aiMeta', 'Generating…', true);
     try {
       var r = await api('/api/v1/reports/ai', { method: 'POST', body: JSON.stringify({ prompt: prompt }) });

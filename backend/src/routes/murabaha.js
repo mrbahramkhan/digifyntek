@@ -64,6 +64,12 @@ router.get('/', auth(), async (req, res) => {
 /** Create murābaḥah application */
 router.post('/', auth(), async (req, res) => {
   try {
+    const b = req.body || {};
+    if (!b.customer_id && !b.member_id) return res.status(400).json({ error: 'customer_id required' });
+    if (b.cost_price != null && Number(b.cost_price) <= 0) return res.status(400).json({ error: 'cost_price must be > 0' });
+    if (b.selling_price != null && b.cost_price != null && Number(b.selling_price) < Number(b.cost_price)) {
+      return res.status(400).json({ error: 'selling_price cannot be less than cost_price' });
+    }
     const b = req.body;
     const cost = Number(b.cost_amount || b.principal || 0);
     const profit = Number(b.profit_amount || 0);

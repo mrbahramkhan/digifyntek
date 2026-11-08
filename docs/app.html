@@ -849,6 +849,18 @@
         <div class="panel">
           <div class="panel-h">Teller drawers</div>
           <div class="panel-b">
+            <div class="form-grid" style="margin-bottom:12px">
+              <div class="field"><label>Opening balance</label><input class="inp" id="tel_open_bal" type="number" step="0.01" value="0" /></div>
+              <div class="field"><label>Branch</label><input class="inp" id="tel_br" value="001" /></div>
+              <div class="field"><label>Drawer ID (close)</label><input class="inp" id="tel_drawer_id" /></div>
+              <div class="field"><label>Counted balance</label><input class="inp" id="tel_counted" type="number" step="0.01" /></div>
+              <div class="field full">
+                <button type="button" class="btn btn-p" id="btnTellerOpen">Open drawer</button>
+                <button type="button" class="btn" id="btnTellerClose">Close drawer</button>
+              </div>
+            </div>
+            <div class="msg" id="tellerMsg"></div>
+
             <div class="table-wrap">
               <table class="data"><thead><tr><th>ID</th><th>Code</th><th>Balance</th><th>Status</th></tr></thead>
               <tbody id="telTb"></tbody></table>
