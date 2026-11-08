@@ -70,10 +70,14 @@ router.post('/', auth(), async (req, res) => {
     if (b.selling_price != null && b.cost_price != null && Number(b.selling_price) < Number(b.cost_price)) {
       return res.status(400).json({ error: 'selling_price cannot be less than cost_price' });
     }
-    const b = req.body;
-    const cost = Number(b.cost_amount || b.principal || 0);
+    const cost = Number(b.cost_amount || b.cost_price || b.principal || 0);
     const profit = Number(b.profit_amount || 0);
-    const sale = Number(b.sale_price || cost + profit);
+    const sale = Number(b.sale_price || b.selling_price || cost + profit);
+    if (!(cost > 0)) return res.status(400).json({ error: 'cost_amount / cost_price required (> 0)' });
+    if (sale < cost) return res.status(400).json({ error: 'sale_price cannot be less than cost (murabaha)' });
+    if (!b.asset_description && !b.description && !b.goods_description && !b.item_name) {
+      return res.status(400).json({ error: 'goods / asset description required' });
+    }
     const loanNumber = b.loan_number || `IM-${Date.now().toString().slice(-8)}`;
 
     // MCL check
