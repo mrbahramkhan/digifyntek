@@ -733,7 +733,16 @@
     var id = $('x_id').value.trim();
     var type = $('x_type').value;
     var nar = ($('x_nar') && $('x_nar').value.trim()) || '';
-    if (!nar) return msg('cashMsg', 'Purpose / narrative required', false);
+    if (!nar) return msg('cashMsg', 'Purpose / narrative required (SBP)', false);
+    var amt = Number($('x_amt').value);
+    if (!(amt > 0)) return msg('cashMsg', 'Amount must be greater than zero', false);
+    // Large cash threshold (configurable display) — require EDD note above 1,000,000 PKR
+    if (amt >= 1000000 && !($('x_edd') && $('x_edd').value.trim())) {
+      return msg('cashMsg', 'Cash >= 1,000,000 PKR requires EDD / verification note (threshold control)', false);
+    }
+    if (type === 'deposit' && !($('x_sof') && $('x_sof').value.trim()) && amt >= 500000) {
+      return msg('cashMsg', 'Source of funds required for large cash deposit (>= 500,000)', false);
+    }
     var parts = [nar];
     if ($('x_sof') && $('x_sof').value.trim()) parts.push('SOF:' + $('x_sof').value.trim());
     if ($('x_party') && $('x_party').value.trim()) parts.push('Party:' + $('x_party').value.trim());
