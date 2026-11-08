@@ -75,8 +75,13 @@ router.get('/accrual-summary', auth(), async (req, res, next) => {
 router.post('/ai', auth(), async (req, res, next) => {
   try {
     const prompt = req.body?.prompt || req.body?.query || req.body?.order || '';
-    if (!String(prompt).trim()) return res.status(400).json({ error: 'prompt required' });
-    const result = await reportAi.generateReport(prompt, req.user);
+    const p = String(prompt).trim();
+    if (!p) return res.status(400).json({ error: 'prompt required' });
+    if (p.length < 3) return res.status(400).json({ error: 'prompt required (min 3 characters)' });
+    if (/\b(drop|truncate|delete\s+from|alter\s+table|insert\s+into)\b/i.test(p)) {
+      return res.status(400).json({ error: 'Destructive instructions not allowed in AI reports' });
+    }
+    const result = await reportAi.generateReport(p || prompt, req.user);
     res.json(result);
   } catch (e) {
     next(e);

@@ -100,8 +100,8 @@ async function postJournal({
     const [ins] = await conn.query(
       `INSERT INTO cbs_journal_headers
         (journal_ref, business_date, value_date, branch_code, source_module, source_ref,
-         narrative, status, currency, total_debit, total_credit, idempotency_key, posted_by, posted_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'POSTED', 'PKR', ?, ?, ?, ?, NOW())`,
+         narrative, status, total_debit, total_credit, idempotency_key, posted_by, posted_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'POSTED', ?, ?, ?, ?, NOW())`,
       [
         journalRef,
         bdate,

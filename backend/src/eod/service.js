@@ -22,15 +22,30 @@ function executionId(orgCode, bizDate) {
 }
 
 async function ensureCalendar(orgCode) {
-  const [[row]] = await pool.query(`SELECT * FROM eod_calendar WHERE por_orgacode = ?`, [orgCode]);
-  if (row) return row;
-  const today = new Date().toISOString().slice(0, 10);
-  await pool.query(
-    `INSERT INTO eod_calendar (por_orgacode, business_date, status) VALUES (?, ?, 'open')`,
-    [orgCode, today]
-  );
-  const [[r2]] = await pool.query(`SELECT * FROM eod_calendar WHERE por_orgacode = ?`, [orgCode]);
-  return r2;
+  // Schema may be org-scoped (por_orgacode) or single-calendar (business_date only)
+  try {
+    const [[row]] = await pool.query(`SELECT * FROM eod_calendar WHERE por_orgacode = ? LIMIT 1`, [orgCode]);
+    if (row) return row;
+    const today = new Date().toISOString().slice(0, 10);
+    await pool.query(
+      `INSERT INTO eod_calendar (por_orgacode, business_date, status) VALUES (?, ?, 'open')`,
+      [orgCode, today]
+    );
+    const [[r2]] = await pool.query(`SELECT * FROM eod_calendar WHERE por_orgacode = ? LIMIT 1`, [orgCode]);
+    return r2;
+  } catch (e) {
+    const today = new Date().toISOString().slice(0, 10);
+    const [[row]] = await pool.query(
+      `SELECT * FROM eod_calendar WHERE status = 'open' ORDER BY business_date DESC LIMIT 1`
+    );
+    if (row) return { ...row, por_orgacode: orgCode };
+    await pool.query(
+      `INSERT INTO eod_calendar (business_date, status, opened_at) VALUES (?, 'open', NOW())`,
+      [today]
+    );
+    const [[r2]] = await pool.query(`SELECT * FROM eod_calendar ORDER BY id DESC LIMIT 1`);
+    return { ...(r2 || {}), por_orgacode: orgCode, status: (r2 && r2.status) || 'open', business_date: (r2 && r2.business_date) || today };
+  }
 }
 
 async function trialBalanceGate(asOf) {
@@ -73,13 +88,26 @@ async function pendingJournalsCount() {
 }
 
 async function findSuccessfulRun(orgCode, bizDate) {
-  const [[row]] = await pool.query(
-    `SELECT * FROM eod_runs
-     WHERE por_orgacode = ? AND business_date = ? AND status = 'success'
-     ORDER BY id DESC LIMIT 1`,
-    [orgCode, bizDate]
-  );
-  return row || null;
+  try {
+    const [[row]] = await pool.query(
+      `SELECT * FROM eod_runs
+       WHERE por_orgacode = ? AND business_date = ? AND status = 'success'
+       ORDER BY id DESC LIMIT 1`,
+      [orgCode, bizDate]
+    );
+    return row || null;
+  } catch (_) {
+    try {
+      const [[row]] = await pool.query(
+        `SELECT * FROM eod_runs WHERE business_date = ? AND status IN ('success','closed','OK')
+         ORDER BY id DESC LIMIT 1`,
+        [bizDate]
+      );
+      return row || null;
+    } catch (e2) {
+      return null;
+    }
+  }
 }
 
 async function status(orgCode) {
@@ -102,7 +130,7 @@ async function status(orgCode) {
   const priorSuccess = await findSuccessfulRun(orgCode, bizDate);
 
   const [recent] = await pool.query(
-    `SELECT * FROM eod_runs WHERE por_orgacode = ? ORDER BY id DESC LIMIT 15`,
+    `SELECT * FROM eod_runs ORDER BY id DESC LIMIT 15`,
     [orgCode]
   );
 
@@ -308,8 +336,6 @@ async function runEod(orgCode, userId, body = {}) {
       steps.push({ code: 'ACCRUAL', ok: false, detail: e.message });
       if (body.accrual_required === true) overall = 'failed';
     }
-  } else {
-    steps.push({ code: 'ACCRUAL', ok: true, detail: 'Skipped by request' });
   } else {
     steps.push({ code: 'ACCRUAL', ok: true, detail: 'Skipped by request' });
   }

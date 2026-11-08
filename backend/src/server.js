@@ -151,7 +151,12 @@ app.use('/api/auth', authRoutes);
 
 // ===== CORE — Fintech CBS =====
 app.use('/api/instruments', instrumentRoutes);
+const collateralRoutesFixed = require('./routes/collateral');
+app.use('/api/collateral', collateralRoutesFixed);
+app.use('/api/v1/collateral', collateralRoutesFixed);
+
 app.use('/api/eod', eodRoutes);
+app.use('/api/v1/eod', eodRoutes);
 app.use('/api/v1/cif', cifRoutes);
 app.use('/api/v1/accounts', accountsRoutes);
 app.use('/api/v1/ledger', ledgerRoutes);
@@ -186,6 +191,7 @@ app.use('/api/rbac', rbacRoutes);
 // ===== AGRI APP (kisaan routes) =====
 if (products.kisaan) {
   app.use('/api/members', memberRoutes);
+  app.use('/api/v1/members', memberRoutes);
   app.use('/api/shares', sharesRoutes);
   app.use('/api/savings', savingsRoutes);
   app.use('/api/vacs', vacsRoutes);
@@ -205,6 +211,7 @@ if (products.fmfb) {
   app.use('/api/mfb', mfbRoutes);
   app.use('/api/loans', loanRoutes);
   app.use('/api/collateral', collateralRoutes);
+  app.use('/api/v1/collateral', collateralRoutes);
   app.use('/api/core', coreBankingRoutes);
   app.use('/api/cbs', cbsRoutes);
 }
