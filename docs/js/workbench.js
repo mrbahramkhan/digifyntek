@@ -762,13 +762,20 @@
   /* ——— Transfer ——— */
   $('frmXfer') && ($('frmXfer').onsubmit = async function (e) {
     e.preventDefault();
+    var fromId = Number($('xf_from').value);
+    var toId = Number($('xf_to').value);
+    var amt = Number($('xf_amt').value);
     var nar = ($('xf_nar') && $('xf_nar').value.trim()) || '';
-    if (!nar) return msg('xferMsg', 'Purpose required', false);
+    if (!fromId || !toId) return msg('xferMsg', 'From and to account IDs required', false);
+    if (fromId === toId) return msg('xferMsg', 'From and to accounts must differ', false);
+    if (!(amt > 0)) return msg('xferMsg', 'Amount must be greater than zero', false);
+    if (!nar) return msg('xferMsg', 'Purpose / narrative required (SBP)', false);
+    if (amt >= 1000000 && nar.length < 15) return msg('xferMsg', 'Large transfer needs detailed purpose (>= 1,000,000)', false);
     if ($('xf_ref') && $('xf_ref').value.trim()) nar += ' | REF:' + $('xf_ref').value.trim();
     var body = {
-      from_account_id: Number($('xf_from').value),
-      to_account_id: Number($('xf_to').value),
-      amount: Number($('xf_amt').value),
+      from_account_id: fromId,
+      to_account_id: toId,
+      amount: amt,
       narrative: nar,
       business_date: ($('xf_date') && $('xf_date').value) || undefined
     };
@@ -786,16 +793,25 @@
   /* ——— TD ——— */
   $('frmTd') && ($('frmTd').onsubmit = async function (e) {
     e.preventDefault();
+    var principal = Number($('t_amt').value);
+    var tenor = Number($('t_days').value);
+    var purpose = ($('t_purpose') && $('t_purpose').value.trim()) || '';
+    var sof = ($('t_sof') && $('t_sof').value.trim()) || '';
+    if (!Number($('t_cust').value)) return msg('tdMsg', 'Customer ID required', false);
+    if (!(principal >= 1000)) return msg('tdMsg', 'Principal minimum 1,000 PKR', false);
+    if (!(tenor >= 7)) return msg('tdMsg', 'Tenor minimum 7 days', false);
+    if (!purpose) return msg('tdMsg', 'Purpose required (SBP CDD linkage)', false);
+    if (!sof) return msg('tdMsg', 'Source of funds required for TD', false);
     var body = {
       customer_id: Number($('t_cust').value),
-      principal: Number($('t_amt').value),
-      tenor_days: Number($('t_days').value),
+      principal: principal,
+      tenor_days: tenor,
       rate_pct: Number($('t_rate').value),
       product_code: $('t_prod').value,
       branch_code: ($('t_br') && $('t_br').value) || '001',
       maturity_instruction: ($('t_mat') && $('t_mat').value) || undefined,
-      source_of_funds: ($('t_sof') && $('t_sof').value.trim()) || undefined,
-      purpose: ($('t_purpose') && $('t_purpose').value.trim()) || undefined
+      source_of_funds: sof,
+      purpose: purpose
     };
     if ($('t_fund') && $('t_fund').value.trim()) body.funding_account_id = Number($('t_fund').value);
     try {
@@ -820,19 +836,29 @@
   $('frmLoan') && ($('frmLoan').onsubmit = async function (e) {
     e.preventDefault();
     var purpose = ($('l_purpose') && $('l_purpose').value.trim()) || '';
+    var repaySrc = ($('l_repay_src') && $('l_repay_src').value.trim()) || '';
+    var principal = Number($('l_amt').value);
+    var isIsl = $('l_isl').value === '1';
+    var mode = $('l_mode').value || null;
+    var sec = ($('l_sec') && $('l_sec').value.trim()) || '';
+    if (!Number($('l_cust').value)) return msg('loanMsg', 'Customer ID required', false);
+    if (!(principal > 0)) return msg('loanMsg', 'Principal must be greater than zero', false);
     if (!purpose) return msg('loanMsg', 'Purpose of financing required (SBP)', false);
+    if (!repaySrc) return msg('loanMsg', 'Source of repayment required (SBP credit)', false);
+    if (principal >= 500000 && !sec) return msg('loanMsg', 'Facility >= 500,000 requires security / collateral ref', false);
+    if (isIsl && !mode) return msg('loanMsg', 'Islamic product requires mode (murabaha / ijarah / …)', false);
     var body = {
       customer_id: Number($('l_cust').value),
       product_code: $('l_prod').value,
-      principal: Number($('l_amt').value),
+      principal: principal,
       rate_pct: Number($('l_rate').value),
       tenor_months: ($('l_tenor') && $('l_tenor').value) ? Number($('l_tenor').value) : undefined,
       branch_code: $('l_br').value,
-      is_islamic: $('l_isl').value === '1',
-      islamic_mode: $('l_mode').value || null,
+      is_islamic: isIsl,
+      islamic_mode: mode,
       purpose: purpose,
-      source_of_repayment: ($('l_repay_src') && $('l_repay_src').value.trim()) || undefined,
-      security_ref: ($('l_sec') && $('l_sec').value.trim()) || undefined,
+      source_of_repayment: repaySrc,
+      security_ref: sec || undefined,
       risk_rating: ($('l_risk') && $('l_risk').value) || undefined,
       narrative: (($('l_nar') && $('l_nar').value) || 'Disbursement') + ' | Purpose:' + purpose
     };
@@ -845,6 +871,8 @@
   });
   $('frmRepay') && ($('frmRepay').onsubmit = async function (e) {
     e.preventDefault();
+    if (!$('r_id').value.trim()) return msg('repayMsg', 'Contract ID required', false);
+    if (!(Number($('r_amt').value) > 0)) return msg('repayMsg', 'Repayment amount must be > 0', false);
     try {
       await api('/api/v1/financing/' + $('r_id').value.trim() + '/repay', {
         method: 'POST', body: JSON.stringify({ amount: Number($('r_amt').value), narrative: ($('r_nar') && $('r_nar').value) || 'Repayment' })

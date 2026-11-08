@@ -74,6 +74,17 @@ router.post('/', auth(), requirePermission('td.write'), async (req, res, next) =
     if (!b.customer_id) return res.status(400).json({ error: 'customer_id required' });
     if (b.principal == null || Number(b.principal) <= 0) return res.status(400).json({ error: 'principal required' });
     if (b.tenor_days == null || Number(b.tenor_days) <= 0) return res.status(400).json({ error: 'tenor_days required' });
+    if (Number(b.tenor_days) < 7) return res.status(400).json({ error: 'tenor_days minimum 7' });
+    if (Number(b.principal) < 1000) return res.status(400).json({ error: 'principal minimum 1,000 PKR' });
+    if (!b.purpose || !String(b.purpose).trim()) return res.status(400).json({ error: 'purpose required for TD placement (SBP CDD linkage)' });
+    if (!b.source_of_funds || !String(b.source_of_funds).trim()) return res.status(400).json({ error: 'source_of_funds required for TD' });
+    // KYC gate
+    try {
+      const [[cust]] = await pool.query(`SELECT kyc_status, status FROM cbs_customers WHERE id = ?`, [b.customer_id]);
+      if (!cust) return res.status(400).json({ error: 'CIF not found' });
+      if (String(cust.kyc_status || '').toLowerCase() === 'rejected') return res.status(400).json({ error: 'Customer KYC rejected — TD not allowed' });
+      if (String(cust.status || '').toLowerCase() === 'closed') return res.status(400).json({ error: 'Customer closed' });
+    } catch (_) {}
     const tdNar = [b.narrative || 'TD placement'];
     if (b.purpose) tdNar.push('Purpose:' + b.purpose);
     if (b.source_of_funds) tdNar.push('SOF:' + b.source_of_funds);

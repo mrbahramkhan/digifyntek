@@ -76,6 +76,24 @@ router.post('/disburse', auth(), requirePermission('loan.disburse'), async (req,
     if (!b.purpose && !(b.narrative || '').toLowerCase().includes('purpose')) {
       return res.status(400).json({ error: 'purpose of financing required (SBP credit CDD)' });
     }
+    if (!b.source_of_repayment || !String(b.source_of_repayment).trim()) {
+      return res.status(400).json({ error: 'source of repayment required (SBP credit assessment)' });
+    }
+    if (Number(b.principal) >= 500000 && !b.security_ref && !b.collateral_id) {
+      return res.status(400).json({ error: 'Facility >= 500,000 PKR requires security / collateral reference' });
+    }
+    if (b.is_islamic && !b.islamic_mode) {
+      return res.status(400).json({ error: 'Islamic financing requires islamic_mode (e.g. murabaha)' });
+    }
+    try {
+      const [[cust]] = await pool.query(`SELECT kyc_status, status, risk_rating, is_pep FROM cbs_customers WHERE id = ?`, [b.customer_id]);
+      if (!cust) return res.status(400).json({ error: 'CIF not found' });
+      if (String(cust.kyc_status || '').toLowerCase() === 'rejected') return res.status(400).json({ error: 'KYC rejected — financing blocked' });
+      if (String(cust.kyc_status || '').toLowerCase() === 'pending') {
+        return res.status(400).json({ error: 'KYC pending — complete CDD before disbursement' });
+      }
+      if (String(cust.status || '').toLowerCase() === 'closed') return res.status(400).json({ error: 'Customer closed' });
+    } catch (_) {}
     if (b.purpose) {
       b.narrative = ((b.narrative || 'Disbursement') + ' | Purpose:' + b.purpose).slice(0, 500);
     }

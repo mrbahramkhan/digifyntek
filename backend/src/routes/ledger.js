@@ -78,9 +78,24 @@ router.get('/trial-balance', auth(), async (req, res, next) => {
   }
 });
 
+
+function validateTransferBody(b) {
+  if (!b.from_account_id) return 'from_account_id required';
+  if (!b.to_account_id) return 'to_account_id required';
+  if (Number(b.from_account_id) === Number(b.to_account_id)) return 'From and to accounts must differ';
+  if (b.amount == null || Number(b.amount) <= 0) return 'amount must be greater than zero';
+  if (!b.narrative || !String(b.narrative).trim()) return 'purpose / narrative required (SBP)';
+  if (Number(b.amount) >= 1000000 && String(b.narrative).length < 15) {
+    return 'Large transfer (>= 1,000,000) requires detailed purpose narrative';
+  }
+  return null;
+}
+
 router.post('/transfers', auth(), requirePermission('transfer.post', 'casa.post', 'ledger.post'), async (req, res, next) => {
   try {
     const b = req.body || {};
+    const verr = validateTransferBody(b);
+    if (verr) return res.status(400).json({ error: verr });
     const result = await ledger.internalTransfer({
       fromAccountId: b.from_account_id,
       toAccountId: b.to_account_id,
@@ -101,6 +116,8 @@ router.post('/transfers', auth(), requirePermission('transfer.post', 'casa.post'
 router.post('/transfer', auth(), requirePermission('transfer.post', 'casa.post', 'ledger.post'), async (req, res, next) => {
   try {
     const b = req.body || {};
+    const verr = validateTransferBody(b);
+    if (verr) return res.status(400).json({ error: verr });
     const result = await ledger.internalTransfer({
       fromAccountId: b.from_account_id,
       toAccountId: b.to_account_id,
