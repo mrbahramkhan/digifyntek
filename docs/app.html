@@ -893,6 +893,17 @@
             <div class="table-wrap" style="margin-top:10px">
               <table class="data"><thead><tr><th>ID</th><th>Type</th><th>Status</th><th>By</th></tr></thead>
               <tbody id="apprTb"></tbody></table>
+            <div class="form-grid" style="margin-top:12px">
+              <div class="field"><label>Approval ID</label><input class="inp" id="appr_id" /></div>
+              <div class="field full"><label>Reject note</label><input class="inp" id="appr_note" placeholder="Required on reject" /></div>
+              <div class="field full">
+                <button type="button" class="btn btn-p" id="btnApprApprove">Approve</button>
+                <button type="button" class="btn btn-d" id="btnApprReject">Reject</button>
+                <button type="button" class="btn" id="btnAppr">Refresh</button>
+              </div>
+            </div>
+            <div class="msg" id="apprMsg"></div>
+            <table class="data" style="display:none"><tbody></table>
             </div>
           </div>
         </div>

@@ -1022,14 +1022,22 @@
   }
   $('frmMem') && ($('frmMem').onsubmit = async function (e) {
     e.preventDefault();
+    var name = ($('m_name') && $('m_name').value.trim()) || '';
+    var cnic = (($('m_cnic') && $('m_cnic').value) || '').replace(/\D/g, '');
+    var phone = (($('m_phone') && $('m_phone').value) || '').replace(/\D/g, '');
+    var shares = ($('m_shares') && $('m_shares').value) ? Number($('m_shares').value) : 1;
+    if (name.length < 3) return msg('memMsg', 'Full name required', false);
+    if (cnic.length !== 13) return msg('memMsg', 'CNIC must be 13 digits', false);
+    if (phone.length < 10) return msg('memMsg', 'Valid mobile required', false);
+    if (!(shares >= 1)) return msg('memMsg', 'Share units minimum 1', false);
     var body = {
-      full_name: $('m_name').value.trim(),
-      cnic: $('m_cnic').value.trim(),
-      phone: $('m_phone').value.trim(),
+      full_name: name,
+      cnic: cnic,
+      phone: phone,
       branch_code: ($('m_br') && $('m_br').value) || '001',
       father_or_husband: ($('m_father') && $('m_father').value.trim()) || undefined,
       member_type: ($('m_type') && $('m_type').value) || 'regular',
-      share_units: ($('m_shares') && $('m_shares').value) ? Number($('m_shares').value) : 1,
+      share_units: shares,
       address: ($('m_addr') && $('m_addr').value.trim()) || undefined
     };
     try {
@@ -1097,7 +1105,39 @@
       $('apprTb').innerHTML = '<tr><td colspan="4">' + (e.message || '') + '</td></tr>';
     }
   }
+
   $('btnAppr') && ($('btnAppr').onclick = loadApprovals);
+  // Maker-checker actions (if controls exist)
+  if ($('apprTb') && !$('apprActionsBound')) {
+    window._apprActionsBound = true;
+    $('apprTb').addEventListener('click', function (e) {
+      var tr = e.target.closest('tr');
+      if (!tr) return;
+      var id = tr.cells[0] && tr.cells[0].textContent;
+      if ($('appr_id')) $('appr_id').value = id;
+    });
+  }
+  $('btnApprApprove') && ($('btnApprApprove').onclick = async function () {
+    var id = ($('appr_id') && $('appr_id').value.trim()) || '';
+    if (!id) return msg('apprMsg', 'Select / enter approval ID', false);
+    try {
+      await api('/api/v1/approvals/' + id + '/approve', { method: 'POST', body: '{}' });
+      msg('apprMsg', 'Approved #' + id, true);
+      loadApprovals();
+    } catch (err) { msg('apprMsg', err.message || err, false); }
+  });
+  $('btnApprReject') && ($('btnApprReject').onclick = async function () {
+    var id = ($('appr_id') && $('appr_id').value.trim()) || '';
+    var note = ($('appr_note') && $('appr_note').value.trim()) || '';
+    if (!id) return msg('apprMsg', 'Select / enter approval ID', false);
+    if (note.length < 3) return msg('apprMsg', 'Rejection note required', false);
+    try {
+      await api('/api/v1/approvals/' + id + '/reject', { method: 'POST', body: JSON.stringify({ note: note }) });
+      msg('apprMsg', 'Rejected #' + id, true);
+      loadApprovals();
+    } catch (err) { msg('apprMsg', err.message || err, false); }
+  });
+
 
   /* ——— Users & roles (simplified bind if elements exist) ——— */
   async function loadRoles() {

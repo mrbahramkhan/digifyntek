@@ -44,6 +44,21 @@ router.post('/', auth(), async (req, res, next) => {
 
 router.post('/:id/approve', auth(), requirePermission('approval.decide'), async (req, res, next) => {
   try {
+    // maker-checker segregation (SBP control)
+    try {
+      const pool = require('../config/db');
+      const [[reqRow]] = await pool.query(`SELECT maker_id, created_by, status FROM cbs_approvals WHERE id = ?`, [req.params.id]).catch(() => [[null]]);
+      if (reqRow) {
+        const maker = String(reqRow.maker_id || reqRow.created_by || '');
+        const checker = String(actor(req) || '');
+        if (maker && checker && maker === checker) {
+          return res.status(400).json({ error: 'Maker cannot approve own request (segregation of duties)' });
+        }
+        if (String(reqRow.status || '').toLowerCase() !== 'pending') {
+          return res.status(400).json({ error: 'Only pending requests can be approved' });
+        }
+      }
+    } catch (_) {}
     const row = await approvals.decide(req.params.id, {
       checkerId: actor(req),
       decision: 'APPROVED',
@@ -57,6 +72,9 @@ router.post('/:id/approve', auth(), requirePermission('approval.decide'), async 
 
 router.post('/:id/reject', auth(), requirePermission('approval.decide'), async (req, res, next) => {
   try {
+    if (!req.body?.note && !req.body?.reason) {
+      return res.status(400).json({ error: 'Rejection requires note/reason' });
+    }
     const row = await approvals.decide(req.params.id, {
       checkerId: actor(req),
       decision: 'REJECTED',

@@ -51,7 +51,10 @@ router.post('/', auth(), requirePermission('admin.rbac', 'admin.setup'), async (
     const fullName = String(b.full_name || b.fullName || userId).trim();
     let role = String(b.role || 'viewer').trim().toLowerCase();
     if (!userId) return res.status(400).json({ error: 'user_id required' });
-    if (password.length < 6) return res.status(400).json({ error: 'password min 6 chars' });
+    if (password.length < 8) return res.status(400).json({ error: 'password min 8 characters' });
+    if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+      return res.status(400).json({ error: 'password must include letters and numbers' });
+    }
     if (role === 'superadmin' && String(req.user.role).toLowerCase() !== 'superadmin') {
       return res.status(403).json({ error: 'Only superadmin can create superadmin' });
     }
@@ -114,7 +117,10 @@ router.patch('/:id', auth(), requirePermission('admin.rbac', 'admin.setup'), asy
 router.post('/:id/reset-password', auth(), requirePermission('admin.rbac', 'admin.setup'), async (req, res, next) => {
   try {
     const password = String(req.body?.password || '');
-    if (password.length < 6) return res.status(400).json({ error: 'password min 6 chars' });
+    if (password.length < 8) return res.status(400).json({ error: 'password min 8 characters' });
+    if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+      return res.status(400).json({ error: 'password must include letters and numbers' });
+    }
     const hash = await bcrypt.hash(password, 10);
     const [r] = await pool.query(
       `UPDATE users SET password_hash = ? WHERE id = ? OR user_id = ?`,
