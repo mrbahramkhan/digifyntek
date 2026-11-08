@@ -54,11 +54,33 @@ router.post('/accrual/run', auth(), requirePermission('eod.run'), async (req, re
     const result = await accrual.runAllAccruals({
       businessDate: biz,
       actor: req.user?.userId || req.user?.id || 'accrual',
+      days: Number(req.body?.days) || 1,
       skip: req.body?.skip || {},
     });
     res.json(result);
   } catch (e) {
     next(e);
+  }
+});
+
+/** Recent accrual log lines */
+router.get('/accrual/log', auth(), async (req, res, next) => {
+  try {
+    const pool = require('../config/db');
+    const limit = Math.min(Number(req.query.limit) || 50, 200);
+    const biz = req.query.business_date;
+    let rows;
+    if (biz) {
+      [rows] = await pool.query(
+        `SELECT * FROM cbs_accrual_log WHERE business_date = ? ORDER BY id DESC LIMIT ?`,
+        [biz, limit]
+      );
+    } else {
+      [rows] = await pool.query(`SELECT * FROM cbs_accrual_log ORDER BY id DESC LIMIT ?`, [limit]);
+    }
+    res.json({ rows });
+  } catch (e) {
+    res.json({ rows: [], note: e.message });
   }
 });
 

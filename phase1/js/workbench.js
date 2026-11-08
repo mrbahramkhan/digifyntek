@@ -1120,17 +1120,43 @@
     try {
       var s = await api('/api/v1/eod/status');
       $('eodStatus').textContent = JSON.stringify(s, null, 2);
-    } catch (e) { $('eodStatus').textContent = e.message || e; }
+    } catch (e) { if ($('eodStatus')) $('eodStatus').textContent = e.message || e; }
+    if (typeof loadAccrualLog === 'function') loadAccrualLog();
   }
   $('btnEodRef') && ($('btnEodRef').onclick = loadEod);
   $('btnEod') && ($('btnEod').onclick = async function () {
-    if (!confirm('Run End of Day? Pending maker-checker items may block EOD (SBP control).')) return;
+    if (!confirm('Run End of Day (includes deposit & loan accruals)?')) return;
     try {
-      await api('/api/v1/eod/run', { method: 'POST', body: JSON.stringify({}) });
-      msg('eodMsg', 'EOD done', true);
+      var r = await api('/api/v1/eod/run', { method: 'POST', body: JSON.stringify({}) });
+      msg('eodMsg', 'EOD ' + (r.status || 'done') + (r.steps ? ' · steps ' + r.steps.length : ''), true);
       loadEod();
+      loadAccrualLog();
     } catch (e) { msg('eodMsg', e.message || e, false); }
   });
+  $('btnAccrualRun') && ($('btnAccrualRun').onclick = async function () {
+    try {
+      var r = await api('/api/v1/eod/accrual/run', { method: 'POST', body: JSON.stringify({}) });
+      msg('eodMsg', 'Accrual posted ' + (r.total_count || 0) + ' · PKR ' + (r.total_amount || 0), true);
+      if ($('eodStatus')) $('eodStatus').textContent = JSON.stringify(r, null, 2);
+      loadAccrualLog();
+    } catch (e) { msg('eodMsg', e.message || e, false); }
+  });
+  async function loadAccrualLog() {
+    try {
+      var r = await api('/api/v1/eod/accrual/log?limit=40');
+      var rows = r.rows || [];
+      if ($('accrualLogTb')) {
+        $('accrualLogTb').innerHTML = rows.map(function (x) {
+          return '<tr><td>' + (x.business_date || '') + '</td><td>' + (x.book || '') +
+            '</td><td>' + (x.entity_type || '') + ' #' + (x.entity_id || '') +
+            '</td><td class="num">' + (x.amount || '') + '</td><td>' + (x.source_ref || '') + '</td></tr>';
+        }).join('') || '<tr><td colspan="5" class="empty">No accruals yet</td></tr>';
+      }
+    } catch (e) {
+      if ($('accrualLogTb')) $('accrualLogTb').innerHTML = '<tr><td colspan="5">' + (e.message || '') + '</td></tr>';
+    }
+  }
+  $('btnAccrualLog') && ($('btnAccrualLog').onclick = loadAccrualLog);
   async function loadApprovals() {
     try {
       var r = await api('/api/v1/approvals?limit=50');

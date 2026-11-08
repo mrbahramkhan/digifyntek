@@ -885,14 +885,22 @@
 
       <div class="panel-view" id="view-eod">
         <div class="panel">
-          <div class="panel-h">End of day</div>
+          <div class="panel-h">End of day · Accruals (deposits &amp; loans)</div>
           <div class="panel-b">
-            <pre class="hint" id="eodStatus" style="white-space:pre-wrap">—</pre>
-            <div class="toolbar">
-              <button type="button" class="btn btn-p" id="btnEod">Run EOD</button>
-              <button type="button" class="btn" id="btnEodRef">Refresh</button>
+            <p class="hint" style="margin:0 0 10px">Standard Actual/365 daily accrual is part of EOD: savings expense→CASA, TD expense→payable, loan receivable→income.</p>
+            <pre class="hint" id="eodStatus" style="white-space:pre-wrap;max-height:220px;overflow:auto">—</pre>
+            <div class="toolbar" style="margin-top:10px">
+              <button type="button" class="btn btn-p" id="btnEod">Run full EOD</button>
+              <button type="button" class="btn" id="btnAccrualRun">Run accruals only</button>
+              <button type="button" class="btn" id="btnEodRef">Refresh status</button>
+              <button type="button" class="btn" id="btnAccrualLog">Accrual log</button>
             </div>
             <div class="msg" id="eodMsg"></div>
+            <div class="table-wrap" style="margin-top:12px;max-height:240px;overflow:auto">
+              <table class="data"><thead><tr><th>Date</th><th>Book</th><th>Entity</th><th>Amount</th><th>Ref</th></tr></thead>
+              <tbody id="accrualLogTb"><tr><td colspan="5" class="empty">—</td></tr></tbody></table>
+            </div>
+
           </div>
         </div>
       </div>

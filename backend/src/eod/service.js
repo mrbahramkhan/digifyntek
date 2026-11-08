@@ -313,31 +313,41 @@ async function runEod(orgCode, userId, body = {}) {
     steps.push({ code: 'UNPOSTED', ok: true, detail: `Skipped: ${e.message}` });
   }
 
-  // --- Accrual (optional, idempotent marker only — no double interest without product engine) ---
+  // --- Accrual (standard deposits + loans; part of EOD; idempotent per day) ---
   if (!body.skip_accrual) {
     try {
       const accrual = require('./accrual');
       const acc = await accrual.runAllAccruals({
         businessDate: bizDate,
         actor: String(userId || 'eod'),
+        days: Number(body.accrual_days) || 1,
         skip: {
           savings: body.skip_savings_accrual === true,
           td: body.skip_td_accrual === true,
           financing: body.skip_loan_accrual === true,
+          islamic_financing: body.skip_islamic_accrual === true,
+          islamic_td: body.skip_islamic_accrual === true,
         },
       });
+      const hasErrors =
+        (acc.savings.errors || []).length +
+          (acc.term_deposits.errors || []).length +
+          (acc.financing.errors || []).length >
+        0;
       steps.push({
         code: 'ACCRUAL',
-        ok: true,
-        detail: `Posted ${acc.total_count} · amt ${acc.total_amount} · SAV ${acc.savings.count||0} TD ${acc.term_deposits.count||0} LON ${acc.financing.count||0} ISL-FIN ${acc.islamic_financing?.count||0} ISL-TD ${acc.islamic_term_deposits?.count||0}`,
+        ok: !hasErrors,
+        required: true,
+        detail: `Actual/365 · posted ${acc.total_count} entries · PKR ${acc.total_amount} | SAV ${acc.savings.count || 0} (${acc.savings.amount || 0}) · TD ${acc.term_deposits.count || 0} (${acc.term_deposits.amount || 0}) · LOAN ${acc.financing.count || 0} (${acc.financing.amount || 0}) · ISL ${acc.islamic_financing?.count || 0}/${acc.islamic_term_deposits?.count || 0}`,
         accrual: acc,
       });
+      if (hasErrors && body.accrual_required !== false) overall = overall === 'failed' ? 'failed' : 'partial';
     } catch (e) {
-      steps.push({ code: 'ACCRUAL', ok: false, detail: e.message });
-      if (body.accrual_required === true) overall = 'failed';
+      steps.push({ code: 'ACCRUAL', ok: false, required: true, detail: e.message });
+      if (body.accrual_required !== false) overall = 'failed';
     }
   } else {
-    steps.push({ code: 'ACCRUAL', ok: true, detail: 'Skipped by request' });
+    steps.push({ code: 'ACCRUAL', ok: true, required: false, detail: 'Skipped by request (skip_accrual)' });
   }
 
   // --- Legacy day-end ---
